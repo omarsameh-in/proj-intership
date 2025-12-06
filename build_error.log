@@ -1,0 +1,43 @@
+
+> login-app@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.33
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|javascript/auto|C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\next-flight-css-loader.js??ruleSet[1].rules[14].oneOf[7].use[0]!C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[14].oneOf[7].use[1]!C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[14].oneOf[7].use[2]!C:\projects\الكلية 1\1\in-login\app\landing.module.css|ssr': No serializer registered for CssSyntaxError
+<w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> webpack/lib/ModuleBuildError -> CssSyntaxError
+<w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|javascript/auto|C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\next-flight-css-loader.js??ruleSet[1].rules[14].oneOf[7].use[0]!C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[14].oneOf[7].use[1]!C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[14].oneOf[7].use[2]!C:\projects\الكلية 1\1\in-login\app\signup\signup.module.css|ssr': No serializer registered for CssSyntaxError
+<w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> webpack/lib/ModuleBuildError -> CssSyntaxError
+<w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|javascript/auto|C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\next-flight-css-loader.js??ruleSet[1].rules[14].oneOf[7].use[0]!C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\css-loader\src\index.js??ruleSet[1].rules[14].oneOf[7].use[1]!C:\projects\الكلية 1\1\in-login\node_modules\next\dist\build\webpack\loaders\postcss-loader\src\index.js??ruleSet[1].rules[14].oneOf[7].use[2]!C:\projects\الكلية 1\1\in-login\app\selectRole\selectRole.module.css|ssr': No serializer registered for CssSyntaxError
+<w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> webpack/lib/ModuleBuildError -> CssSyntaxError
+Failed to compile.
+
+./app/landing.module.css:1:1
+Syntax error: Selector ":root" is not pure (pure selectors must contain at least one local class or id)
+
+[1m[31m>[39m[22m[90m 1 | [39m[33m:[39mroot [33m{[39m
+ [90m   | [39m[1m[31m^[39m[22m
+ [90m 2 | [39m    --color-brand-primary[33m:[39m [35m#2563eb[39m[33m;[39m
+ [90m 3 | [39m    --color-brand-secondary[33m:[39m [35m#6366f1[39m[33m;[39m
+
+./app/selectRole/selectRole.module.css:1:1
+Syntax error: Selector ":root" is not pure (pure selectors must contain at least one local class or id)
+
+[1m[31m>[39m[22m[90m 1 | [39m[33m:[39mroot [33m{[39m
+ [90m   | [39m[1m[31m^[39m[22m
+ [90m 2 | [39m    [90m/* InternWay Color Palette (Light Mode) */[39m
+ [90m 3 | [39m    --primary-color[33m:[39m [35m#2563eb[39m[33m;[39m
+
+./app/signup/signup.module.css:81:1
+Syntax error: Selector "form" is not pure (pure selectors must contain at least one local class or id)
+
+ [90m 79 | [39m[33m}[39m
+ [90m 80 | [39m
+[1m[31m>[39m[22m[90m 81 | [39mform [33m{[39m
+ [90m    | [39m[1m[31m^[39m[22m
+ [90m 82 | [39m    display[33m:[39m grid[33m;[39m
+ [90m 83 | [39m    grid-template-columns[33m:[39m 1fr 1fr[33m;[39m
+
+
+> Build failed because of webpack errors
