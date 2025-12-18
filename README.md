@@ -1,124 +1,119 @@
-# InternWay Platform 
+# InternWay Platform
 
-منصة **InternWay** هي بوابتك المثالية للفرص التدريبية والمهنية. تم تصميم هذا المشروع باستخدام أحدث تقنيات الويب (Modern Web Technologies) لتقديم تجربة مستخدم سلسة، عصرية، وسريعة الاستجابة.
-
-المشروع يمثل واجهة أمامية (Frontend) متكاملة مبنية باستخدام **Next.js 14** و **React 18**، مع تصميم انسيابي باستخدام **Bootstrap 5** وتخصيصات CSS متقدمة.
-
----
-
-##  المميزات الرئيسية
-
-###  تصميم عصري وجذاب (UI/UX)
-- **واجهة Landing Page تفاعلية:** أقسام تعريفية (Home, Features, How it Works) مع تنقل سلس (Smooth Scroll).
-- **تصميم منقسم (Split Screen):** صفحة تسجيل الدخول تتميز بتصميم عصري؛ نصف للصورة/الشعار مع تدرجات لونية، ونصف للنموذج.
-- **تأثيرات بصرية:** أيقونات متحركة (Floating Animations)، تدرجات لونية (Gradients) مريحة للعين، وMicro-interactions.
-
-###  دعم الثيمات (Dark/Light Mode)
-- **تبديل فوري:** زر عائم لتبديل الوضع بين الفاتح والداكن.
-- **حفظ التفضيلات:** يتذكر الموقع اختيارك المفضل باستخدام `localStorage`.
-
-###  دعم متعدد اللغات (i18n)
-- **عربي / إنجليزي:** دعم كامل للغتين مع تحويل اتجاه الصفحة تلقائياً (RTL/LTR).
-- **تجربة محلية:** نصوص ورسائل خطأ مخصصة لكل لغة.
-
-###  نظام مصادقة متكامل
-- **تسجيل الدخول:** نموذج آمن يدعم التحقق (Validation) الفوري.
-- **نسيان كلمة المرور:** مسار كامل لاستعادة كلمة المرور (Forgot & Reset Password).
-- **اختيار الدور (Role Selection):** واجهة مخصصة لاختيار نوع الحساب (طالب، شركة، مرشد) بأيقونات معبرة.
-- **التسجيل (Sign Up):** نماذج تسجيل مخصصة لكل فئة من المستخدمين.
-
-###  متجاوب بالكامل (Mobile First)
-- تصميم مرن يتكيف مع جميع أحجام الشاشات (موبايل، تابلت، ديسك توب).
-- قوائم وتخطيطات تتغير ديناميكياً لتناسب شاشات اللمس.
+## Overview
+InternWay is a comprehensive gateway for internships and professional development opportunities. Built with modern web technologies, this platform delivers a seamless, responsive, and intuitive user experience. The project serves as a sophisticated frontend application developed using Next.js 14 and React 18, featuring advanced styling with CSS Modules and Bootstrap 5 integration.
 
 ---
 
-##  التقنيات المستخدمة (Tech Stack)
+## Key Features
 
-| التقنية | الوصف |
+### Modern User Interface & Experience
+- **Interactive Landing Page**: Features dynamic sections including Home, Features, and How it Works with smooth scrolling navigation.
+- **Responsive Design**: Fully adaptable layout ensuring optimal viewing across all devices (Desktop, Tablet, Mobile).
+- **Visual Effects**: Implements modern design principles with subtle animations, gradients, and refined micro-interactions.
+
+### Student Dashboard & Services
+- **Sessions Management**: A dedicated "My Sessions" area allowing students to manage mentorship appointments.
+    - **Status Tracking**: Visual indicators for Confirmed, Waiting, and Completed sessions.
+    - **Action Controls**: direct options to Join Meeting, Reschedule, Cancel, or Leave Reviews.
+- **Profile Management**: Comprehensive profile section for students to manage personal information, education, and skills.
+- **Mentorships & Internships**: Browsing capabilities for finding mentors and internship opportunities (UI integrated).
+
+### Theming System
+- **Dark/Light Mode**: Full system-wide theme support with persistent user preference storage.
+- **Consistent Styling**: Unified color palettes and component styles across both modes.
+
+### Internationalization (i18n)
+- **Bilingual Support**: Complete support for English and Arabic languages.
+- **RTL/LTR Layouts**: Automatic layout direction adjustment based on the selected language.
+
+### Authentication & Authorization
+- **Secure Login**: Robust form validation and secure token handling.
+- **Role-Based Access**: Dedicated workflows and interfaces for different user roles (Student, Company, Mentor).
+- **Account Recovery**: Integrated password reset and recovery flow.
+
+---
+
+## Technology Stack
+
+| Technology | Purpose |
 | --- | --- |
-| **Next.js 14** | إطار العمل الأساسي (App Router Architecture). |
-| **React 18** | مكتبة بناء الواجهات. |
-| **Bootstrap 5** | إطار عمل التنسيق (Grid & Components). |
-| **React Bootstrap** | مكونات Bootstrap جاهزة لـ React. |
-| **Lucide React** | مكتبة أيقونات عصرية وخفيفة. |
-| **FontAwesome** | أيقونات إضافية لتعزيز التصميم. |
-| **Axios** | للتعامل مع الـ API والـ Backend. |
+| **Next.js 14** | Core React framework using App Router architecture. |
+| **React 18** | UI library for building interactive component-based interfaces. |
+| **TypeScript** | Static typing for enhanced code quality and maintainability. |
+| **Bootstrap 5** | Responsive grid system and utility classes. |
+| **CSS Modules** | Scoped styling for component isolation. |
+| **Lucide React** | Modern, lightweight icon set. |
+| **Axios** | HTTP client for backend communication. |
 
 ---
 
-##  هيكل المشروع (Project Structure)
+## Project Structure
 
-```bash
-c:/projects/college 1/1/proj. intership/
-├── app/
-│   ├── context/          # إدارة الحالة العامة (Theme & Language)
-│   ├── login/            # صفحة تسجيل الدخول
-│   ├── signup/           # صفحات إنشاء حساب جديد
-│   ├── selectRole/       # صفحة اختيار نوع المستخدم
-│   ├── forgotPassword/   # طلب استعادة كلمة المرور
-│   ├── resetPassword/    # تعيين كلمة المرور الجديدة
-│   ├── lib/              # دوال مساعدة وإعدادات API
-│   ├── locales/          # ملفات الترجمة
-│   ├── layout.tsx        # التخطيط العام وجلب الخطوط
-│   ├── page.tsx          # الصفحة الرئيسية (Landing Page)
-│   └── globalStyles.css  # التنسيقات العامة
-├── public/               # الصور والملفات الثابتة
-└── next.config.js        # إعدادات Next.js
+```
+app/
+├── context/          # Global state management (Theme, Language)
+├── student/          # Student-specific protected routes
+│   ├── dashboard/    # Student main dashboard
+│   ├── sessions/     # Mentorship sessions management
+│   ├── profile/      # Student profile settings
+│   ├── internships/  # Internship listings
+│   └── mentorships/  # Mentor browsing
+├── login/            # Authentication pages
+├── signup/           # Registration flows
+├── lib/              # Utilities and API configuration
+├── locales/          # Translation files
+└── globalStyles.css  # Global design tokens
 ```
 
 ---
 
-##  التثبيت والتشغيل المحلي
+## Getting Started
 
-اتبع الخطوات التالية لتشغيل المشروع على جهازك:
+Follow these steps to set up the project locally:
 
-1. **نسخ المستودع (Clone):**
-   ```bash
-   git clone https://github.com/omarsameh-in/proj-intership.git
-   cd proj-intership
-   ```
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/omarsameh-in/proj-intership.git
+    cd proj-intership
+    ```
 
-2. **تثبيت الاعتمادات (Install Dependencies):**
-   ```bash
-   npm install
-   ```
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
 
-3. **تشغيل سيرفر التطوير (Dev Server):**
-   ```bash
-   npm run dev
-   ```
+3.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
 
-4. **المعاينة:**
-   افتح المتصفح على الرابط: `http://localhost:3000`
+4.  **Access the Application**
+    Open your browser and navigate to `http://localhost:3000`
 
 ---
 
-##  الربط مع الـ Backend
+## Backend Integration
 
-المشروع مهيأ للاتصال بـ RESTful API. تم إعداد ملف `app/lib/api.ts` ليقوم بإدارة الطلبات.
+The project is configured to communicate with a RESTful API. The API client is centrally managed in `app/lib/api.ts`.
 
-### المتغيرات البيئية (.env)
-قم بإنشاء ملف `.env` في الجذر وأضف رابط الـ Backend:
+### Environment Configuration
+Create a `.env` file in the root directory to define your API endpoint:
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
-### نقاط الاتصال المتوقعة (Endpoints)
-- `POST /auth/login` - لتسجيل الدخول.
-- `POST /auth/register/*` - لإنشاء حسابات جديدة.
-- `POST /auth/forgot-password` - لطلب رابط الاستعادة.
+---
+
+## Deployment
+
+The application is deployed and hosted on Vercel. Feature updates are automatically built and deployed upon pushing to the main branch.
+
+**[Live Demo Link](https://ui-one-steel-31.vercel.app/student/sessions)**
 
 ---
 
-##  النشر (Deployment)
+## Copyright
 
-تم نشر المشروع بنجاح على **Vercel** ويمكن الوصول إليه عبر الرابط:
- **[Live Demo On Vercel](https://proj-intership-fux4o1e95-omars-projects-1e4409a8.vercel.app)**
-
-للتحديث، يكفي عمل `git push` وسيقوم Vercel ببناء النسخة الجديدة تلقائياً.
-
----
-
-##  حقوق الملكية
-تم تطوير هذا المشروع كجزء من منصة **InternWay**. جميع الحقوق محفوظة.
+© 2024 InternWay Platform. All Rights Reserved.
