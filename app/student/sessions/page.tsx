@@ -294,7 +294,9 @@ export default function SessionsPage() {
                                                 <BookOpen size={16} />
                                                 {session.isBooked ? t.joinMeeting : t.waitingButtonText}
                                             </button>
+                                            <div className={styles.actionDivider}></div>
                                             <button className={styles.secondaryButton}>{t.reschedule}</button>
+                                            <div className={styles.actionDivider}></div>
                                             <button className={styles.dangerButton}>{t.cancel}</button>
                                         </>
                                     )}

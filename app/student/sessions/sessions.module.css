@@ -477,6 +477,14 @@
     flex-wrap: wrap;
 }
 
+/* Divider between action buttons */
+.actionDivider {
+    width: 1px;
+    height: 24px;
+    background-color: #6b7280;
+    margin: 0 0.25rem;
+}
+
 .cardActions button {
     padding: 0.625rem 1rem;
     border-radius: 0.5rem;
@@ -499,45 +507,45 @@
     background: #2563eb;
 }
 
-.secondaryButton {
+.cardActions .secondaryButton {
     background: transparent;
-    border: 2px solid #64748b;
+    border: 2px solid #4b5563;
     color: #9ca3af;
 }
 
-.secondaryButton:hover {
+.cardActions .secondaryButton:hover {
     background: #252b3d;
     border-color: #3b82f6;
     color: white;
 }
 
-.dangerButton {
+.cardActions .dangerButton {
     background: transparent;
-    border: 2px solid #64748b;
+    border: 2px solid #4b5563;
     color: #ef4444;
 }
 
-.dangerButton:hover {
+.cardActions .dangerButton:hover {
     background: rgba(239, 68, 68, 0.1);
     border-color: #ef4444;
 }
 
-.waitingButton {
+.cardActions .waitingButton {
     background: transparent;
-    border: 2px solid #64748b;
-    color: #6b7280;
+    border: 2px solid #4b5563;
+    color: #9ca3af;
 }
 
-.waitingButton:hover {
+.cardActions .waitingButton:hover {
     background: #252b3d;
     border-color: #3b82f6;
     color: #9ca3af;
 }
 
-.reviewButton {
-    background: #1a1f2e;
-    border: 1px solid #2d3548;
-    color: white;
+.cardActions .reviewButton {
+    background: transparent;
+    border: 2px solid #4b5563;
+    color: #9ca3af;
     padding: 0.625rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.875rem;
@@ -546,9 +554,10 @@
     transition: all 0.2s ease;
 }
 
-.reviewButton:hover {
+.cardActions .reviewButton:hover {
     background: #252b3d;
     border-color: #3b82f6;
+    color: white;
 }
 
 /* No Sessions */
@@ -726,6 +735,8 @@
 
 :global(body.light-mode) .categoryTag {
     background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.5);
+    color: #2563eb;
 }
 
 :global(body.light-mode) .statusBadge.confirmed {
@@ -776,15 +787,20 @@
     color: #64748b;
 }
 
-:global(body.light-mode) .reviewButton {
-    background: #ffffff;
-    border-color: #e2e8f0;
+:global(body.light-mode) .cardActions .reviewButton {
+    background: transparent;
+    border: 2px solid #cbd5e1;
+    color: #64748b;
+}
+
+:global(body.light-mode) .cardActions .reviewButton:hover {
+    background: #f1f5f9;
+    border-color: #3b82f6;
     color: #1e293b;
 }
 
-:global(body.light-mode) .reviewButton:hover {
-    background: #f1f5f9;
-    border-color: #3b82f6;
+:global(body.light-mode) .actionDivider {
+    background-color: #cbd5e1;
 }
 
 /* RTL Support */
