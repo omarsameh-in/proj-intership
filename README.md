@@ -15,7 +15,7 @@ InternWay is a comprehensive gateway for internships and professional developmen
 ### Student Dashboard & Services
 - **Sessions Management**: A dedicated "My Sessions" area allowing students to manage mentorship appointments.
     - **Status Tracking**: Visual indicators for Confirmed, Waiting, and Completed sessions.
-    - **Action Controls**: direct options to Join Meeting, Reschedule, Cancel, or Leave Reviews.
+    - **Action Controls**: Direct options to Join Meeting, Reschedule, Cancel, or Leave Reviews.
 - **Profile Management**: Comprehensive profile section for students to manage personal information, education, and skills.
 - **Mentorships & Internships**: Browsing capabilities for finding mentors and internship opportunities (UI integrated).
 
@@ -93,27 +93,104 @@ Follow these steps to set up the project locally:
 
 ---
 
-## Backend Integration
-
-The project is configured to communicate with a RESTful API. The API client is centrally managed in `app/lib/api.ts`.
-
-### Environment Configuration
-Create a `.env` file in the root directory to define your API endpoint:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
-```
-
----
-
 ## Deployment
 
 The application is deployed and hosted on Vercel. Feature updates are automatically built and deployed upon pushing to the main branch.
 
-**[Live Demo Link](https://ui-one-steel-31.vercel.app/student/sessions)**
+**[Live Demo Link](https://proj-intership-fux4o1e95-omars-projects-1e4409a8.vercel.app)**
 
 ---
 
 ## Copyright
 
 © 2024 InternWay Platform. All Rights Reserved.
+
+---
+---
+
+# منصة InternWay
+
+## نظرة عامة
+تعد منصة **InternWay** بوابتك الشاملة لفرص التدريب والتطوير المهني. تم بناء هذه المنصة باستخدام أحدث تقنيات الويب لتوفير تجربة مستخدم سلسة وسريعة الاستجابة. تم تطوير المشروع كتطبيق واجهة أمامية (Frontend) متطور باستخدام **Next.js 14** و **React 18**، مع تصميم عصري يعتمد على CSS Modules و Bootstrap 5.
+
+---
+
+## المميزات الرئيسية
+
+### واجهة مستخدم عصرية وتفاعلية
+- **صفحة هبوط تفاعلية**: تتضمن أقساماً ديناميكية مثل الرئيسية، المميزات، وكيفية العمل، مع تنقل سلس.
+- **تصميم متجاوب**: تخطيط مرن يتكيف تماماً مع جميع الأجهزة (سطح المكتب، الأجهزة اللوحية، الهواتف المحمولة).
+- **مؤثرات بصرية**: تطبيق مبادئ التصميم الحديث مع رسوم متحركة خفيفة، تدرجات لونية، وتفاعلات دقيقة.
+
+### لوحة تحكم الطالب والخدمات
+- **إدارة الجلسات**: قسم مخصص "جلساتي" يتيح للطلاب إدارة مواعيد الإرشاد.
+    - **تتبع الحالة**: مؤشرات بصرية للجلسات المؤكدة، قيد الانتظار، والمكتملة.
+    - **خيارات التحكم**: خيارات مباشرة للانضمام للاجتماع، إعادة الجدولة، الإلغاء، أو كتابة تقييم.
+- **إدارة الملف الشخصي**: قسم شامل للطلاب لإدارة البيانات الشخصية، التعليم، والمهارات.
+- **الإرشاد والتدريب**: تصفح المشرفين وفرص التدريب المتاحة.
+
+### نظام الثيمات (Theming)
+- **الوضع الداكن/الفاتح**: دعم كامل لتبديل الثيمات مع حفظ تفضيلات المستخدم.
+- **تنسيق موحد**: لوحات ألوان وأنماط مكونات متسقة عبر كلا الوضعين.
+
+### تعدد اللغات (i18n)
+- **دعم ثنائي اللغة**: دعم كامل للغتين العربية والإنجليزية.
+- **تخطيط RTL/LTR**: ضبط تلقائي لاتجاه الصفحة بناءً على اللغة المختارة.
+
+### المصادقة والأمان
+- **تسجيل دخول آمن**: التحقق من صحة النماذج والتعامل الآمن مع الرموز (Tokens).
+- **صلاحيات متعددة الأدوار**: مسارات وواجهات مخصصة لكل دور (طالب، شركة، مرشد).
+- **استعادة الحساب**: تدفق متكامل لاستعادة وتعيين كلمة المرور.
+
+---
+
+## التقنيات المستخدمة
+
+| التقنية | الغرض |
+| --- | --- |
+| **Next.js 14** | إطار العمل الأساسي باستخدام معمارية App Router. |
+| **React 18** | مكتبة بناء الواجهات التفاعلية. |
+| **TypeScript** | الكتابة الثابتة (Static Types) لتحسين جودة الكود والصيانة. |
+| **Bootstrap 5** | نظام الشبكة وفئات التصميم المساعدة. |
+| **CSS Modules** | تنسيق المكونات بشكل معزول. |
+| **Lucide React** | مجموعة أيقونات حديثة وخفيفة. |
+| **Axios** | عميل HTTP للتواصل مع الخوادم الخلفية. |
+
+---
+
+## التثبيت والتشغيل
+
+اتبع الخطوات التالية لتشغيل المشروع محلياً:
+
+1.  **نسخ المستودع**
+    ```bash
+    git clone https://github.com/omarsameh-in/proj-intership.git
+    cd proj-intership
+    ```
+
+2.  **تثبيت الحزم**
+    ```bash
+    npm install
+    ```
+
+3.  **تشغيل خادم التطوير**
+    ```bash
+    npm run dev
+    ```
+
+4.  **تصفح التطبيق**
+    افتح المتصفح وانتقل إلى الرابط `http://localhost:3000`
+
+---
+
+## النشر (Deployment)
+
+تم نشر التطبيق واستضافته على **Vercel**. يتم بناء ونشر التحديثات تلقائياً عند رفع التغييرات إلى الفرع الرئيسي (main branch).
+
+**[رابط المعاينة المباشرة](https://proj-intership-fux4o1e95-omars-projects-1e4409a8.vercel.app)**
+
+---
+
+## حقوق الملكية
+
+© 2024 منصة InternWay. جميع الحقوق محفوظة.
