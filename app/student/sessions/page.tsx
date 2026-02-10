@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
     Search,
     Calendar,
@@ -147,6 +148,7 @@ const mockSessions: Session[] = [
 
 export default function SessionsPage() {
     const { theme, toggleTheme, language, setLanguage, t } = useApp()
+    const router = useRouter()
     const [sessions, setSessions] = useState<Session[]>(mockSessions)
     const [showLanguageMenu, setShowLanguageMenu] = useState(false)
 
@@ -157,11 +159,14 @@ export default function SessionsPage() {
 
     return (
         <div className={styles.appLayout}>
+            <div className={styles.glow} aria-hidden="true" />
+            <div className={styles.glowSecondary} aria-hidden="true" />
+            <div className={styles.glowTertiary} aria-hidden="true" />
             {/* Sidebar */}
             <aside className={styles.sidebar}>
                 {/* Logo */}
                 <div className={styles.logoSection}>
-                    <div className={styles.backButton}>
+                    <div className={styles.backButton} onClick={() => router.push('/student/dashboard')} role="button" title="Back to Dashboard">
                         <ChevronLeft size={20} />
                     </div>
                     <div className={styles.logo}>

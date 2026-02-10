@@ -93,7 +93,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="d-flex min-vh-100">
+    <div className="d-flex min-vh-100 position-relative overflow-hidden">
+      <div className="login-glow" aria-hidden="true" />
+      <div className="login-glow-secondary" aria-hidden="true" />
+      <div className="login-glow-tertiary" aria-hidden="true" />
       {/* Left Panel (40%) */}
       <div className="left-panel d-flex flex-column align-items-center justify-content-center position-relative">
         {/* Back Arrow */}
@@ -102,17 +105,17 @@ export default function LoginPage() {
           className="position-absolute top-0 start-0 m-4 btn btn-link text-white text-decoration-none"
           title="Go back"
         >
-          <ArrowLeft size={24} style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
+          <ArrowLeft size={24} className={language === 'ar' ? 'rotate-180' : ''} />
         </Link>
 
         {/* Logo and Welcome Message */}
-        <div className="d-flex flex-column align-items-center gap-4 position-relative" style={{ zIndex: 1 }}>
+        <div className="d-flex flex-column align-items-center gap-4 position-relative z-index-1">
           <div className="logo-circle">IW</div>
           <div className="text-center">
             <h1 className="display-5 fw-bold text-white mb-3">
               {t.welcomeTitle}
             </h1>
-            <p className="text-white fs-5" style={{ opacity: 0.8 }}>
+            <p className="text-white fs-5 text-opacity-80">
               {t.welcomeSubtitle}
             </p>
           </div>
@@ -136,16 +139,16 @@ export default function LoginPage() {
                 className={`language-option ${language === 'en' ? 'active' : ''}`}
                 onClick={() => changeLanguage('en')}
               >
-                {language === 'en' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                {language !== 'en' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                {language === 'en' && <Check size={16} className="me-2 d-inline" />}
+                {language !== 'en' && <span className="me-2 empty-check-space"></span>}
                 English
               </div>
               <div
                 className={`language-option ${language === 'ar' ? 'active' : ''}`}
                 onClick={() => changeLanguage('ar')}
               >
-                {language === 'ar' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                {language !== 'ar' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                {language === 'ar' && <Check size={16} className="me-2 d-inline" />}
+                {language !== 'ar' && <span className="me-2 empty-check-space"></span>}
                 العربية
               </div>
             </div>
@@ -160,13 +163,13 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form Container */}
-        <div className="w-100" style={{ maxWidth: '28rem' }}>
+        <div className="w-100 max-w-28">
           {/* Title Section */}
           <div className="mb-4">
             <h1 className="h2 fw-bold text-white mb-2">
               {t.loginTitle}
             </h1>
-            <p className="small" style={{ color: 'var(--color-text-body)' }}>
+            <p className="small text-body-secondary">
               {t.loginSubtitle}
             </p>
           </div>

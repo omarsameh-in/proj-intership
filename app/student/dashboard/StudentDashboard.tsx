@@ -128,17 +128,17 @@ function StudentDashboard() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <div style={{ color: '#9ca3af' }}>Loading...</div>
+      <div className="flex-center min-vh-100">
+        <div className="text-gray-400">Loading...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div style={{ padding: '2rem', color: '#ef4444' }}>
+      <div className="p-4 text-red-500">
         {error}
-        <button onClick={fetchDashboardData} style={{ marginLeft: '1rem', padding: '0.5rem 1rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
+        <button onClick={fetchDashboardData} className="ms-10 px-4 py-2 bg-blue-500 text-white border-0 rounded-lg cursor-pointer" title="Retry">
           Retry
         </button>
       </div>
@@ -147,11 +147,14 @@ function StudentDashboard() {
 
   return (
     <div className={styles.appLayout}>
+      <div className={styles.glow} aria-hidden="true" />
+      <div className={styles.glowSecondary} aria-hidden="true" />
+      <div className={styles.glowTertiary} aria-hidden="true" />
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         {/* Logo Section */}
         <div className={styles.logoSection}>
-          <div className={styles.backButton} onClick={() => router.push('/')}>
+          <div className={styles.backButton} onClick={() => router.push('/')} role="button" title="Back to Home">
             <ChevronLeft size={20} />
           </div>
           <div className={styles.logo}>

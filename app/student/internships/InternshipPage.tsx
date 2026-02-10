@@ -132,23 +132,26 @@ function InternshipPage() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <div style={{ color: '#9ca3af' }}>Loading...</div>
+      <div className="flex-center min-vh-100">
+        <div className="text-gray-400">Loading...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div style={{ padding: '2rem', color: '#ef4444' }}>
+      <div className="p-4 text-red-500">
         {error}
-        <button onClick={fetchInternships} style={{ marginLeft: '1rem' }}>Retry</button>
+        <button onClick={fetchInternships} className="ms-10 px-4 py-2 bg-blue-500 text-white border-0 rounded-lg cursor-pointer" title="Retry">Retry</button>
       </div>
     )
   }
 
   return (
     <div className={styles.appLayout}>
+      <div className={styles.glow} aria-hidden="true" />
+      <div className={styles.glowSecondary} aria-hidden="true" />
+      <div className={styles.glowTertiary} aria-hidden="true" />
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.logoSection}>
@@ -230,6 +233,7 @@ function InternshipPage() {
                 type="text"
                 className={styles.searchInput}
                 placeholder={t.searchInternships}
+                title={t.searchInternships}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />

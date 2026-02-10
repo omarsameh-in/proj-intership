@@ -68,6 +68,9 @@ export default function LandingPage() {
 
   return (
     <>
+      <div className={styles.glow} aria-hidden="true" />
+      <div className={styles.glowSecondary} aria-hidden="true" />
+      <div className={styles.glowTertiary} aria-hidden="true" />
       <nav className={styles.nav} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className={styles.logo}>
           <div className={styles.logoIcon}>IW</div>
@@ -102,13 +105,12 @@ export default function LandingPage() {
             </a>
           </li>
         </ul>
-        <div className={styles.navActions} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className={styles.navActions}>
           <div className="position-relative">
             <button
               className={styles.iconBtn}
               onClick={() => setShowLanguageMenu(!showLanguageMenu)}
               title="Change Language"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <Globe size={20} />
             </button>
@@ -117,21 +119,21 @@ export default function LandingPage() {
                 className={`language-option ${language === 'en' ? 'active' : ''}`}
                 onClick={() => changeLanguage('en')}
               >
-                {language === 'en' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                {language !== 'en' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                {language === 'en' && <Check size={16} className="me-2 d-inline" />}
+                {language !== 'en' && <span className="me-2 empty-check-space"></span>}
                 English
               </div>
               <div
                 className={`language-option ${language === 'ar' ? 'active' : ''}`}
                 onClick={() => changeLanguage('ar')}
               >
-                {language === 'ar' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                {language !== 'ar' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                {language === 'ar' && <Check size={16} className="me-2 d-inline" />}
+                {language !== 'ar' && <span className="me-2 empty-check-space"></span>}
                 العربية
               </div>
             </div>
           </div>
-          <button className={styles.iconBtn} onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button className={styles.iconBtn} onClick={toggleTheme} title="Toggle Theme">
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           <button className={styles.loginBtn} onClick={handleLogin}>{t.login}</button>
@@ -145,7 +147,7 @@ export default function LandingPage() {
         <div className={styles.ctaButtons}>
           <button className={styles.btnPrimary} onClick={handleGetStarted}>
             {t.getStarted}
-            <span style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none', display: 'inline-block' }}>→</span>
+            <span className={language === 'ar' ? 'rotate-180 d-inline-block' : 'd-inline-block'}>→</span>
           </button>
           <button className={styles.btnSecondary} onClick={(e) => handleNavClick(e, 'features')}>
             {t.learnMore}
@@ -259,7 +261,7 @@ export default function LandingPage() {
           <p>{t.joinThousands}</p>
           <button className={`${styles.btnPrimary} ${styles.large}`} onClick={handleGetStarted}>
             {t.getStartedNow}
-            <span style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none', display: 'inline-block' }}>→</span>
+            <span className={language === 'ar' ? 'rotate-180 d-inline-block' : 'd-inline-block'}>→</span>
           </button>
         </div>
       </section>

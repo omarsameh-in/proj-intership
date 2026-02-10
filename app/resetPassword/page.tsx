@@ -184,16 +184,19 @@ function ResetPasswordContent() {
     }
 
     return (
-        <div className="d-flex min-vh-100">
+        <div className="d-flex min-vh-100 position-relative overflow-hidden">
+            <div className="login-glow" aria-hidden="true" />
+            <div className="login-glow-secondary" aria-hidden="true" />
+            <div className="login-glow-tertiary" aria-hidden="true" />
             {/* Left Panel */}
             <div className="left-panel d-flex flex-column align-items-center justify-content-center position-relative">
-                <div className="d-flex flex-column align-items-center gap-4 position-relative" style={{ zIndex: 1 }}>
+                <div className="d-flex flex-column align-items-center gap-4 position-relative z-index-1">
                     <div className="logo-circle">IW</div>
                     <div className="text-center">
                         <h1 className="display-5 fw-bold text-white mb-3">
                             Welcome to InternWay
                         </h1>
-                        <p className="text-white fs-5" style={{ opacity: 0.8 }}>
+                        <p className="text-white fs-5 text-opacity-80">
                             Your journey to the perfect internship starts here
                         </p>
                     </div>
@@ -217,16 +220,16 @@ function ResetPasswordContent() {
                                 className={`language-option ${language === 'en' ? 'active' : ''}`}
                                 onClick={() => changeLanguage('en')}
                             >
-                                {language === 'en' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                                {language !== 'en' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                                {language === 'en' && <Check size={16} className="me-2 d-inline" />}
+                                {language !== 'en' && <span className="me-2 empty-check-space"></span>}
                                 English
                             </div>
                             <div
                                 className={`language-option ${language === 'ar' ? 'active' : ''}`}
                                 onClick={() => changeLanguage('ar')}
                             >
-                                {language === 'ar' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                                {language !== 'ar' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                                {language === 'ar' && <Check size={16} className="me-2 d-inline" />}
+                                {language !== 'ar' && <span className="me-2 empty-check-space"></span>}
                                 العربية
                             </div>
                         </div>
@@ -240,7 +243,7 @@ function ResetPasswordContent() {
                     </button>
                 </div>
 
-                <div className="w-100" style={{ maxWidth: '28rem' }}>
+                <div className="w-100 max-w-28">
                     {!isSubmitted ? (
                         <>
                             {/* Title Section */}
@@ -281,8 +284,7 @@ function ResetPasswordContent() {
                                         <button
                                             type="button"
                                             onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="btn btn-link position-absolute end-0 top-50 translate-middle-y text-secondary"
-                                            style={{ zIndex: 10 }}
+                                            className="btn btn-link position-absolute end-0 top-50 translate-middle-y text-secondary z-index-10"
                                         >
                                             {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                         </button>
@@ -307,8 +309,7 @@ function ResetPasswordContent() {
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="btn btn-link position-absolute end-0 top-50 translate-middle-y text-secondary"
-                                            style={{ zIndex: 10 }}
+                                            className="btn btn-link position-absolute end-0 top-50 translate-middle-y text-secondary z-index-10"
                                         >
                                             {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                         </button>

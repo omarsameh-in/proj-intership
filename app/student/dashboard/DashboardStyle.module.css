@@ -4,20 +4,63 @@
 .appLayout {
     display: flex;
     min-height: 100vh;
-    background-color: #0f172a;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+    border-radius: 50%;
+    top: -150px;
+    right: -100px;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+}
+
+.glowSecondary {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0) 70%);
+    border-radius: 50%;
+    bottom: 5%;
+    left: 10%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(70px);
+}
+
+.glowTertiary {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%);
+    border-radius: 50%;
+    top: 30%;
+    left: -100px;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(60px);
 }
 
 /* Sidebar */
 .sidebar {
     width: 260px;
-    background-color: #1a1f2e;
+    background-color: rgba(15, 23, 42, 0.8);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     min-height: 100vh;
     position: fixed;
     left: 0;
     top: 0;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #2d3548;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
     z-index: 100;
 }
 
@@ -113,7 +156,7 @@
     margin-left: 260px;
     flex: 1;
     min-height: 100vh;
-    background-color: #0f172a;
+    background-color: transparent;
     padding: 2rem;
 }
 
@@ -211,18 +254,24 @@
 }
 
 .statCard {
-    background: #1a1f2e;
-    border: 1px solid #2d3548;
-    border-radius: 0.75rem;
+    background: rgba(15, 23, 42, 0.4);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
     padding: 1.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 10;
 }
 
 .statCard:hover {
-    border-color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+    background: rgba(15, 23, 42, 0.8);
 }
 
 .statIcon {
@@ -273,15 +322,17 @@
 }
 
 .card {
-    background: #1a1f2e;
-    border: 1px solid #2d3548;
-    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 1rem;
     padding: 1.5rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .card:hover {
-    border-color: #3b82f6;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
 }
 
 .cardContent {
@@ -320,20 +371,22 @@
 }
 
 .mentorCard {
-    background: #1a1f2e;
-    border: 1px solid #2d3548;
-    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 1.25rem;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 1rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .mentorCard:hover {
-    border-color: #3b82f6;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
 }
 
 .mentorAvatar {

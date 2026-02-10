@@ -169,9 +169,12 @@ function MentorshipsPage() {
 
     return (
         <div className={styles.appLayout}>
+            <div className={styles.glow} aria-hidden="true" />
+            <div className={styles.glowSecondary} aria-hidden="true" />
+            <div className={styles.glowTertiary} aria-hidden="true" />
             <aside className={styles.sidebar}>
                 <div className={styles.logoSection}>
-                    <div className={styles.backButton} onClick={() => router.push('/student/dashboard')}>
+                    <div className={styles.backButton} onClick={() => router.push('/student/dashboard')} role="button" title="Back to Dashboard">
                         <ChevronLeft size={20} />
                     </div>
                     <div className={styles.logo}>

@@ -88,8 +88,11 @@ export default function MentorSignupPage() {
 
     return (
         <div className={styles.formContainer} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            <button type="button" className={styles.backArrow} onClick={() => router.back()}>
-                <FontAwesomeIcon icon={faArrowLeft} style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
+            <div className={styles.glow} aria-hidden="true" />
+            <div className={styles.glowSecondary} aria-hidden="true" />
+            <div className={styles.glowTertiary} aria-hidden="true" />
+            <button type="button" className={styles.backArrow} onClick={() => router.back()} title={language === 'ar' ? 'العودة' : 'Back'}>
+                <FontAwesomeIcon icon={faArrowLeft} className={language === 'ar' ? styles.rotate180 : ''} />
             </button>
 
             <div className={styles.themeToggle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -97,7 +100,8 @@ export default function MentorSignupPage() {
                     <button
                         type="button"
                         onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem' }}
+                        className={styles.iconToggleBtn}
+                        title={language === 'ar' ? 'تغيير اللغة' : 'Change Language'}
                     >
                         <Globe size={18} />
                     </button>
@@ -120,7 +124,12 @@ export default function MentorSignupPage() {
                         </div>
                     </div>
                 </div>
-                <button onClick={toggleTheme} type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem' }}>
+                <button
+                    onClick={toggleTheme}
+                    type="button"
+                    className={styles.iconToggleBtn}
+                    title={language === 'ar' ? 'تبديل المظهر' : 'Toggle Theme'}
+                >
                     {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
             </div>
@@ -135,22 +144,24 @@ export default function MentorSignupPage() {
                     <label>{t.fullName}</label>
                     <FontAwesomeIcon icon={faUser} className={styles.inputIcon} />
                     <input
-                        type="text" name="fullName" placeholder=""
+                        type="text" name="fullName" placeholder={t.fullName}
+                        title={t.fullName}
                         value={formData.fullName} onChange={handleChange}
-                        style={errors.fullName ? { borderColor: '#ef4444' } : {}}
+                        className={errors.fullName ? styles.inputError : ''}
                     />
-                    {errors.fullName && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.fullName}</span>}
+                    {errors.fullName && <span className={styles.errorText}>{errors.fullName}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.emailLabel}</label>
                     <FontAwesomeIcon icon={faEnvelope} className={styles.inputIcon} />
                     <input
-                        type="email" name="email" placeholder=""
+                        type="email" name="email" placeholder={t.emailLabel}
+                        title={t.emailLabel}
                         value={formData.email} onChange={handleChange}
-                        style={errors.email ? { borderColor: '#ef4444' } : {}}
+                        className={errors.email ? styles.inputError : ''}
                     />
-                    {errors.email && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.email}</span>}
+                    {errors.email && <span className={styles.errorText}>{errors.email}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -158,10 +169,11 @@ export default function MentorSignupPage() {
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="password" placeholder="••••••••"
+                        title={t.passwordLabel}
                         value={formData.password} onChange={handleChange}
-                        style={errors.password ? { borderColor: '#ef4444' } : {}}
+                        className={errors.password ? styles.inputError : ''}
                     />
-                    {errors.password && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.password}</span>}
+                    {errors.password && <span className={styles.errorText}>{errors.password}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -169,43 +181,47 @@ export default function MentorSignupPage() {
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="confirmPassword" placeholder="••••••••"
+                        title={t.confirmPassword}
                         value={formData.confirmPassword} onChange={handleChange}
-                        style={errors.confirmPassword ? { borderColor: '#ef4444' } : {}}
+                        className={errors.confirmPassword ? styles.inputError : ''}
                     />
-                    {errors.confirmPassword && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.confirmPassword}</span>}
+                    {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.expertise}</label>
                     <FontAwesomeIcon icon={faStar} className={styles.inputIcon} />
                     <input
-                        type="text" name="expertise" placeholder=""
+                        type="text" name="expertise" placeholder={t.expertise}
+                        title={t.expertise}
                         value={formData.expertise} onChange={handleChange}
-                        style={errors.expertise ? { borderColor: '#ef4444' } : {}}
+                        className={errors.expertise ? styles.inputError : ''}
                     />
-                    {errors.expertise && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.expertise}</span>}
+                    {errors.expertise && <span className={styles.errorText}>{errors.expertise}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.yearsExperience}</label>
                     <FontAwesomeIcon icon={faBriefcase} className={styles.inputIcon} />
                     <input
-                        type="number" name="yearsExperience" placeholder="" min="0"
+                        type="number" name="yearsExperience" placeholder={t.yearsExperience} min="0"
+                        title={t.yearsExperience}
                         value={formData.yearsExperience} onChange={handleChange}
-                        style={errors.yearsExperience ? { borderColor: '#ef4444' } : {}}
+                        className={errors.yearsExperience ? styles.inputError : ''}
                     />
-                    {errors.yearsExperience && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.yearsExperience}</span>}
+                    {errors.yearsExperience && <span className={styles.errorText}>{errors.yearsExperience}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.jobTitle}</label>
                     <FontAwesomeIcon icon={faAddressCard} className={styles.inputIcon} />
                     <input
-                        type="text" name="jobTitle" placeholder=""
+                        type="text" name="jobTitle" placeholder={t.jobTitle}
+                        title={t.jobTitle}
                         value={formData.jobTitle} onChange={handleChange}
-                        style={errors.jobTitle ? { borderColor: '#ef4444' } : {}}
+                        className={errors.jobTitle ? styles.inputError : ''}
                     />
-                    {errors.jobTitle && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.jobTitle}</span>}
+                    {errors.jobTitle && <span className={styles.errorText}>{errors.jobTitle}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -213,10 +229,11 @@ export default function MentorSignupPage() {
                     <FontAwesomeIcon icon={faLink} className={styles.inputIcon} />
                     <input
                         type="url" name="linkedin" placeholder="https://linkedin.com/in/..."
+                        title={t.linkedin}
                         value={formData.linkedin} onChange={handleChange}
-                        style={errors.linkedin ? { borderColor: '#ef4444' } : {}}
+                        className={errors.linkedin ? styles.inputError : ''}
                     />
-                    {errors.linkedin && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.linkedin}</span>}
+                    {errors.linkedin && <span className={styles.errorText}>{errors.linkedin}</span>}
                 </div>
 
                 <div className={styles.buttonGroup}>

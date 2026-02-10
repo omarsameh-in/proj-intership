@@ -127,23 +127,26 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="d-flex min-vh-100">
+        <div className="d-flex min-vh-100 position-relative overflow-hidden">
+            <div className="login-glow" aria-hidden="true" />
+            <div className="login-glow-secondary" aria-hidden="true" />
+            <div className="login-glow-tertiary" aria-hidden="true" />
             {/* Left Panel */}
             <div className="left-panel d-flex flex-column align-items-center justify-content-center position-relative">
                 <Link
                     href="/login"
                     className="position-absolute top-0 start-0 m-4 btn btn-link text-white text-decoration-none"
                 >
-                    <ArrowLeft size={24} />
+                    <ArrowLeft size={24} className={language === 'ar' ? 'rotate-180' : ''} />
                 </Link>
 
-                <div className="d-flex flex-column align-items-center gap-4 position-relative" style={{ zIndex: 1 }}>
+                <div className="d-flex flex-column align-items-center gap-4 position-relative z-index-1">
                     <div className="logo-circle">IW</div>
                     <div className="text-center">
                         <h1 className="display-5 fw-bold text-white mb-3">
                             Welcome to InternWay
                         </h1>
-                        <p className="text-white fs-5" style={{ opacity: 0.8 }}>
+                        <p className="text-white fs-5 text-opacity-80">
                             Your journey to the perfect internship starts here
                         </p>
                     </div>
@@ -167,16 +170,16 @@ export default function ForgotPasswordPage() {
                                 className={`language-option ${language === 'en' ? 'active' : ''}`}
                                 onClick={() => changeLanguage('en')}
                             >
-                                {language === 'en' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                                {language !== 'en' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                                {language === 'en' && <Check size={16} className="me-2 d-inline" />}
+                                {language !== 'en' && <span className="me-2 empty-check-space"></span>}
                                 English
                             </div>
                             <div
                                 className={`language-option ${language === 'ar' ? 'active' : ''}`}
                                 onClick={() => changeLanguage('ar')}
                             >
-                                {language === 'ar' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                                {language !== 'ar' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                                {language === 'ar' && <Check size={16} className="me-2 d-inline" />}
+                                {language !== 'ar' && <span className="me-2 empty-check-space"></span>}
                                 العربية
                             </div>
                         </div>
@@ -190,7 +193,7 @@ export default function ForgotPasswordPage() {
                     </button>
                 </div>
 
-                <div className="w-100" style={{ maxWidth: '28rem' }}>
+                <div className="w-100 max-w-28">
                     {!isSubmitted ? (
                         <>
                             {/* Title Section */}
@@ -198,7 +201,7 @@ export default function ForgotPasswordPage() {
                                 <h1 className="h2 fw-bold text-white mb-2">
                                     {t.title}
                                 </h1>
-                                <p className="small" style={{ color: 'var(--color-text-body)' }}>
+                                <p className="small text-body-secondary">
                                     {t.subtitle}
                                 </p>
                             </div>
@@ -258,7 +261,7 @@ export default function ForgotPasswordPage() {
                                     <h1 className="h2 fw-bold text-white mb-2">
                                         {t.successTitle}
                                     </h1>
-                                    <p style={{ color: 'var(--color-text-body)' }}>
+                                    <p className="text-body-secondary">
                                         {t.successMessage}
                                     </p>
                                 </div>

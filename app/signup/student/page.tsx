@@ -97,8 +97,11 @@ export default function StudentSignupPage() {
 
     return (
         <div className={styles.formContainer} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            <button type="button" className={styles.backArrow} onClick={() => router.back()}>
-                <FontAwesomeIcon icon={faArrowLeft} style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
+            <div className={styles.glow} aria-hidden="true" />
+            <div className={styles.glowSecondary} aria-hidden="true" />
+            <div className={styles.glowTertiary} aria-hidden="true" />
+            <button type="button" className={styles.backArrow} onClick={() => router.back()} title={language === 'ar' ? 'العودة' : 'Back'}>
+                <FontAwesomeIcon icon={faArrowLeft} className={language === 'ar' ? styles.rotate180 : ''} />
             </button>
 
             <div className={styles.themeToggle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -106,7 +109,8 @@ export default function StudentSignupPage() {
                     <button
                         type="button"
                         onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem' }}
+                        className={styles.iconToggleBtn}
+                        title={language === 'ar' ? 'تغيير اللغة' : 'Change Language'}
                     >
                         <Globe size={18} />
                     </button>
@@ -129,7 +133,12 @@ export default function StudentSignupPage() {
                         </div>
                     </div>
                 </div>
-                <button onClick={toggleTheme} type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem' }}>
+                <button
+                    onClick={toggleTheme}
+                    type="button"
+                    className={styles.iconToggleBtn}
+                    title={language === 'ar' ? 'تبديل المظهر' : 'Toggle Theme'}
+                >
                     {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
             </div>
@@ -144,22 +153,24 @@ export default function StudentSignupPage() {
                     <label>{t.fullName}</label>
                     <FontAwesomeIcon icon={faUser} className={styles.inputIcon} />
                     <input
-                        type="text" name="fullName" placeholder=""
+                        type="text" name="fullName" placeholder={t.fullName}
+                        title={t.fullName}
                         value={formData.fullName} onChange={handleChange}
-                        style={errors.fullName ? { borderColor: '#ef4444' } : {}}
+                        className={errors.fullName ? styles.inputError : ''}
                     />
-                    {errors.fullName && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.fullName}</span>}
+                    {errors.fullName && <span className={styles.errorText}>{errors.fullName}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.emailLabel}</label>
                     <FontAwesomeIcon icon={faEnvelope} className={styles.inputIcon} />
                     <input
-                        type="email" name="email" placeholder=""
+                        type="email" name="email" placeholder={t.emailLabel}
+                        title={t.emailLabel}
                         value={formData.email} onChange={handleChange}
-                        style={errors.email ? { borderColor: '#ef4444' } : {}}
+                        className={errors.email ? styles.inputError : ''}
                     />
-                    {errors.email && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.email}</span>}
+                    {errors.email && <span className={styles.errorText}>{errors.email}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -167,10 +178,11 @@ export default function StudentSignupPage() {
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="password" placeholder="••••••••"
+                        title={t.passwordLabel}
                         value={formData.password} onChange={handleChange}
-                        style={errors.password ? { borderColor: '#ef4444' } : {}}
+                        className={errors.password ? styles.inputError : ''}
                     />
-                    {errors.password && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.password}</span>}
+                    {errors.password && <span className={styles.errorText}>{errors.password}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -178,39 +190,43 @@ export default function StudentSignupPage() {
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="confirmPassword" placeholder="••••••••"
+                        title={t.confirmPassword}
                         value={formData.confirmPassword} onChange={handleChange}
-                        style={errors.confirmPassword ? { borderColor: '#ef4444' } : {}}
+                        className={errors.confirmPassword ? styles.inputError : ''}
                     />
-                    {errors.confirmPassword && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.confirmPassword}</span>}
+                    {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.university}</label>
                     <FontAwesomeIcon icon={faUniversity} className={styles.inputIcon} />
                     <input
-                        type="text" name="university" placeholder=""
+                        type="text" name="university" placeholder={t.university}
+                        title={t.university}
                         value={formData.university} onChange={handleChange}
-                        style={errors.university ? { borderColor: '#ef4444' } : {}}
+                        className={errors.university ? styles.inputError : ''}
                     />
-                    {errors.university && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.university}</span>}
+                    {errors.university && <span className={styles.errorText}>{errors.university}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.college}</label>
                     <FontAwesomeIcon icon={faGraduationCap} className={styles.inputIcon} />
                     <input
-                        type="text" name="college" placeholder=""
+                        type="text" name="college" placeholder={t.college}
+                        title={t.college}
                         value={formData.college} onChange={handleChange}
-                        style={errors.college ? { borderColor: '#ef4444' } : {}}
+                        className={errors.college ? styles.inputError : ''}
                     />
-                    {errors.college && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.college}</span>}
+                    {errors.college && <span className={styles.errorText}>{errors.college}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.degree}</label>
                     <FontAwesomeIcon icon={faGraduationCap} className={styles.inputIcon} />
                     <input
-                        type="text" name="degree" placeholder=""
+                        type="text" name="degree" placeholder={t.degree}
+                        title={t.degree}
                         value={formData.degree} onChange={handleChange}
                     />
                 </div>
@@ -219,18 +235,20 @@ export default function StudentSignupPage() {
                     <label>{t.major}</label>
                     <FontAwesomeIcon icon={faBook} className={styles.inputIcon} />
                     <input
-                        type="text" name="major" placeholder=""
+                        type="text" name="major" placeholder={t.major}
+                        title={t.major}
                         value={formData.major} onChange={handleChange}
-                        style={errors.major ? { borderColor: '#ef4444' } : {}}
+                        className={errors.major ? styles.inputError : ''}
                     />
-                    {errors.major && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.major}</span>}
+                    {errors.major && <span className={styles.errorText}>{errors.major}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.gradYear}</label>
                     <FontAwesomeIcon icon={faCalendarDays} className={styles.inputIcon} />
                     <input
-                        type="text" name="gradYear" placeholder=""
+                        type="text" name="gradYear" placeholder={t.gradYear}
+                        title={t.gradYear}
                         value={formData.gradYear} onChange={handleChange}
                     />
                 </div>
@@ -249,9 +267,10 @@ export default function StudentSignupPage() {
                             type="file" name="cvFile" accept=".pdf,.doc,.docx"
                             onChange={handleChange}
                             style={{ display: 'none' }}
+                            title={t.uploadCv}
                         />
                     </div>
-                    {errors.cvFile && <span style={{ color: '#ef4444', fontSize: '12px', display: 'block', marginTop: '5px' }}>{errors.cvFile}</span>}
+                    {errors.cvFile && <span className={styles.errorText} style={{ display: 'block', marginTop: '5px' }}>{errors.cvFile}</span>}
                 </div>
 
                 <div className={styles.buttonGroup}>

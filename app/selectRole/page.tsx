@@ -38,19 +38,22 @@ export default function SelectRolePage() {
 
     return (
         <div className={styles.signupContainer} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <div className={styles.glow} aria-hidden="true" />
+            <div className={styles.glowSecondary} aria-hidden="true" />
+            <div className={styles.glowTertiary} aria-hidden="true" />
 
             <div className={styles.backArrow} onClick={() => router.push('/')}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={language === 'ar' ? 'rotate-180' : ''}>
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
             </div>
 
             <div className={styles.card}>
                 <header className={styles.cardHeader}>
-                    <div className={styles.topIcons} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div className={styles.topIcons}>
                         <div className="position-relative">
                             <button
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                className="icon-toggle-btn"
                                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
                                 title="Change Language"
                             >
@@ -61,21 +64,21 @@ export default function SelectRolePage() {
                                     className={`language-option ${language === 'en' ? 'active' : ''}`}
                                     onClick={() => changeLanguage('en')}
                                 >
-                                    {language === 'en' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                                    {language !== 'en' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                                    {language === 'en' && <Check size={16} className="me-2 d-inline" />}
+                                    {language !== 'en' && <span className="me-2 empty-check-space"></span>}
                                     English
                                 </div>
                                 <div
                                     className={`language-option ${language === 'ar' ? 'active' : ''}`}
                                     onClick={() => changeLanguage('ar')}
                                 >
-                                    {language === 'ar' && <Check size={16} className="me-2" style={{ display: 'inline' }} />}
-                                    {language !== 'ar' && <span className="me-2" style={{ width: '16px', display: 'inline-block' }}></span>}
+                                    {language === 'ar' && <Check size={16} className="me-2 d-inline" />}
+                                    {language !== 'ar' && <span className="me-2 empty-check-space"></span>}
                                     العربية
                                 </div>
                             </div>
                         </div>
-                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={toggleTheme}>
+                        <button className="icon-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                         </button>
                     </div>
@@ -140,7 +143,7 @@ export default function SelectRolePage() {
                 </div>
 
                 <button className={styles.continueBtn} onClick={handleContinue}>
-                    {t.continue} <FontAwesomeIcon icon={faArrowRight} style={{ marginLeft: '10px', transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
+                    {t.continue} <FontAwesomeIcon icon={faArrowRight} className={language === 'ar' ? 'ms-10 rotate-180' : 'ms-10'} />
                 </button>
             </div>
         </div>

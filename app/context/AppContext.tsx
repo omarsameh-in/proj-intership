@@ -22,11 +22,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Load saved preferences
-        const savedTheme = localStorage.getItem('theme') as Theme
-        const savedLanguage = localStorage.getItem('language') as Language
+        if (typeof window !== 'undefined') {
+            const savedTheme = localStorage.getItem('theme') as Theme
+            const savedLanguage = localStorage.getItem('language') as Language
 
-        if (savedTheme) setTheme(savedTheme)
-        if (savedLanguage) setLanguage(savedLanguage)
+            if (savedTheme) setTheme(savedTheme)
+            if (savedLanguage) setLanguage(savedLanguage)
+        }
         setMounted(true)
     }, [])
 
@@ -40,12 +42,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         } else {
             document.body.classList.remove('light-mode')
         }
-        localStorage.setItem('theme', theme)
-
+        
         // Apply language
         document.documentElement.setAttribute('dir', language === 'ar' ? 'rtl' : 'ltr')
         document.documentElement.setAttribute('lang', language)
-        localStorage.setItem('language', language)
+        
+        // Save to localStorage only on client
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('theme', theme)
+            localStorage.setItem('language', language)
+        }
     }, [theme, language, mounted])
 
     const toggleTheme = () => {

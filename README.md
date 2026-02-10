@@ -193,4 +193,4 @@ The application is deployed and hosted on Vercel. Feature updates are automatica
 
 ## حقوق الملكية
 
-© 2024 منصة InternWay. جميع الحقوق محفوظة.
+© 2026 منصة InternWay. جميع الحقوق محفوظة.

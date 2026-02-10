@@ -22,6 +22,11 @@ export default function RootLayout({
       </head>
       <body>
         <AppProvider>
+          <div className="global-glow-container" aria-hidden="true">
+            <div className="glow-1"></div>
+            <div className="glow-2"></div>
+            <div className="glow-3"></div>
+          </div>
           {children}
         </AppProvider>
       </body>

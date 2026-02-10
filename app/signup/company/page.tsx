@@ -84,8 +84,11 @@ export default function CompanySignupPage() {
 
     return (
         <div className={styles.formContainer} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            <button type="button" className={styles.backArrow} onClick={() => router.back()}>
-                <FontAwesomeIcon icon={faArrowLeft} style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
+            <div className={styles.glow} aria-hidden="true" />
+            <div className={styles.glowSecondary} aria-hidden="true" />
+            <div className={styles.glowTertiary} aria-hidden="true" />
+            <button type="button" className={styles.backArrow} onClick={() => router.back()} title={language === 'ar' ? 'العودة' : 'Back'}>
+                <FontAwesomeIcon icon={faArrowLeft} className={language === 'ar' ? styles.rotate180 : ''} />
             </button>
 
             <div className={styles.themeToggle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -93,7 +96,8 @@ export default function CompanySignupPage() {
                     <button
                         type="button"
                         onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem' }}
+                        className={styles.iconToggleBtn}
+                        title={language === 'ar' ? 'تغيير اللغة' : 'Change Language'}
                     >
                         <Globe size={18} />
                     </button>
@@ -116,7 +120,12 @@ export default function CompanySignupPage() {
                         </div>
                     </div>
                 </div>
-                <button onClick={toggleTheme} type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem' }}>
+                <button
+                    onClick={toggleTheme}
+                    type="button"
+                    className={styles.iconToggleBtn}
+                    title={language === 'ar' ? 'تبديل المظهر' : 'Toggle Theme'}
+                >
                     {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
             </div>
@@ -131,22 +140,24 @@ export default function CompanySignupPage() {
                     <label>{t.workEmail}</label>
                     <FontAwesomeIcon icon={faEnvelope} className={styles.inputIcon} />
                     <input
-                        type="email" name="email" placeholder=""
+                        type="email" name="email" placeholder={t.workEmail}
+                        title={t.workEmail}
                         value={formData.email} onChange={handleChange}
-                        style={errors.email ? { borderColor: '#ef4444' } : {}}
+                        className={errors.email ? styles.inputError : ''}
                     />
-                    {errors.email && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.email}</span>}
+                    {errors.email && <span className={styles.errorText}>{errors.email}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.companyName}</label>
                     <FontAwesomeIcon icon={faBuilding} className={styles.inputIcon} />
                     <input
-                        type="text" name="companyName" placeholder=""
+                        type="text" name="companyName" placeholder={t.companyName}
+                        title={t.companyName}
                         value={formData.companyName} onChange={handleChange}
-                        style={errors.companyName ? { borderColor: '#ef4444' } : {}}
+                        className={errors.companyName ? styles.inputError : ''}
                     />
-                    {errors.companyName && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.companyName}</span>}
+                    {errors.companyName && <span className={styles.errorText}>{errors.companyName}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -154,10 +165,11 @@ export default function CompanySignupPage() {
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="password" placeholder="••••••••"
+                        title={t.passwordLabel}
                         value={formData.password} onChange={handleChange}
-                        style={errors.password ? { borderColor: '#ef4444' } : {}}
+                        className={errors.password ? styles.inputError : ''}
                     />
-                    {errors.password && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.password}</span>}
+                    {errors.password && <span className={styles.errorText}>{errors.password}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -165,32 +177,35 @@ export default function CompanySignupPage() {
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="confirmPassword" placeholder="••••••••"
+                        title={t.confirmPassword}
                         value={formData.confirmPassword} onChange={handleChange}
-                        style={errors.confirmPassword ? { borderColor: '#ef4444' } : {}}
+                        className={errors.confirmPassword ? styles.inputError : ''}
                     />
-                    {errors.confirmPassword && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.confirmPassword}</span>}
+                    {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.industry}</label>
                     <FontAwesomeIcon icon={faBriefcase} className={styles.inputIcon} />
                     <input
-                        type="text" name="industry" placeholder=""
+                        type="text" name="industry" placeholder={t.industry}
+                        title={t.industry}
                         value={formData.industry} onChange={handleChange}
-                        style={errors.industry ? { borderColor: '#ef4444' } : {}}
+                        className={errors.industry ? styles.inputError : ''}
                     />
-                    {errors.industry && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.industry}</span>}
+                    {errors.industry && <span className={styles.errorText}>{errors.industry}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label>{t.location}</label>
                     <FontAwesomeIcon icon={faMapMarkerAlt} className={styles.inputIcon} />
                     <input
-                        type="text" name="location" placeholder=""
+                        type="text" name="location" placeholder={t.location}
+                        title={t.location}
                         value={formData.location} onChange={handleChange}
-                        style={errors.location ? { borderColor: '#ef4444' } : {}}
+                        className={errors.location ? styles.inputError : ''}
                     />
-                    {errors.location && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.location}</span>}
+                    {errors.location && <span className={styles.errorText}>{errors.location}</span>}
                 </div>
 
                 <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
@@ -198,17 +213,19 @@ export default function CompanySignupPage() {
                     <FontAwesomeIcon icon={faLink} className={styles.inputIcon} />
                     <input
                         type="url" name="webSite" placeholder="https://www.company.com"
+                        title={t.website}
                         value={formData.webSite} onChange={handleChange}
-                        style={errors.webSite ? { borderColor: '#ef4444' } : {}}
+                        className={errors.webSite ? styles.inputError : ''}
                     />
-                    {errors.webSite && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.webSite}</span>}
+                    {errors.webSite && <span className={styles.errorText}>{errors.webSite}</span>}
                 </div>
 
                 <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
                     <label className={styles.optional}>{t.address}</label>
                     <FontAwesomeIcon icon={faLocationArrow} className={styles.inputIcon} />
                     <input
-                        type="text" name="address" placeholder=""
+                        type="text" name="address" placeholder={t.address}
+                        title={t.address}
                         value={formData.address} onChange={handleChange}
                     />
                 </div>
@@ -218,12 +235,13 @@ export default function CompanySignupPage() {
                     <textarea
                         name="description"
                         placeholder={t.companyPlaceholder}
+                        title={t.companyOverview}
                         value={formData.description}
                         onChange={handleChange}
-                        style={errors.description ? { borderColor: '#ef4444' } : {}}
+                        className={errors.description ? styles.inputError : ''}
                     ></textarea>
                     <div className={styles.charCount}>{formData.description.length} chars</div>
-                    {errors.description && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.description}</span>}
+                    {errors.description && <span className={styles.errorText}>{errors.description}</span>}
                 </div>
 
                 <div className={styles.buttonGroup}>
