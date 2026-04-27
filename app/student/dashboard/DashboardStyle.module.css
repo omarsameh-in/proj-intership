@@ -242,15 +242,29 @@
 }
 
 .statIcon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    background: rgba(59, 130, 246, 0.15);
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #3b82f6;
     flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.blueIcon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.purpleIcon {
+    background: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
+}
+
+.orangeIcon {
+    background: rgba(249, 115, 22, 0.1);
+    color: #f97316;
 }
 
 .statInfo {

@@ -16,7 +16,8 @@ import {
   Bell,
   LogOut,
   Check,
-  Star
+  Star,
+  Calendar
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import styles from './DashboardStyle.module.css'
@@ -239,7 +240,7 @@ function StudentDashboard() {
         {/* Stats Cards */}
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>
+            <div className={`${styles.statIcon} ${styles.blueIcon}`}>
               <Briefcase size={24} />
             </div>
             <div className={styles.statInfo}>
@@ -249,8 +250,8 @@ function StudentDashboard() {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>
-              <Video size={24} />
+            <div className={`${styles.statIcon} ${styles.purpleIcon}`}>
+              <Calendar size={24} />
             </div>
             <div className={styles.statInfo}>
               <div className={styles.statLabel}>{t.sessionsBooked}</div>
@@ -259,7 +260,7 @@ function StudentDashboard() {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>
+            <div className={`${styles.statIcon} ${styles.orangeIcon}`}>
               <Star size={24} />
             </div>
             <div className={styles.statInfo}>

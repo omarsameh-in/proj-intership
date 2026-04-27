@@ -206,6 +206,10 @@
     color: white;
 }
 
+.languageWrapper {
+    position: relative;
+}
+
 /* language menu moved to global */
 
 /* Stats Grid */

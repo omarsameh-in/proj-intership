@@ -208,6 +208,10 @@
     color: white;
 }
 
+.languageWrapper {
+    position: relative;
+}
+
 /* languageMenu and languageOption moved to globalStyles.css */
 
 /* Search Section */
