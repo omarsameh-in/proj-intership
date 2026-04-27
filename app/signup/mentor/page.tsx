@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
     faArrowLeft, faUser, faEnvelope, faLock,
-    faBriefcase, faStar, faLink, faAddressCard
+    faBriefcase, faStar, faLink, faAddressCard, faPhone, faCloudArrowUp
 } from '@fortawesome/free-solid-svg-icons'
 import { Globe, Moon, Sun, Check } from 'lucide-react'
 import styles from '../signup.module.css'
@@ -19,7 +19,7 @@ export default function MentorSignupPage() {
     const [showLanguageMenu, setShowLanguageMenu] = useState(false)
     const [formData, setFormData] = useState({
         fullName: '', email: '', password: '', confirmPassword: '',
-        expertise: '', yearsExperience: '', jobTitle: '', linkedin: ''
+        yearsExperience: '', jobTitle: '', linkedin: '', phoneNumber: '', cvFile: null as File | null
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(false)
@@ -30,35 +30,48 @@ export default function MentorSignupPage() {
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData({ ...formData, [name]: value })
-        if (errors[name]) setErrors({ ...errors, [name]: '' })
+        const { name, value, files } = e.target
+        if (name === 'cvFile' && files) {
+            setFormData({ ...formData, cvFile: files[0] })
+            if (errors.cvFile) setErrors({ ...errors, cvFile: '' })
+        } else {
+            setFormData({ ...formData, [name]: value })
+            if (errors[name]) setErrors({ ...errors, [name]: '' })
+        }
     }
 
     const validateForm = () => {
         let newErrors: Record<string, string> = {}
-        if (!formData.fullName.trim()) newErrors.fullName = "Required"
+        if (!formData.fullName.trim()) newErrors.fullName = t.fullNameRequired
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!formData.email) newErrors.email = "Required"
+        if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
 
-        if (formData.password.length < 8) newErrors.password = "Min 8 chars"
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
-
-        if (!formData.expertise.trim()) newErrors.expertise = "Required"
+        
+        const phoneRegex = /^\+?[0-9]{7,15}$/
+        if (!formData.phoneNumber.trim()) {
+            newErrors.phoneNumber = t.phoneRequired
+        } else if (!phoneRegex.test(formData.phoneNumber.trim())) {
+            newErrors.phoneNumber = "Invalid format (e.g. +20...)"
+        }
+        
 
         if (!formData.yearsExperience) {
-            newErrors.yearsExperience = "Required"
+            newErrors.yearsExperience = t.yearsExperienceRequired
         } else if (parseInt(formData.yearsExperience) < 0) {
             newErrors.yearsExperience = "Invalid"
         }
 
-        if (!formData.jobTitle.trim()) newErrors.jobTitle = "Required"
+        if (!formData.jobTitle.trim()) newErrors.jobTitle = t.jobTitleRequired
 
         if (formData.linkedin && !formData.linkedin.startsWith('http')) {
             newErrors.linkedin = "Start with http"
         }
+
+        if (formData.cvFile && formData.cvFile.size > 5 * 1024 * 1024) newErrors.cvFile = "Max 5MB"
+        if (!formData.cvFile) newErrors.cvFile = t.cvRequired
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
@@ -69,10 +82,27 @@ export default function MentorSignupPage() {
         if (validateForm()) {
             setLoading(true)
             try {
-                // Remove confirmPassword before sending
-                const { confirmPassword, ...payload } = formData
+                const payload = new FormData()
 
-                await api.post('/auth/register/mentor', payload)
+                // Append all fields
+                payload.append('fullName', formData.fullName)
+                payload.append('email', formData.email)
+                payload.append('password', formData.password)
+                payload.append('yearsExperience', formData.yearsExperience)
+                payload.append('jobTitle', formData.jobTitle)
+                if (formData.linkedin) {
+                    payload.append('linkedin', formData.linkedin)
+                }
+                if (formData.phoneNumber) {
+                    payload.append('phoneNumber', formData.phoneNumber)
+                }
+                if (formData.cvFile) {
+                    payload.append('cvFile', formData.cvFile)
+                }
+
+                await api.post('/auth/register/mentor', payload, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                })
 
                 alert("Account Created Successfully!")
                 router.push('/login')
@@ -141,7 +171,7 @@ export default function MentorSignupPage() {
 
             <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.inputGroup}>
-                    <label>{t.fullName}</label>
+                    <label className={styles.required}>{t.fullName}</label>
                     <FontAwesomeIcon icon={faUser} className={styles.inputIcon} />
                     <input
                         type="text" name="fullName" placeholder={t.fullName}
@@ -153,7 +183,7 @@ export default function MentorSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.emailLabel}</label>
+                    <label className={styles.required}>{t.emailLabel}</label>
                     <FontAwesomeIcon icon={faEnvelope} className={styles.inputIcon} />
                     <input
                         type="email" name="email" placeholder={t.emailLabel}
@@ -165,7 +195,7 @@ export default function MentorSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.passwordLabel}</label>
+                    <label className={styles.required}>{t.passwordLabel}</label>
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="password" placeholder="••••••••"
@@ -177,7 +207,7 @@ export default function MentorSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.confirmPassword}</label>
+                    <label className={styles.required}>{t.confirmPassword}</label>
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="confirmPassword" placeholder="••••••••"
@@ -189,31 +219,7 @@ export default function MentorSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.expertise}</label>
-                    <FontAwesomeIcon icon={faStar} className={styles.inputIcon} />
-                    <input
-                        type="text" name="expertise" placeholder={t.expertise}
-                        title={t.expertise}
-                        value={formData.expertise} onChange={handleChange}
-                        className={errors.expertise ? styles.inputError : ''}
-                    />
-                    {errors.expertise && <span className={styles.errorText}>{errors.expertise}</span>}
-                </div>
-
-                <div className={styles.inputGroup}>
-                    <label>{t.yearsExperience}</label>
-                    <FontAwesomeIcon icon={faBriefcase} className={styles.inputIcon} />
-                    <input
-                        type="number" name="yearsExperience" placeholder={t.yearsExperience} min="0"
-                        title={t.yearsExperience}
-                        value={formData.yearsExperience} onChange={handleChange}
-                        className={errors.yearsExperience ? styles.inputError : ''}
-                    />
-                    {errors.yearsExperience && <span className={styles.errorText}>{errors.yearsExperience}</span>}
-                </div>
-
-                <div className={styles.inputGroup}>
-                    <label>{t.jobTitle}</label>
+                    <label className={styles.required}>{t.jobTitle}</label>
                     <FontAwesomeIcon icon={faAddressCard} className={styles.inputIcon} />
                     <input
                         type="text" name="jobTitle" placeholder={t.jobTitle}
@@ -222,6 +228,18 @@ export default function MentorSignupPage() {
                         className={errors.jobTitle ? styles.inputError : ''}
                     />
                     {errors.jobTitle && <span className={styles.errorText}>{errors.jobTitle}</span>}
+                </div>
+
+                <div className={styles.inputGroup}>
+                    <label className={styles.required}>{t.yearsExperience}</label>
+                    <FontAwesomeIcon icon={faBriefcase} className={styles.inputIcon} />
+                    <input
+                        type="number" name="yearsExperience" placeholder={t.yearsExperience} min="0"
+                        title={t.yearsExperience}
+                        value={formData.yearsExperience} onChange={handleChange}
+                        className={errors.yearsExperience ? styles.inputError : ''}
+                    />
+                    {errors.yearsExperience && <span className={styles.errorText}>{errors.yearsExperience}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -234,6 +252,39 @@ export default function MentorSignupPage() {
                         className={errors.linkedin ? styles.inputError : ''}
                     />
                     {errors.linkedin && <span className={styles.errorText}>{errors.linkedin}</span>}
+                </div>
+
+                <div className={styles.inputGroup}>
+                    <label className={styles.required}>{t.phoneNumberLabel}</label>
+                    <FontAwesomeIcon icon={faPhone} className={styles.inputIcon} />
+                    <input
+                        type="tel" name="phoneNumber" placeholder="+20..."
+                        title={t.phoneNumberLabel}
+                        value={formData.phoneNumber} onChange={handleChange}
+                        className={errors.phoneNumber ? styles.inputError : ''}
+                    />
+                    <span className={styles.helpText}>{t.phoneHelpText}</span>
+                    {errors.phoneNumber && <span className={styles.errorText}>{errors.phoneNumber}</span>}
+                </div>
+
+                <div className={styles.fileUpload}>
+                    <label className={styles.required}>{t.uploadCv}</label>
+
+                    <div className={styles.uploadArea} onClick={() => document.getElementById('cv-upload')?.click()}>
+                        <FontAwesomeIcon icon={faCloudArrowUp} />
+                        <p>{t.clickToUpload}</p>
+                        <span>{t.maxSize}</span>
+                        {formData.cvFile && <p style={{ color: '#2563eb', marginTop: '10px' }}>Selected: {formData.cvFile.name}</p>}
+
+                        <input
+                            id="cv-upload"
+                            type="file" name="cvFile" accept=".pdf,.doc,.docx"
+                            onChange={handleChange}
+                            style={{ display: 'none' }}
+                            title={t.uploadCv}
+                        />
+                    </div>
+                    {errors.cvFile && <span className={styles.errorText} style={{ display: 'block', marginTop: '5px' }}>{errors.cvFile}</span>}
                 </div>
 
                 <div className={styles.buttonGroup}>

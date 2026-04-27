@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
     faArrowLeft, faEnvelope, faLock,
-    faBuilding, faBriefcase, faMapMarkerAlt, faLocationArrow, faLink
+    faBuilding, faBriefcase, faMapMarkerAlt, faLocationArrow, faLink, faPhone
 } from '@fortawesome/free-solid-svg-icons'
 import { Globe, Moon, Sun, Check } from 'lucide-react'
 import styles from '../signup.module.css'
@@ -19,7 +19,7 @@ export default function CompanySignupPage() {
     const [showLanguageMenu, setShowLanguageMenu] = useState(false)
     const [formData, setFormData] = useState({
         email: '', password: '', confirmPassword: '',
-        companyName: '', industry: '', location: '', address: '', webSite: '', description: ''
+        companyName: '', industry: '', location: '', address: '', phoneNumber: '', description: ''
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(false)
@@ -38,23 +38,26 @@ export default function CompanySignupPage() {
     const validateForm = () => {
         let newErrors: Record<string, string> = {}
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!formData.email) newErrors.email = "Required"
+        if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
 
         if (formData.password.length < 8) newErrors.password = "Min 8 chars"
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
-        if (!formData.confirmPassword.trim()) newErrors.confirmPassword = "Required"
+        if (!formData.confirmPassword.trim()) newErrors.confirmPassword = t.passwordRequired
 
-        if (!formData.companyName.trim()) newErrors.companyName = "Required"
-        if (!formData.industry.trim()) newErrors.industry = "Required"
-        if (!formData.location.trim()) newErrors.location = "Required"
+        if (!formData.companyName.trim()) newErrors.companyName = t.companyNameRequired
+        if (!formData.industry.trim()) newErrors.industry = t.industryRequired
+        if (!formData.location.trim()) newErrors.location = t.locationRequired
 
-        const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})$/
-        if (formData.webSite.trim() && !urlRegex.test(formData.webSite.trim())) {
-            newErrors.webSite = "Invalid URL"
+
+        const phoneRegex = /^\+?[0-9]{7,15}$/
+        if (formData.phoneNumber.trim() && !phoneRegex.test(formData.phoneNumber.trim())) {
+            newErrors.phoneNumber = "Invalid format (e.g. +20...)"
         }
 
-        if (formData.description.trim().length < 20) newErrors.description = "Min 20 chars"
+        if (formData.description.trim() && formData.description.trim().length < 20) {
+            newErrors.description = "Min 20 chars"
+        }
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
@@ -137,19 +140,7 @@ export default function CompanySignupPage() {
 
             <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.inputGroup}>
-                    <label>{t.workEmail}</label>
-                    <FontAwesomeIcon icon={faEnvelope} className={styles.inputIcon} />
-                    <input
-                        type="email" name="email" placeholder={t.workEmail}
-                        title={t.workEmail}
-                        value={formData.email} onChange={handleChange}
-                        className={errors.email ? styles.inputError : ''}
-                    />
-                    {errors.email && <span className={styles.errorText}>{errors.email}</span>}
-                </div>
-
-                <div className={styles.inputGroup}>
-                    <label>{t.companyName}</label>
+                    <label className={styles.required}>{t.companyName}</label>
                     <FontAwesomeIcon icon={faBuilding} className={styles.inputIcon} />
                     <input
                         type="text" name="companyName" placeholder={t.companyName}
@@ -161,7 +152,19 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.passwordLabel}</label>
+                    <label className={styles.required}>{t.workEmail}</label>
+                    <FontAwesomeIcon icon={faEnvelope} className={styles.inputIcon} />
+                    <input
+                        type="email" name="email" placeholder={t.workEmail}
+                        title={t.workEmail}
+                        value={formData.email} onChange={handleChange}
+                        className={errors.email ? styles.inputError : ''}
+                    />
+                    {errors.email && <span className={styles.errorText}>{errors.email}</span>}
+                </div>
+
+                <div className={styles.inputGroup}>
+                    <label className={styles.required}>{t.passwordLabel}</label>
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="password" placeholder="••••••••"
@@ -173,7 +176,7 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.confirmPassword}</label>
+                    <label className={styles.required}>{t.confirmPassword}</label>
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="confirmPassword" placeholder="••••••••"
@@ -185,7 +188,7 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.industry}</label>
+                    <label className={styles.required}>{t.industry}</label>
                     <FontAwesomeIcon icon={faBriefcase} className={styles.inputIcon} />
                     <input
                         type="text" name="industry" placeholder={t.industry}
@@ -197,7 +200,7 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.location}</label>
+                    <label className={styles.required}>{t.location}</label>
                     <FontAwesomeIcon icon={faMapMarkerAlt} className={styles.inputIcon} />
                     <input
                         type="text" name="location" placeholder={t.location}
@@ -208,20 +211,24 @@ export default function CompanySignupPage() {
                     {errors.location && <span className={styles.errorText}>{errors.location}</span>}
                 </div>
 
-                <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                    <label>{t.website}</label>
-                    <FontAwesomeIcon icon={faLink} className={styles.inputIcon} />
+
+
+
+                <div className={styles.inputGroup}>
+                    <label>{t.phoneNumberLabel}</label>
+                    <FontAwesomeIcon icon={faPhone} className={styles.inputIcon} />
                     <input
-                        type="url" name="webSite" placeholder="https://www.company.com"
-                        title={t.website}
-                        value={formData.webSite} onChange={handleChange}
-                        className={errors.webSite ? styles.inputError : ''}
+                        type="tel" name="phoneNumber" placeholder="+20..."
+                        title={t.phoneNumberLabel}
+                        value={formData.phoneNumber} onChange={handleChange}
+                        className={errors.phoneNumber ? styles.inputError : ''}
                     />
-                    {errors.webSite && <span className={styles.errorText}>{errors.webSite}</span>}
+                    <span className={styles.helpText}>{t.phoneHelpText}</span>
+                    {errors.phoneNumber && <span className={styles.errorText}>{errors.phoneNumber}</span>}
                 </div>
 
-                <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                    <label className={styles.optional}>{t.address}</label>
+                <div className={styles.inputGroup}>
+                    <label>{t.address}</label>
                     <FontAwesomeIcon icon={faLocationArrow} className={styles.inputIcon} />
                     <input
                         type="text" name="address" placeholder={t.address}
@@ -231,17 +238,15 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.textareaGroup}>
-                    <label>{t.companyOverview}</label>
+                    <label>{t.companyDescription}</label>
                     <textarea
                         name="description"
                         placeholder={t.companyPlaceholder}
-                        title={t.companyOverview}
+                        title={t.companyDescription}
                         value={formData.description}
                         onChange={handleChange}
-                        className={errors.description ? styles.inputError : ''}
                     ></textarea>
                     <div className={styles.charCount}>{formData.description.length} chars</div>
-                    {errors.description && <span className={styles.errorText}>{errors.description}</span>}
                 </div>
 
                 <div className={styles.buttonGroup}>

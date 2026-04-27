@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
     faArrowLeft, faUser, faEnvelope, faLock,
-    faUniversity, faGraduationCap, faBook, faCalendarDays, faCloudArrowUp
+    faUniversity, faGraduationCap, faBook, faCalendarDays, faCloudArrowUp, faPhone
 } from '@fortawesome/free-solid-svg-icons'
 import { Globe, Moon, Sun, Check } from 'lucide-react'
 import styles from '../signup.module.css'
@@ -19,7 +19,7 @@ export default function StudentSignupPage() {
     const [showLanguageMenu, setShowLanguageMenu] = useState(false)
     const [formData, setFormData] = useState({
         fullName: '', email: '', password: '', confirmPassword: '',
-        university: '', college: '', degree: '', major: '', gradYear: '', cvFile: null as File | null
+        university: '', college: '', degree: '', major: '', gradYear: '', phoneNumber: '', cvFile: null as File | null
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(false)
@@ -42,18 +42,30 @@ export default function StudentSignupPage() {
 
     const validateForm = () => {
         let newErrors: Record<string, string> = {}
-        if (!formData.fullName.trim()) newErrors.fullName = "Required"
+        if (!formData.fullName.trim()) newErrors.fullName = t.fullNameRequired
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!formData.email) newErrors.email = "Required"
+        if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
+        
+        const phoneRegex = /^\+?[0-9]{7,15}$/
+        if (!formData.phoneNumber.trim()) {
+            newErrors.phoneNumber = t.phoneRequired
+        } else if (!phoneRegex.test(formData.phoneNumber.trim())) {
+            newErrors.phoneNumber = "Invalid format (e.g. +20...)"
+        }
+        
         if (formData.password.length < 8) newErrors.password = "Min 8 chars"
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
-        if (!formData.confirmPassword.trim()) newErrors.confirmPassword = "Required"
-        if (!formData.university.trim()) newErrors.university = "Required"
-        if (!formData.college.trim()) newErrors.college = "Required"
-        if (!formData.major.trim()) newErrors.major = "Required"
+        if (!formData.confirmPassword.trim()) newErrors.confirmPassword = t.passwordRequired
+
+        if (!formData.university.trim()) newErrors.university = t.universityRequired
+        if (!formData.college.trim()) newErrors.college = t.collegeRequired
+        if (!formData.major.trim()) newErrors.major = t.majorRequired
+        
         if (formData.cvFile && formData.cvFile.size > 5 * 1024 * 1024) newErrors.cvFile = "Max 5MB"
-        if (!formData.cvFile) newErrors.cvFile = "Required"
+        if (!formData.cvFile) newErrors.cvFile = t.cvRequired
+        
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
@@ -74,6 +86,9 @@ export default function StudentSignupPage() {
                 payload.append('degree', formData.degree)
                 payload.append('major', formData.major)
                 payload.append('gradYear', formData.gradYear)
+                if (formData.phoneNumber) {
+                    payload.append('phoneNumber', formData.phoneNumber)
+                }
 
                 if (formData.cvFile) {
                     payload.append('cvFile', formData.cvFile)
@@ -150,7 +165,7 @@ export default function StudentSignupPage() {
 
             <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.inputGroup}>
-                    <label>{t.fullName}</label>
+                    <label className={styles.required}>{t.fullName}</label>
                     <FontAwesomeIcon icon={faUser} className={styles.inputIcon} />
                     <input
                         type="text" name="fullName" placeholder={t.fullName}
@@ -162,7 +177,7 @@ export default function StudentSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.emailLabel}</label>
+                    <label className={styles.required}>{t.emailLabel}</label>
                     <FontAwesomeIcon icon={faEnvelope} className={styles.inputIcon} />
                     <input
                         type="email" name="email" placeholder={t.emailLabel}
@@ -174,7 +189,7 @@ export default function StudentSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.passwordLabel}</label>
+                    <label className={styles.required}>{t.passwordLabel}</label>
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="password" placeholder="••••••••"
@@ -186,7 +201,7 @@ export default function StudentSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.confirmPassword}</label>
+                    <label className={styles.required}>{t.confirmPassword}</label>
                     <FontAwesomeIcon icon={faLock} className={styles.inputIcon} />
                     <input
                         type="password" name="confirmPassword" placeholder="••••••••"
@@ -198,7 +213,7 @@ export default function StudentSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.university}</label>
+                    <label className={styles.required}>{t.university}</label>
                     <FontAwesomeIcon icon={faUniversity} className={styles.inputIcon} />
                     <input
                         type="text" name="university" placeholder={t.university}
@@ -210,7 +225,7 @@ export default function StudentSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.college}</label>
+                    <label className={styles.required}>{t.college}</label>
                     <FontAwesomeIcon icon={faGraduationCap} className={styles.inputIcon} />
                     <input
                         type="text" name="college" placeholder={t.college}
@@ -232,7 +247,7 @@ export default function StudentSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.major}</label>
+                    <label className={styles.required}>{t.major}</label>
                     <FontAwesomeIcon icon={faBook} className={styles.inputIcon} />
                     <input
                         type="text" name="major" placeholder={t.major}
@@ -253,8 +268,21 @@ export default function StudentSignupPage() {
                     />
                 </div>
 
+                <div className={styles.inputGroup}>
+                    <label className={styles.required}>{t.phoneNumberLabel}</label>
+                    <FontAwesomeIcon icon={faPhone} className={styles.inputIcon} />
+                    <input
+                        type="tel" name="phoneNumber" placeholder="+20..."
+                        title={t.phoneNumberLabel}
+                        value={formData.phoneNumber} onChange={handleChange}
+                        className={errors.phoneNumber ? styles.inputError : ''}
+                    />
+                    <span className={styles.helpText}>{t.phoneHelpText}</span>
+                    {errors.phoneNumber && <span className={styles.errorText}>{errors.phoneNumber}</span>}
+                </div>
+
                 <div className={styles.fileUpload}>
-                    <label>{t.uploadCv}</label>
+                    <label className={styles.required}>{t.uploadCv}</label>
 
                     <div className={styles.uploadArea} onClick={() => document.getElementById('cv-upload')?.click()}>
                         <FontAwesomeIcon icon={faCloudArrowUp} />
@@ -272,6 +300,7 @@ export default function StudentSignupPage() {
                     </div>
                     {errors.cvFile && <span className={styles.errorText} style={{ display: 'block', marginTop: '5px' }}>{errors.cvFile}</span>}
                 </div>
+
 
                 <div className={styles.buttonGroup}>
                     <button type="button" className={styles.backBtn} onClick={() => router.back()}>

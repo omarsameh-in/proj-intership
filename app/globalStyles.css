@@ -643,7 +643,7 @@ body.light-mode label {
 
 body.light-mode p,
 body.light-mode span {
-  color: #64748b !important;
+  color: #64748b;
 }
 
 body.light-mode .form-control {
