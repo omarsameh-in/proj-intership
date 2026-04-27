@@ -220,16 +220,14 @@ function ResetPasswordContent() {
                                 className={`language-option ${language === 'en' ? 'active' : ''}`}
                                 onClick={() => changeLanguage('en')}
                             >
-                                {language === 'en' && <Check size={16} className="me-2 d-inline" />}
-                                {language !== 'en' && <span className="me-2 empty-check-space"></span>}
+                                {language === 'en' && <Check size={16} />}
                                 English
                             </div>
                             <div
                                 className={`language-option ${language === 'ar' ? 'active' : ''}`}
                                 onClick={() => changeLanguage('ar')}
                             >
-                                {language === 'ar' && <Check size={16} className="me-2 d-inline" />}
-                                {language !== 'ar' && <span className="me-2 empty-check-space"></span>}
+                                {language === 'ar' && <Check size={16} />}
                                 العربية
                             </div>
                         </div>

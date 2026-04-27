@@ -225,9 +225,9 @@ function ApplicationsContent() {
 
             <div className={styles.languageWrapper}>
               <button className={styles.iconButton} onClick={() => setShowLanguageMenu(!showLanguageMenu)} title={t.changeLanguage}><Globe size={20} /></button>
-              <div className={`${styles.languageMenu} ${showLanguageMenu ? styles.show : ''}`}>
+              <div className={`language-menu ${showLanguageMenu ? 'show' : ''}`}>
                 {(['en', 'ar'] as const).map(lang => (
-                  <div key={lang} className={`${styles.languageOption} ${language === lang ? styles.active : ''}`} onClick={() => changeLanguage(lang)}>
+                  <div key={lang} className={`language-option ${language === lang ? 'active' : ''}`} onClick={() => changeLanguage(lang)}>
                     {language === lang && <Check size={16} />}{lang === 'en' ? 'English' : 'العربية'}
                   </div>
                 ))}

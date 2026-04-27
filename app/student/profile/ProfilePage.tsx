@@ -154,16 +154,16 @@ function ProfilePage() {
                             <button className={styles.iconButton} onClick={() => setShowLanguageMenu(!showLanguageMenu)} title="Change Language">
                                 <Globe size={20} />
                             </button>
-                            <div className={`${styles.languageMenu} ${showLanguageMenu ? styles.show : ''}`}>
-                                <div className={`${styles.languageOption} ${language === 'en' ? styles.active : ''}`} onClick={() => changeLanguage('en')}>
-                                    {language === 'en' && <Check size={16} />}
-                                    English
-                                </div>
-                                <div className={`${styles.languageOption} ${language === 'ar' ? styles.active : ''}`} onClick={() => changeLanguage('ar')}>
-                                    {language === 'ar' && <Check size={16} />}
-                                    العربية
-                                </div>
-                            </div>
+                             <div className={`language-menu ${showLanguageMenu ? 'show' : ''}`}>
+                                 <div className={`language-option ${language === 'en' ? 'active' : ''}`} onClick={() => changeLanguage('en')}>
+                                     {language === 'en' && <Check size={16} />}
+                                     English
+                                 </div>
+                                 <div className={`language-option ${language === 'ar' ? 'active' : ''}`} onClick={() => changeLanguage('ar')}>
+                                     {language === 'ar' && <Check size={16} />}
+                                     العربية
+                                 </div>
+                             </div>
                         </div>
                         <button className={styles.iconButton} onClick={toggleTheme} title="Toggle Theme">
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}

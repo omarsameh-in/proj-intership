@@ -206,44 +206,7 @@
     color: white;
 }
 
-.languageWrapper {
-    position: relative;
-}
-
-.languageMenu {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 8px 0;
-    min-width: 150px;
-    display: none;
-    z-index: 100;
-}
-
-.languageMenu.show {
-    display: block;
-}
-
-.languageOption {
-    padding: 8px 16px;
-    color: white;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.languageOption:hover {
-    background: #334155;
-}
-
-.languageOption.active {
-    background: #3b82f6;
-}
+/* language menu moved to global */
 
 /* Stats Grid */
 .statsGrid {
@@ -752,23 +715,7 @@
     color: #1e293b;
 }
 
-:global(body.light-mode) .languageMenu {
-    background: #ffffff;
-    border-color: #e2e8f0;
-}
-
-:global(body.light-mode) .languageOption {
-    color: #1e293b;
-}
-
-:global(body.light-mode) .languageOption:hover {
-    background: #f1f5f9;
-}
-
-:global(body.light-mode) .languageOption.active {
-    background: #3b82f6;
-    color: white;
-}
+/* light mode overrides removed */
 
 :global(body.light-mode) .statCard,
 :global(body.light-mode) .card,
@@ -878,10 +825,7 @@
     margin-right: 260px;
 }
 
-[dir="rtl"] .languageMenu {
-    right: auto;
-    left: 0;
-}
+/* rtl handled by global */
 
 /* Responsive */
 @media (max-width: 1024px) {

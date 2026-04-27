@@ -600,44 +600,7 @@
     position: relative;
 }
 
-.languageMenu {
-    position: absolute;
-    top: 55px;
-    right: 0;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 10px;
-    padding: 8px 0;
-    min-width: 160px;
-    display: none;
-    z-index: 1000;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-}
-
-.languageMenu.show {
-    display: block;
-}
-
-.languageOption {
-    padding: 10px 16px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.languageOption:hover {
-    background: #334155;
-}
-
-.languageOption.active {
-    background: #3b82f6;
-    color: white;
-}
+/* languageMenu and languageOption moved to globalStyles.css */
 
 /* Light Mode Overrides */
 :global([data-theme="light"]) .appLayout {
@@ -739,24 +702,7 @@
     color: #1e293b;
 }
 
-:global([data-theme="light"]) .languageMenu {
-    background: #ffffff;
-    border-color: #e2e8f0;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-:global([data-theme="light"]) .languageOption {
-    color: #1e293b;
-}
-
-:global([data-theme="light"]) .languageOption:hover {
-    background: #f1f5f9;
-}
-
-:global([data-theme="light"]) .languageOption.active {
-    background: #3b82f6;
-    color: white;
-}
+/* ... language menu overrides removed ... */
 
 :global([data-theme="light"]) .paid {
     color: #059669; /* Darker green for light mode */
@@ -802,10 +748,7 @@
     margin-right: 260px;
 }
 
-[dir="rtl"] .languageMenu {
-    right: auto;
-    left: 0;
-}
+/* rtl handled by global */
 
 [dir="rtl"] :global([data-theme="light"]) .sidebar {
     border-left-color: #e2e8f0;
