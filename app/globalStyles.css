@@ -583,34 +583,51 @@ body.light-mode * {
 /* Language Menu */
 .language-menu {
   position: absolute;
-  top: 50px;
+  top: calc(100% + 10px);
   right: 0;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 8px 0;
-  min-width: 150px;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 160px;
   display: none;
-  z-index: 100;
+  z-index: 1000;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .language-menu.show {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .language-option {
-  padding: 8px 16px;
-  color: white;
+  padding: 10px 14px;
+  color: var(--text-heading);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .language-option:hover {
-  background: #334155;
+  background: var(--inner-card-background);
+  transform: translateX(4px);
+}
+
+[dir="rtl"] .language-option:hover {
+  transform: translateX(-4px);
 }
 
 .language-option.active {
-  background: #3b82f6;
+  background: var(--primary-color);
+  color: white !important;
 }
 
 /* Light Mode Overrides for Legacy Logic */
@@ -685,23 +702,7 @@ body.light-mode .role-icon-circle.unselected {
   background: #e5e7eb;
 }
 
-body.light-mode .language-menu {
-  background: #ffffff !important;
-  border-color: #dee2e6 !important;
-}
-
-body.light-mode .language-option {
-  color: #1e293b !important;
-}
-
-body.light-mode .language-option:hover {
-  background: #f8f9fa !important;
-}
-
-body.light-mode .language-option.active {
-  background: #3b82f6 !important;
-  color: #ffffff !important;
-}
+/* ... language menu overrides removed and unified ... */
 
 body.light-mode .theme-lang-controls button {
   color: #1e293b !important;
