@@ -23,7 +23,7 @@ import {
   Menu,
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
-import styles from './CompanyProfileStyle.module.css'
+import styles from './Companyprofilestyle.module.css'
 import api from '../../lib/api'
 import Notification from '../../components/Notification/Notification'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
