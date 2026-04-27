@@ -2,12 +2,14 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Bell, X, Check, Info, AlertTriangle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useApp } from '../../context/AppContext'
 import styles from './Notification.module.css'
 import { notificationService, NotificationItem } from '../../services/notificationService'
 
 const Notification: React.FC = () => {
     const { theme, language, t } = useApp()
+    const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [notifications, setNotifications] = useState<NotificationItem[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
@@ -32,8 +34,7 @@ const Notification: React.FC = () => {
         try {
             const data = await notificationService.getAll()
             setNotifications(data)
-            // تحديث العدد أيضاً للتأكد
-            const count = data.filter(n => !n.read).length
+            const count = data.filter(n => !n.isRead).length
             setUnreadCount(count)
         } catch (error) {
             console.error('Error fetching notifications:', error)
@@ -56,12 +57,11 @@ const Notification: React.FC = () => {
         }
         setIsOpen(!isOpen)
     }
-
     const markAsRead = async (id: number) => {
         try {
             // تحديث الواجهة فوراً (Optimistic Update)
             setNotifications(notifications.map(n => 
-                n.id === id ? { ...n, read: true } : n
+                n.notificationId === id ? { ...n, isRead: true } : n
             ))
             setUnreadCount(prev => Math.max(0, prev - 1))
             
@@ -77,7 +77,7 @@ const Notification: React.FC = () => {
     const markAllAsRead = async () => {
         try {
             // تحديث الواجهة فوراً
-            setNotifications(notifications.map(n => ({ ...n, read: true })))
+            setNotifications(notifications.map(n => ({ ...n, isRead: true })))
             setUnreadCount(0)
             
             // إرسال الطلب للسيرفر
@@ -85,6 +85,34 @@ const Notification: React.FC = () => {
         } catch (error) {
             console.error('Error marking all as read:', error)
             fetchNotifications()
+        }
+    }
+
+    const handleNotificationClick = async (notification: NotificationItem) => {
+        // 1. تعليم كـ مقروء لو مش مقروء
+        if (!notification.isRead) {
+            await markAsRead(notification.notificationId)
+        }
+
+        // 2. إغلاق القائمة
+        setIsOpen(false)
+
+        // 3. التوجيه بناءً على النوع والـ ID
+        if (notification.relatedEntityId) {
+            switch (notification.type) {
+                case 'Session':
+                    router.push(`/student/sessions`)
+                    break
+                case 'Internship':
+                    router.push(`/student/internships`)
+                    break
+                case 'Mentorship':
+                    router.push(`/student/mentorships`)
+                    break
+                default:
+                    // لو نوع غير معروف، مفيش توجيه محدد
+                    break
+            }
         }
     }
 
@@ -124,21 +152,21 @@ const Notification: React.FC = () => {
                         {notifications.length > 0 ? (
                             notifications.map(notification => (
                                 <div 
-                                    key={notification.id} 
-                                    className={`${styles.item} ${!notification.read ? styles.unread : ''}`}
-                                    onClick={() => !notification.read && markAsRead(notification.id)}
+                                    key={notification.notificationId} 
+                                    className={`${styles.item} ${!notification.isRead ? styles.unread : ''}`}
+                                    onClick={() => handleNotificationClick(notification)}
                                 >
                                     <div className={styles.iconBox}>
-                                        {getIcon(notification.type)}
+                                        {getIcon(notification.type.toLowerCase())}
                                     </div>
                                     <div className={styles.content}>
                                         <div className={styles.itemHeader}>
                                             <span className={styles.itemTitle}>{notification.title}</span>
-                                            <span className={styles.time}>{notification.time}</span>
+                                            <span className={styles.time}>{notification.timeAgo}</span>
                                         </div>
                                         <p className={styles.message}>{notification.message}</p>
                                     </div>
-                                    {!notification.read && <div className={styles.unreadDot} />}
+                                    {!notification.isRead && <div className={styles.unreadDot} />}
                                 </div>
                             ))
                         ) : (

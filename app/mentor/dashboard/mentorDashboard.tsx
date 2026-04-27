@@ -21,6 +21,7 @@ import {
     XCircle
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+import Notification from '../../components/Notification/Notification'
 import styles from './mentorDashboardStyle.module.css'
 
 function MentorDashboard() {
@@ -217,9 +218,7 @@ function MentorDashboard() {
                         <button className={styles.iconButton} onClick={toggleTheme} title={t.toggleTheme}>
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                         </button>
-                        <button className={styles.iconButton} title={t.notifications}>
-                            <Bell size={20} />
-                        </button>
+                        <Notification />
                         <button className={styles.iconButton} onClick={() => router.push('/')} title={t.logout}>
                             <LogOut size={20} />
                         </button>

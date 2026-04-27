@@ -1,12 +1,14 @@
 import api from '../lib/api';
 
 export interface NotificationItem {
-    id: number;
+    notificationId: number;
     title: string;
     message: string;
-    time: string;
-    type: 'info' | 'success' | 'warning';
-    read: boolean;
+    type: string; // e.g., 'Session', 'Internship', 'System'
+    relatedEntityId?: number;
+    isRead: boolean;
+    createdAt: string;
+    timeAgo: string;
 }
 
 export const notificationService = {

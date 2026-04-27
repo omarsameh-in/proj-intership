@@ -25,6 +25,7 @@ import {
     ChevronDown
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+import Notification from '../../components/Notification/Notification'
 import styles from './sessions.module.css'
 
 interface Session {
@@ -239,9 +240,7 @@ export default function SessionsPage() {
                         <button className={styles.iconButton} onClick={toggleTheme} title="Toggle Theme">
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                         </button>
-                        <button className={styles.iconButton} title="Notifications">
-                            <Bell size={20} />
-                        </button>
+                        <Notification />
                         <button className={styles.iconButton} title="Logout">
                             <LogOut size={20} />
                         </button>
