@@ -29,14 +29,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
 
-  /* ... inside component ... */
   const router = useRouter()
-  // const { theme, toggleTheme, language, setLanguage, t } = useApp() // Already destructured above
-  // const [selectedRole, setSelectedRole] = useState<Role>('company') // Already declared
-  // const [email, setEmail] = useState('') // Already declared
-  // const [password, setPassword] = useState('') // Already declared
-  // const [rememberMe, setRememberMe] = useState(false) // Already declared
-  // const [showLanguageMenu, setShowLanguageMenu] = useState(false) // Already declared
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {

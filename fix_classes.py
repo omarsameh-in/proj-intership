@@ -1,7 +1,7 @@
 import os
 import re
 
-target_dir = r'c:\projects\college 1\1\proj. intership\app'
+target_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app')
 
 def fix_user_pages():
     for root, dirs, files in os.walk(target_dir):
