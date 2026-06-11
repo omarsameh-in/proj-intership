@@ -1,51 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-    LayoutDashboard,
     Users,
-    UserCircle,
-    Video,
-    ChevronLeft,
-    Globe,
-    Moon,
-    Sun,
-    Bell,
-    LogOut,
-    Check,
     Clock,
-    Calendar,
-    CheckCircle,
-    XCircle
+    Calendar
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
-import Notification from '../../components/Notification/Notification'
+import TopBarControls from '../../components/TopBarControls/TopBarControls'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './mentorDashboardStyle.module.css'
 
 function MentorDashboard() {
-    const { theme, toggleTheme, language, setLanguage, t } = useApp()
-    const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
-            const isLanguageMenu = target.closest('.language-menu');
-            if (!isLanguageButton && !isLanguageMenu) {
-                setShowLanguageMenu(false);
-            }
-        };
-        if (showLanguageMenu) {
-            document.addEventListener('click', handleClickOutside);
-        }
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLanguageMenu]);
-
+    const { language, t } = useApp()
     const router = useRouter()
 
     const [upcomingSessions, setUpcomingSessions] = useState<any[]>([])
@@ -136,17 +104,10 @@ function MentorDashboard() {
         }
     }
 
-    const changeLanguage = (lang: 'en' | 'ar') => {
-        setLanguage(lang)
-        setShowLanguageMenu(false)
-    }
+
 
     if (loading) {
-        return (
-            <div className={styles.loadingContainer}>
-                <div className={styles.loadingText}>{t.loading}</div>
-            </div>
-        )
+        return <LoadingScreen />
     }
 
     if (error) {
@@ -161,88 +122,14 @@ function MentorDashboard() {
     }
 
     return (
-        <div className={`${styles.appLayout} ${language === 'ar' ? styles.rtl : ''}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            <div className={styles.glow} aria-hidden="true" />
-            <div className={styles.glowSecondary} aria-hidden="true" />
-            <div className={styles.glowTertiary} aria-hidden="true" />
-            {/* Sidebar */}
-            <aside className={styles.sidebar}>
-                <div className={styles.logoSection}>
-                    <div className={styles.backButton} onClick={() => router.push('/')}>
-                        <ChevronLeft size={20} />
-                    </div>
-                    <div className={styles.logo}>
-                        <div className={styles.logoIcon}>IW</div>
-                        <span className={styles.logoText}>InternWay</span>
-                    </div>
+        <>
+            <header className={styles.topBar}>
+                <div className={styles.pageHeader}>
+                    <h1 className={styles.pageTitle}>{t.mentorWelcome}</h1>
+                    <p className={styles.pageSubtitle}>{t.mentorSubtitle}</p>
                 </div>
-
-                <nav className={styles.nav}>
-                    <Link href="/mentor/dashboard" className={`${styles.navItem} ${styles.active}`}>
-                        <LayoutDashboard size={20} />
-                        <span>{t.dashboard}</span>
-                    </Link>
-                    {/* Other pages will be added by the team */}
-                    {/* 
-                    <Link href="/mentor/mySessions" className={styles.navItem}>
-                        <Video size={20} />
-                        <span>{t.mySessions}</span>
-                    </Link>
-                    <Link href="/mentor/myMentees" className={styles.navItem}>
-                        <Users size={20} />
-                        <span>{t.myMentees}</span>
-                    </Link>
-                    <Link href="/mentor/profile" className={styles.navItem}>
-                        <UserCircle size={20} />
-                        <span>{t.profile}</span>
-                    </Link>
-                    */}
-                </nav>
-            </aside>
-
-            {/* Main Content */}
-            <main className={styles.mainContent}>
-                <header className={styles.topBar}>
-                    <div className={styles.pageHeader}>
-                        <h1 className={styles.pageTitle}>{t.mentorWelcome}</h1>
-                        <p className={styles.pageSubtitle}>{t.mentorSubtitle}</p>
-                    </div>
-
-                    <div className={styles.topBarControls}>
-                        <div className={styles.languageWrapper}>
-                            <button
-                                className={styles.iconButton}
-                                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                                title={t.changeLanguage}
-                            >
-                                <Globe size={20} />
-                            </button>
-                            <div className={`language-menu ${showLanguageMenu ? 'show' : ''}`}>
-                                <div
-                                    className={`language-option ${language === 'en' ? 'active' : ''}`}
-                                    onClick={() => changeLanguage('en')}
-                                >
-                                    {language === 'en' && <Check size={16} />}
-                                    English
-                                </div>
-                                <div
-                                    className={`language-option ${language === 'ar' ? 'active' : ''}`}
-                                    onClick={() => changeLanguage('ar')}
-                                >
-                                    {language === 'ar' && <Check size={16} />}
-                                    العربية
-                                </div>
-                            </div>
-                        </div>
-                        <button className={styles.iconButton} onClick={toggleTheme} title={t.toggleTheme}>
-                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
-                        <Notification />
-                        <button className={styles.iconButton} onClick={() => router.push('/')} title={t.logout}>
-                            <LogOut size={20} />
-                        </button>
-                    </div>
-                </header>
+                <TopBarControls />
+            </header>
 
                 {/* Stats Grid */}
                 <div className={styles.statsGrid}>
@@ -329,8 +216,7 @@ function MentorDashboard() {
                         )}
                     </div>
                 </div>
-            </main>
-        </div>
+        </>
     )
 }
 

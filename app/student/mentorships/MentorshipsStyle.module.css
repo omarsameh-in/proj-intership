@@ -899,3 +899,618 @@
         width: 100%;
     }
 }
+
+/* --- Added Mentor Detail and Booking Modal Styles --- */
+
+.cardActions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-self: center;
+    min-width: 150px;
+}
+
+.viewDetailsButton {
+    padding: 0.625rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.viewDetailsButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: #3b82f6;
+}
+
+.detailBreadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #9ca3af;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+    width: fit-content;
+}
+
+.detailBreadcrumb:hover {
+    color: white;
+}
+
+.breadcrumbBackIcon {
+    transition: transform 0.2s ease;
+}
+
+.detailBreadcrumb:hover .breadcrumbBackIcon {
+    transform: translateX(-4px);
+}
+
+[dir="rtl"] .detailBreadcrumb:hover .breadcrumbBackIcon {
+    transform: translateX(4px);
+}
+
+.detailContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+.detailHeaderCard {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+    padding: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+.detailHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.detailAvatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.detailHeaderInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detailName {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.detailTitle {
+    font-size: 1.125rem;
+    color: #60a5fa;
+    margin: 0;
+    font-weight: 500;
+}
+
+.detailMeta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.detailMetaItem {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.detailMetaItem .rating {
+    color: white;
+    font-weight: 600;
+}
+
+.metaDivider {
+    color: rgba(255, 255, 255, 0.1);
+}
+
+.metaIcon {
+    color: #9ca3af;
+}
+
+.detailHeaderRight {
+    display: flex;
+    align-items: center;
+}
+
+.detailBookButton {
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.detailBookButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.detailUnavailableButton {
+    padding: 1rem 2rem;
+    background: transparent;
+    border: 1px solid #2d3548;
+    color: #6b7280;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: not-allowed;
+    opacity: 0.5;
+    min-width: 160px;
+}
+
+.detailBody {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.detailMainContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.detailSection {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 2rem;
+}
+
+.detailSectionTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 1.25rem 0;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.detailSectionTitle::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: #3b82f6;
+}
+
+[dir="rtl"] .detailSectionTitle::after {
+    left: auto;
+    right: 0;
+}
+
+.detailLongBio {
+    color: #9ca3af;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.detailExpertiseTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.detailExpertiseTag {
+    padding: 0.5rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 0.375rem;
+    color: #60a5fa;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Stats card in detail sidebar */
+.detailSidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.statsCard {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 2rem;
+}
+
+.statsCardTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.statsIcon {
+    color: #3b82f6;
+}
+
+.statsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.statsItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 1rem;
+}
+
+.statsItem:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.statsLabel {
+    font-size: 0.8125rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.statsValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Booking Modal Overlay */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modalContainer {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalHeader {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0;
+}
+
+.modalCloseBtn {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.modalBody {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.modalSubtext {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0 0 0.5rem 0;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formLabel {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+}
+
+.formSelect {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.formSelect:focus {
+    border-color: #3b82f6;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.formSelect option {
+    background: #1a1f2e;
+    color: white;
+}
+
+.modalFooter {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.cancelBtn {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.confirmBtn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirmBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Light Mode Adaptations */
+:global(body.light-mode) .detailBreadcrumb {
+    color: #64748b;
+}
+:global(body.light-mode) .detailBreadcrumb:hover {
+    color: #000000;
+}
+
+:global(body.light-mode) .detailHeaderCard {
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+:global(body.light-mode) .detailName,
+:global(body.light-mode) .detailSectionTitle,
+:global(body.light-mode) .statsCardTitle,
+:global(body.light-mode) .statsValue,
+:global(body.light-mode) .modalTitle,
+:global(body.light-mode) .formLabel {
+    color: #000000;
+}
+
+:global(body.light-mode) .detailMeta,
+:global(body.light-mode) .metaIcon,
+:global(body.light-mode) .detailLongBio,
+:global(body.light-mode) .modalSubtext,
+:global(body.light-mode) .cancelBtn {
+    color: #64748b;
+}
+
+:global(body.light-mode) .metaDivider {
+    color: #e2e8f0;
+}
+
+:global(body.light-mode) .detailSection,
+:global(body.light-mode) .statsCard {
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+:global(body.light-mode) .detailExpertiseTag {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.25);
+    color: #3b82f6;
+}
+
+:global(body.light-mode) .statsItem {
+    border-bottom-color: #f1f5f9;
+}
+
+:global(body.light-mode) .statsLabel {
+    color: #94a3b8;
+}
+
+:global(body.light-mode) .viewDetailsButton {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+:global(body.light-mode) .viewDetailsButton:hover {
+    background: #e2e8f0;
+    color: #000000;
+    border-color: #3b82f6;
+}
+
+:global(body.light-mode) .modalContainer {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+:global(body.light-mode) .modalHeader,
+:global(body.light-mode) .modalFooter {
+    border-color: #f1f5f9;
+}
+
+:global(body.light-mode) .modalCloseBtn:hover {
+    background: #f1f5f9;
+    color: #000000;
+}
+
+:global(body.light-mode) .formSelect {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+:global(body.light-mode) .formSelect:focus {
+    border-color: #3b82f6;
+    background: #f8fafc;
+}
+
+:global(body.light-mode) .formSelect option {
+    background: #ffffff;
+    color: #1e293b;
+}
+
+:global(body.light-mode) .cancelBtn {
+    border-color: #cbd5e1;
+}
+:global(body.light-mode) .cancelBtn:hover {
+    background: #f1f5f9;
+    color: #000000;
+    border-color: #cbd5e1;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Responsive Detail View override */
+@media (max-width: 768px) {
+    .detailHeaderCard {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .detailHeaderLeft {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .detailMeta {
+        justify-content: center;
+    }
+
+    .detailHeaderRight,
+    .detailBookButton,
+    .detailUnavailableButton {
+        width: 100%;
+    }
+
+    .detailBody {
+        grid-template-columns: 1fr;
+    }
+
+    .modalContainer {
+        width: 90%;
+        margin: 0 auto;
+    }
+}

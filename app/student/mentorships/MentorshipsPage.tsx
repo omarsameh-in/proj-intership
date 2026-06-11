@@ -10,19 +10,15 @@ import {
     UserCircle,
     Video,
     ChevronLeft,
-    Globe,
-    Moon,
-    Sun,
-    Bell,
-    LogOut,
-    Check,
     Star,
     Search,
     Calendar,
-    Clock
+    Eye,
+    X
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
-import Notification from '../../components/Notification/Notification'
+import TopBarControls from '../../components/TopBarControls/TopBarControls'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './MentorshipsStyle.module.css'
 
 interface Mentor {
@@ -39,6 +35,14 @@ interface Mentor {
         time: string
     }
     isAvailable: boolean
+    longBio?: string
+    stats?: {
+        totalSessions: number
+        avgResponseTime: string
+        menteesHired: number
+    }
+    field?: string
+    availableSlots?: string[]
 }
 
 const mockMentors: Mentor[] = [
@@ -47,10 +51,18 @@ const mockMentors: Mentor[] = [
         name: 'Dr. Ahmed Hassan',
         title: 'Senior Software Engineer',
         expertise: ['React', 'Node.js', 'System Design', 'Career Growth'],
-        experience: 5,
+        experience: 15,
         rating: 4.9,
         reviews: 127,
         bio: 'Passionate about mentoring young developers and helping them navigate their career paths.',
+        longBio: 'Passionate about mentoring young developers and helping them navigate their career paths. I have over 15 years of experience building scalable web applications and leading engineering teams at top tech companies. My mentoring style focuses on practical, hands-on learning and preparing you for real-world engineering challenges.',
+        stats: {
+            totalSessions: 342,
+            avgResponseTime: '< 2 hours',
+            menteesHired: 45
+        },
+        field: 'Software Engineering',
+        availableSlots: ['Tomorrow 3:00 PM', 'Monday 10:00 AM', 'Wednesday 2:00 PM'],
         nextAvailable: {
             date: 'Tomorrow',
             time: '3PM'
@@ -66,6 +78,14 @@ const mockMentors: Mentor[] = [
         rating: 4.8,
         reviews: 89,
         bio: 'Helping aspiring data scientists break into the field with practical guidance.',
+        longBio: 'Helping aspiring data scientists break into the field with practical guidance. With 10 years in data warehousing, predictive modeling, and analytics, I guide students through building portfolio projects, understanding machine learning pipelines, and preparing for technical interviews.',
+        stats: {
+            totalSessions: 210,
+            avgResponseTime: '< 3 hours',
+            menteesHired: 28
+        },
+        field: 'Data Science',
+        availableSlots: ['Dec 28, 10:00 AM', 'Dec 29, 4:00 PM'],
         nextAvailable: {
             date: 'Dec 28',
             time: '10AM'
@@ -81,6 +101,14 @@ const mockMentors: Mentor[] = [
         rating: 4.7,
         reviews: 156,
         bio: 'Research-focused mentor specializing in cutting-edge AI technologies.',
+        longBio: 'Research-focused mentor specializing in cutting-edge AI technologies, deep learning, and natural language processing. I have guided numerous academic and industry projects, helping researchers transition theory into practical models.',
+        stats: {
+            totalSessions: 180,
+            avgResponseTime: '< 5 hours',
+            menteesHired: 15
+        },
+        field: 'AI & ML',
+        availableSlots: [],
         isAvailable: false
     },
     {
@@ -92,6 +120,14 @@ const mockMentors: Mentor[] = [
         rating: 4.9,
         reviews: 189,
         bio: 'Helping designers build stunning portfolios and land their dream jobs.',
+        longBio: 'Helping designers build stunning portfolios and land their dream jobs. Dedicated UI/UX designer with 8 years of experience. We will focus on user research, wireframing, design systems in Figma, and how to present your design decisions to stakeholders.',
+        stats: {
+            totalSessions: 295,
+            avgResponseTime: '< 1 hour',
+            menteesHired: 38
+        },
+        field: 'Design',
+        availableSlots: ['Dec 27, 2:00 PM', 'Dec 30, 11:00 AM'],
         nextAvailable: {
             date: 'Dec 27',
             time: '2PM'
@@ -101,46 +137,32 @@ const mockMentors: Mentor[] = [
 ]
 
 function MentorshipsPage() {
-    const { theme, toggleTheme, language, setLanguage, t } = useApp()
-    const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
-            const isLanguageMenu = target.closest('.language-menu');
-            if (!isLanguageButton && !isLanguageMenu) {
-                setShowLanguageMenu(false);
-            }
-        };
-        if (showLanguageMenu) {
-            document.addEventListener('click', handleClickOutside);
-        }
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLanguageMenu]);
-
+    const { t, language } = useApp()
     const router = useRouter()
     const [mentors, setMentors] = useState<Mentor[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedField, setSelectedField] = useState('all')
 
+    const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null)
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+    const [bookingSlot, setBookingSlot] = useState('')
+    const [bookingTopic, setBookingTopic] = useState('')
+
     useEffect(() => {
-        // Load data instantly
         setMentors(mockMentors)
         setLoading(false)
     }, [])
 
-    const handleBookSession = (mentor: Mentor) => {
-        alert(`Booking session with ${mentor.name}`)
-    }
-
-    const changeLanguage = (lang: 'en' | 'ar') => {
-        setLanguage(lang)
-        setShowLanguageMenu(false)
+    const handleConfirmBooking = () => {
+        if (!bookingSlot || !bookingTopic) {
+            alert(t.selectSlotAndTopic)
+            return
+        }
+        alert(`${t.bookingSuccess} ${selectedMentor?.name}!`)
+        setIsBookingModalOpen(false)
+        setBookingSlot('')
+        setBookingTopic('')
     }
 
     // Filter mentors based on search query and selected field
@@ -180,11 +202,7 @@ function MentorshipsPage() {
     })
 
     if (loading) {
-        return (
-            <div className={styles.loadingContainer}>
-                <div className={styles.loadingText}>Loading...</div>
-            </div>
-        )
+        return <LoadingScreen />
     }
 
     return (
@@ -194,8 +212,19 @@ function MentorshipsPage() {
             <div className={styles.glowTertiary} aria-hidden="true" />
             <aside className={styles.sidebar}>
                 <div className={styles.logoSection}>
-                    <div className={styles.backButton} onClick={() => router.push('/student/dashboard')} role="button" title="Back to Dashboard">
-                        <ChevronLeft size={20} />
+                    <div 
+                        className={styles.backButton} 
+                        onClick={() => {
+                            if (selectedMentor) {
+                                setSelectedMentor(null)
+                            } else {
+                                router.push('/student/dashboard')
+                            }
+                        }} 
+                        role="button" 
+                        title={selectedMentor ? "Back to Mentors List" : "Back to Dashboard"}
+                    >
+                        <ChevronLeft size={20} style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
                     </div>
                     <div className={styles.logo}>
                         <div className={styles.logoIcon}>IW</div>
@@ -230,118 +259,298 @@ function MentorshipsPage() {
             <main className={styles.mainContent}>
                 <header className={styles.topBar}>
                     <div className={styles.pageHeader}>
-                        <h1 className={styles.pageTitle}>{t.findMentor}</h1>
-                        <p className={styles.pageSubtitle}>{t.connectWithProfessionals}</p>
+                        {selectedMentor ? (
+                            <div className={styles.detailBreadcrumb} onClick={() => setSelectedMentor(null)} role="button">
+                                <ChevronLeft size={20} className={styles.breadcrumbBackIcon} style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
+                                <span className={styles.breadcrumbText}>{t.back}</span>
+                            </div>
+                        ) : (
+                            <>
+                                <h1 className={styles.pageTitle}>{t.findMentor}</h1>
+                                <p className={styles.pageSubtitle}>{t.connectWithProfessionals}</p>
+                            </>
+                        )}
                     </div>
 
-                    <div className={styles.topBarControls}>
-                        <div className={styles.languageWrapper}>
-                            <button className={styles.iconButton} onClick={() => setShowLanguageMenu(!showLanguageMenu)} title="Change Language">
-                                <Globe size={20} />
-                            </button>
-                            <div className={`language-menu ${showLanguageMenu ? 'show' : ''}`}>
-                                <div className={`language-option ${language === 'en' ? 'active' : ''}`} onClick={() => changeLanguage('en')}>
-                                    {language === 'en' && <Check size={16} />}
-                                    English
-                                </div>
-                                <div className={`language-option ${language === 'ar' ? 'active' : ''}`} onClick={() => changeLanguage('ar')}>
-                                    {language === 'ar' && <Check size={16} />}
-                                    العربية
-                                </div>
-                            </div>
-                        </div>
-                        <button className={styles.iconButton} onClick={toggleTheme} title="Toggle Theme">
-                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
-                        <Notification />
-                        <button className={styles.iconButton} onClick={() => router.push('/')} title="Logout">
-                            <LogOut size={20} />
-                        </button>
-                    </div>
+                    <TopBarControls />
                 </header>
 
-                {/* Search and Filter Section */}
-                <div className={styles.searchFilterSection}>
-                    <div className={styles.searchBarWrapper}>
-                        <Search className={styles.searchIcon} size={20} />
-                        <input
-                            type="text"
-                            placeholder={t.searchMentors}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className={styles.searchBar}
-                        />
-                    </div>
-                    <select
-                        value={selectedField}
-                        onChange={(e) => setSelectedField(e.target.value)}
-                        className={styles.filterDropdown}
-                        aria-label="Filter by field"
-                    >
-                        <option value="all">{t.allFields}</option>
-                        <option value="software">Software Engineering</option>
-                        <option value="data">Data Science</option>
-                        <option value="ai">AI & ML</option>
-                        <option value="design">Design</option>
-                    </select>
-                </div>
-
-                {/* Mentors Grid */}
-                <div className={styles.mentorsGrid}>
-                    {filteredMentors.length > 0 ? (
-                        filteredMentors.map((mentor) => (
-                            <div key={mentor.id} className={styles.mentorCardHorizontal}>
-                                <div className={styles.mentorAvatarLarge}>
-                                    <UserCircle size={64} />
+                {selectedMentor ? (
+                    /* Mentor Detail View */
+                    <div className={styles.detailContainer}>
+                        <div className={styles.detailHeaderCard}>
+                            <div className={styles.detailHeaderLeft}>
+                                <div className={styles.detailAvatar}>
+                                    <UserCircle size={80} />
                                 </div>
-                                <div className={styles.mentorDetails}>
-                                    <div className={styles.mentorHeader}>
-                                        <h3 className={styles.mentorName}>{mentor.name}</h3>
-                                        <p className={styles.mentorField}>{mentor.title}</p>
-                                    </div>
-                                    <div className={styles.mentorMeta}>
-                                        <Star size={14} fill="#fbbf24" color="#fbbf24" />
-                                        <span className={styles.rating}>{mentor.rating}</span>
-                                        <span className={styles.metaText}>({mentor.reviews} {t.reviews}) • {mentor.experience}+ {t.years}</span>
-                                    </div>
-                                    <p className={styles.mentorBio}>{mentor.bio}</p>
-                                    <div className={styles.expertiseBadges}>
-                                        <span className={styles.expertiseLabel}>{t.expertise}:</span>
-                                        {mentor.expertise.map((skill, index) => (
-                                            <span key={index} className={styles.expertiseBadge}>
-                                                {skill}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    {mentor.nextAvailable && (
-                                        <div className={styles.availabilitySection}>
-                                            <Calendar size={14} />
-                                            <span className={styles.availabilityLabel}>{t.nextAvailable}:</span>
-                                            <span className={styles.availabilityTime}>{mentor.nextAvailable.date} {mentor.nextAvailable.time}</span>
+                                <div className={styles.detailHeaderInfo}>
+                                    <h2 className={styles.detailName}>{selectedMentor.name}</h2>
+                                    <p className={styles.detailTitle}>{selectedMentor.title}</p>
+                                    <div className={styles.detailMeta}>
+                                        <div className={styles.detailMetaItem}>
+                                            <Star size={16} fill="#fbbf24" color="#fbbf24" />
+                                            <span className={styles.rating}>{selectedMentor.rating}</span>
+                                            <span className={styles.metaText}>({selectedMentor.reviews} {t.reviews})</span>
                                         </div>
-                                    )}
+                                        <span className={styles.metaDivider}>|</span>
+                                        <div className={styles.detailMetaItem}>
+                                            <Briefcase size={16} className={styles.metaIcon} />
+                                            <span className={styles.metaText}>{selectedMentor.experience} {t.years}</span>
+                                        </div>
+                                        <span className={styles.metaDivider}>|</span>
+                                        <div className={styles.detailMetaItem}>
+                                            <Calendar size={16} className={styles.metaIcon} />
+                                            <span className={styles.metaText}>{selectedMentor.field || selectedMentor.title}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                {mentor.isAvailable ? (
-                                    <button
-                                        className={styles.bookButton}
-                                        onClick={() => handleBookSession(mentor)}
+                            </div>
+                            <div className={styles.detailHeaderRight}>
+                                {selectedMentor.isAvailable ? (
+                                    <button 
+                                        className={styles.detailBookButton}
+                                        onClick={() => setIsBookingModalOpen(true)}
                                     >
                                         {t.bookSession}
                                     </button>
                                 ) : (
-                                    <button className={styles.unavailableButton} disabled>
+                                    <button className={styles.detailUnavailableButton} disabled>
                                         {t.unavailable}
                                     </button>
                                 )}
                             </div>
-                        ))
-                    ) : (
-                        <div className={styles.emptyMessage}>
-                            {t.noMentorsFound}
                         </div>
-                    )}
-                </div>
+
+                        <div className={styles.detailBody}>
+                            <div className={styles.detailMainContent}>
+                                <div className={styles.detailSection}>
+                                    <h3 className={styles.detailSectionTitle}>{t.about}</h3>
+                                    <p className={styles.detailLongBio}>
+                                        {selectedMentor.longBio || selectedMentor.bio}
+                                    </p>
+                                </div>
+
+                                <div className={styles.detailSection}>
+                                    <h3 className={styles.detailSectionTitle}>{t.expertise}</h3>
+                                    <div className={styles.detailExpertiseTags}>
+                                        {selectedMentor.expertise.map((skill, index) => (
+                                            <span key={index} className={styles.detailExpertiseTag}>
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles.detailSidebar}>
+                                <div className={styles.statsCard}>
+                                    <h3 className={styles.statsCardTitle}>
+                                        <Users size={18} className={styles.statsIcon} />
+                                        {t.mentorStats}
+                                    </h3>
+                                    
+                                    <div className={styles.statsList}>
+                                        <div className={styles.statsItem}>
+                                            <span className={styles.statsLabel}>{t.totalSessions}</span>
+                                            <span className={styles.statsValue}>
+                                                {selectedMentor.stats?.totalSessions || 0}
+                                            </span>
+                                        </div>
+                                        <div className={styles.statsItem}>
+                                            <span className={styles.statsLabel}>{t.avgResponseTime}</span>
+                                            <span className={styles.statsValue}>
+                                                {selectedMentor.stats?.avgResponseTime || 'N/A'}
+                                            </span>
+                                        </div>
+                                        <div className={styles.statsItem}>
+                                            <span className={styles.statsLabel}>{t.menteesHired}</span>
+                                            <span className={styles.statsValue}>
+                                                {selectedMentor.stats?.menteesHired || 0}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    /* Find a Mentor Listing View */
+                    <>
+                        <div className={styles.searchFilterSection}>
+                            <div className={styles.searchBarWrapper}>
+                                <Search className={styles.searchIcon} size={20} />
+                                <input
+                                    type="text"
+                                    placeholder={t.searchMentors}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className={styles.searchBar}
+                                />
+                            </div>
+                            <select
+                                value={selectedField}
+                                onChange={(e) => setSelectedField(e.target.value)}
+                                className={styles.filterDropdown}
+                                aria-label="Filter by field"
+                            >
+                                <option value="all">{t.allFields}</option>
+                                <option value="software">Software Engineering</option>
+                                <option value="data">Data Science</option>
+                                <option value="ai">AI & ML</option>
+                                <option value="design">Design</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.mentorsGrid}>
+                            {filteredMentors.length > 0 ? (
+                                filteredMentors.map((mentor) => (
+                                    <div 
+                                        key={mentor.id} 
+                                        className={styles.mentorCardHorizontal}
+                                        onClick={() => setSelectedMentor(mentor)}
+                                    >
+                                        <div className={styles.mentorAvatarLarge}>
+                                            <UserCircle size={64} />
+                                        </div>
+                                        <div className={styles.mentorDetails}>
+                                            <div className={styles.mentorHeader}>
+                                                <h3 className={styles.mentorName}>{mentor.name}</h3>
+                                                <p className={styles.mentorField}>{mentor.title}</p>
+                                            </div>
+                                            <div className={styles.mentorMeta}>
+                                                <Star size={14} fill="#fbbf24" color="#fbbf24" />
+                                                <span className={styles.rating}>{mentor.rating}</span>
+                                                <span className={styles.metaText}>({mentor.reviews} {t.reviews}) • {mentor.experience}+ {t.years}</span>
+                                            </div>
+                                            <p className={styles.mentorBio}>{mentor.bio}</p>
+                                            <div className={styles.expertiseBadges}>
+                                                <span className={styles.expertiseLabel}>{t.expertise}:</span>
+                                                {mentor.expertise.map((skill, index) => (
+                                                    <span key={index} className={styles.expertiseBadge}>
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            {mentor.nextAvailable && (
+                                                <div className={styles.availabilitySection}>
+                                                    <Calendar size={14} />
+                                                    <span className={styles.availabilityLabel}>{t.nextAvailable}:</span>
+                                                    <span className={styles.availabilityTime}>{mentor.nextAvailable.date} {mentor.nextAvailable.time}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={styles.cardActions} onClick={(e) => e.stopPropagation()}>
+                                            {mentor.isAvailable ? (
+                                                <button
+                                                    className={styles.bookButton}
+                                                    onClick={() => setSelectedMentor(mentor)}
+                                                >
+                                                    {t.bookSession}
+                                                </button>
+                                            ) : (
+                                                <button className={styles.unavailableButton} disabled>
+                                                    {t.unavailable}
+                                                </button>
+                                            )}
+                                            <button 
+                                                className={styles.viewDetailsButton}
+                                                onClick={() => setSelectedMentor(mentor)}
+                                                title="View Profile"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className={styles.emptyMessage}>
+                                    {t.noMentorsFound}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
             </main>
+
+            {/* Booking Modal Overlay */}
+            {isBookingModalOpen && selectedMentor && (
+                <div className={styles.modalOverlay} onClick={() => setIsBookingModalOpen(false)}>
+                    <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.modalTitle}>
+                                {t.bookSessionWith} {selectedMentor.name}
+                            </h3>
+                            <button 
+                                className={styles.modalCloseBtn} 
+                                onClick={() => setIsBookingModalOpen(false)}
+                                aria-label="Close modal"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className={styles.modalBody}>
+                            <p className={styles.modalSubtext}>
+                                Select a preferred time slot and topic for your mentorship session.
+                            </p>
+
+                            <div className={styles.formGroup}>
+                                <label htmlFor="timeSlot" className={styles.formLabel}>
+                                    {t.selectTimeSlot}
+                                </label>
+                                <select
+                                    id="timeSlot"
+                                    value={bookingSlot}
+                                    onChange={(e) => setBookingSlot(e.target.value)}
+                                    className={styles.formSelect}
+                                >
+                                    <option value="">{t.chooseTime}</option>
+                                    {selectedMentor.availableSlots && selectedMentor.availableSlots.length > 0 ? (
+                                        selectedMentor.availableSlots.map((slot, index) => (
+                                            <option key={index} value={slot}>
+                                                {slot}
+                                            </option>
+                                        ))
+                                    ) : (
+                                        <option value="default">Next Available Slot</option>
+                                    )}
+                                </select>
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label htmlFor="sessionTopic" className={styles.formLabel}>
+                                    {t.sessionTopic}
+                                </label>
+                                <select
+                                    id="sessionTopic"
+                                    value={bookingTopic}
+                                    onChange={(e) => setBookingTopic(e.target.value)}
+                                    className={styles.formSelect}
+                                >
+                                    <option value="">{t.whatDiscuss}</option>
+                                    <option value="career">{t.careerGuidance || "Career Guidance"}</option>
+                                    <option value="resume">{t.resumeReview || "Resume Review"}</option>
+                                    <option value="interview">{t.interviewPrep || "Interview Prep"}</option>
+                                    <option value="tech">Technical mentorship / Q&A</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className={styles.modalFooter}>
+                            <button 
+                                className={styles.cancelBtn} 
+                                onClick={() => setIsBookingModalOpen(false)}
+                            >
+                                {t.cancel}
+                            </button>
+                            <button 
+                                className={styles.confirmBtn} 
+                                onClick={handleConfirmBooking}
+                            >
+                                {t.confirmBooking}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

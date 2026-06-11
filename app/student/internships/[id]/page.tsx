@@ -10,11 +10,6 @@ import {
   UserCircle,
   Video,
   ChevronLeft,
-  Globe,
-  Moon,
-  Sun,
-  LogOut,
-  Check,
   Menu,
   X,
   MapPin,
@@ -27,9 +22,10 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useApp } from '../../../context/AppContext'
+import TopBarControls from '../../../components/TopBarControls/TopBarControls'
+import LoadingScreen from '../../../components/LoadingScreen/LoadingScreen'
 import sharedStyles from '../InternshipsStyle.module.css'
 import styles from './ViewdetailsStyles.module.css'
-import Notification from '../../../components/Notification/Notification'
 import { useAppliedInternships } from '../../../hooks/useAppliedInternships'
 
 
@@ -160,6 +156,93 @@ const MOCK_DETAIL: Record<number, any> = {
       industry: 'Software Development',
     },
   },
+  4: {
+    internId:           4,
+    title:              'UI/UX Designer Intern',
+    description:        'We are looking for a passionate UI/UX Designer Intern to join our digital solutions team. You will work on wireframes, design prototypes, and build sleek visual styles using Figma and Adobe XD.',
+    duration:           4,
+    locationType:       'Hybrid',
+    startDate:          'Feb 1, 2025',
+    endDate:            'Jun 1, 2025',
+    isPaid:             true,
+    price:              4500,
+    status:             'Open',
+    canApply:           true,
+    internship_City:    'Alexandria',
+    internship_Country: 'Egypt',
+    skills:             ['Figma', 'Adobe XD', 'Prototyping'],
+    requirements:       [
+      'Basic understanding of layout design and typography',
+      'Hands-on experience with Figma or Adobe XD',
+      'A design portfolio showing user flow or mobile layouts is preferred',
+    ],
+    applicationsCount:  12,
+    company: {
+      name:     'Digital Solutions',
+      webSit:   'https://www.digitalsolutions.com',
+      city:     'Alexandria',
+      country:  'Egypt',
+      industry: 'Design & Visuals',
+    },
+  },
+  5: {
+    internId:           5,
+    title:              'Full Stack Developer',
+    description:        'Join our core development team to work on Next.js web applications, Node.js backend controllers, and MongoDB collections. Excellent learning opportunity with expert developer mentoring.',
+    duration:           6,
+    locationType:       'Remote',
+    startDate:          'Jan 25, 2025',
+    endDate:            'Jul 25, 2025',
+    isPaid:             false,
+    price:              0,
+    status:             'Open',
+    canApply:           true,
+    internship_City:    'Remote',
+    internship_Country: 'Egypt',
+    skills:             ['Node.js', 'MongoDB', 'React'],
+    requirements:       [
+      'Understanding of modern Javascript and ES6 standards',
+      'Knowledge of React.js and components lifecycle',
+      'Familiar with REST API design and Node.js routing',
+    ],
+    applicationsCount:  19,
+    company: {
+      name:     'Innovation Hub',
+      webSit:   'https://www.innovationhub.co',
+      city:     'Remote',
+      country:  'Egypt',
+      industry: 'Software Development',
+    },
+  },
+  6: {
+    internId:           6,
+    title:              'Data Analyst Intern',
+    description:        'Analyze business metrics, clean dataset sheets, build interactive reports, and present data insights. Hands-on experience using Python libraries, SQL queries, and Excel dashboards.',
+    duration:           3,
+    locationType:       'On-site',
+    startDate:          'Jan 1, 2025',
+    endDate:            'Apr 1, 2025',
+    isPaid:             true,
+    price:              6000,
+    status:             'Open',
+    canApply:           true,
+    internship_City:    'Giza',
+    internship_Country: 'Egypt',
+    skills:             ['Python', 'SQL', 'Excel'],
+    requirements:       [
+      'Understanding of basic statistics and data cleaning',
+      'Ability to write standard SQL SELECT queries',
+      'Familiarity with Excel pivot tables and Python libraries (pandas/numpy)',
+    ],
+    applicationsCount:  8,
+    company: {
+      name:     'Startup Labs',
+      webSit:   'https://www.startuplabs.io',
+      city:     'Giza',
+      country:  'Egypt',
+      industry: 'Data Analytics',
+    },
+  },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -179,26 +262,7 @@ const initials    = (name: string) =>
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function InternshipDetailPage() {
-  const { theme, toggleTheme, language, setLanguage, t } = useApp()
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
-            const isLanguageMenu = target.closest('.language-menu');
-            if (!isLanguageButton && !isLanguageMenu) {
-                setShowLanguageMenu(false);
-            }
-        };
-        if (showLanguageMenu) {
-            document.addEventListener('click', handleClickOutside);
-        }
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLanguageMenu]);
+  const { language, t } = useApp()
 
   const router   = useRouter()
   const params   = useParams()
@@ -299,9 +363,10 @@ export default function InternshipDetailPage() {
     }
   }
 
-  const changeLanguage = (lang: 'en' | 'ar') => {
-    setLanguage(lang)
-    setShowLanguageMenu(false)
+
+
+  if (loading) {
+    return <LoadingScreen />
   }
 
   const accentColor   = internship ? colorFromId(internship.internId) : '#5B8DEF'
@@ -351,41 +416,15 @@ export default function InternshipDetailPage() {
             <p className={sharedStyles.pageSubtitle}>{internship?.company.name ?? ''}</p>
           </div>
 
-          <div className={sharedStyles.topBarControls}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button className={sharedStyles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle menu">
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
-
-            <div className={sharedStyles.languageWrapper}>
-              <button className={sharedStyles.iconButton} onClick={() => setShowLanguageMenu(p => !p)} title="Change Language">
-                <Globe size={20} />
-              </button>
-              <div className={`${sharedStyles.languageMenu} ${showLanguageMenu ? sharedStyles.show : ''}`}>
-                <div className={`${sharedStyles.languageOption} ${language === 'en' ? sharedStyles.active : ''}`} onClick={() => changeLanguage('en')}>
-                  {language === 'en' && <Check size={16} />} English
-                </div>
-                <div className={`${sharedStyles.languageOption} ${language === 'ar' ? sharedStyles.active : ''}`} onClick={() => changeLanguage('ar')}>
-                  {language === 'ar' && <Check size={16} />} العربية
-                </div>
-              </div>
-            </div>
-
-            <button className={sharedStyles.iconButton} onClick={toggleTheme} title="Toggle Theme">
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <Notification />
-            <button className={sharedStyles.iconButton} onClick={() => router.push('/')} title="Logout">
-              <LogOut size={20} />
-            </button>
+            <TopBarControls />
           </div>
         </header>
 
-        {loading && (
-          <div className={styles.stateCenter}>
-            <Loader2 size={32} className={styles.spinner} style={{ color: accentColor }} />
-            <span>Loading internship details…</span>
-          </div>
-        )}
+
 
         {!loading && error && (
           <div className={styles.stateCenter}>

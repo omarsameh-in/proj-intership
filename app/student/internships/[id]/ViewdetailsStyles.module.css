@@ -3,11 +3,33 @@
 
 /* ── Detail page scroll area ─────────────────────────────────────────────── */
 .detailScroll {
+  /* Default: Dark Mode Theme Variables */
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --card-bg: rgba(30, 41, 59, 0.4);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: none;
+  --skill-bg: rgba(59, 130, 246, 0.1);
+  --skill-color: #60a5fa;
+  --skill-border: rgba(59, 130, 246, 0.3);
+
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 28px 32px 60px;
   animation: fadeSlideUp 0.35s ease both;
+}
+
+:global(body.light-mode) .detailScroll {
+  /* Light Mode Theme Variables */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --skill-bg: rgba(59, 130, 246, 0.08);
+  --skill-color: #2563eb;
+  --skill-border: rgba(59, 130, 246, 0.2);
 }
 
 @keyframes fadeSlideUp {

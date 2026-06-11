@@ -7,19 +7,14 @@ import {
   Briefcase,
   Users,
   Building2,
-  Globe,
-  Moon,
-  Sun,
-  LogOut,
-  Check,
   ChevronLeft,
   Plus,
   X,
   Menu
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './PostInternshipStyle.module.css'
-import Notification from '../../components/Notification/Notification'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 
 
@@ -44,26 +39,7 @@ interface PostFormData {
 }
 
 function PostInternshipContent() {
-  const { theme, toggleTheme, language, setLanguage, t } = useApp()
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
-            const isLanguageMenu = target.closest('.language-menu');
-            if (!isLanguageButton && !isLanguageMenu) {
-                setShowLanguageMenu(false);
-            }
-        };
-        if (showLanguageMenu) {
-            document.addEventListener('click', handleClickOutside);
-        }
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLanguageMenu]);
+  const { language, t } = useApp()
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -106,7 +82,7 @@ function PostInternshipContent() {
         setSkills(['React', 'TypeScript', 'CSS'])
       } catch {
         alert(t.failedToLoadInternshipData)
-        router.push('/company/myinternships')
+        router.push('/company/internships')
       } finally {
         setFetching(false)
       }
@@ -161,7 +137,7 @@ function PostInternshipContent() {
     try {
       await new Promise(r => setTimeout(r, 200))
       alert(isEditMode ? t.internshipUpdatedSuccess : t.internshipPublishedSuccess)
-      router.push('/company/myinternships')
+      router.push('/company/internships')
     } catch {
       alert(isEditMode ? t.failedToUpdateInternship : t.failedToPublishInternship)
     } finally {
@@ -169,7 +145,7 @@ function PostInternshipContent() {
     }
   }
 
-  const changeLanguage = (lang: 'en' | 'ar') => { setLanguage(lang); setShowLanguageMenu(false) }
+
 
   if (fetching) {
     return <LoadingScreen />
@@ -222,28 +198,14 @@ function PostInternshipContent() {
             </p>
           </div>
 
-          <div className={styles.topBarControls}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               className={styles.hamburgerBtn}
               onClick={() => setSidebarOpen(prev => !prev)}
             >
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
-            <div className={styles.languageWrapper}>
-              <button className={styles.iconButton} onClick={() => setShowLanguageMenu(!showLanguageMenu)} title={t.changeLanguage}><Globe size={20} /></button>
-              <div className={`language-menu ${showLanguageMenu ? 'show' : ''}`}>
-                {(['en', 'ar'] as const).map(lang => (
-                  <div key={lang} className={`language-option ${language === lang ? 'active' : ''}`} onClick={() => changeLanguage(lang)}>
-                    {language === lang && <Check size={16} />}{lang === 'en' ? 'English' : 'العربية'}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button className={styles.iconButton} onClick={toggleTheme} title={t.toggleTheme}>{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</button>
-
-            <Notification />
-
-            <button className={styles.iconButton} onClick={() => router.push('/')} title={t.logout}><LogOut size={20} /></button>
+            <TopBarControls />
           </div>
         </header>
 
@@ -386,7 +348,7 @@ function PostInternshipContent() {
             </div>
 
             <div className={styles.formActions}>
-              <button type="button" className={styles.cancelBtn} onClick={() => router.push('/company/myinternships')}>
+              <button type="button" className={styles.cancelBtn} onClick={() => router.push('/company/internships')}>
                 {t.cancel}
               </button>
               <button type="submit" className={styles.submitBtn} disabled={loading}>

@@ -9,12 +9,6 @@ import {
     Users,
     ClipboardList,
     ChevronLeft,
-    Globe,
-    Moon,
-    Sun,
-    Bell,
-    LogOut,
-    Check,
     PlusCircle,
     Eye,
     Star,
@@ -26,32 +20,13 @@ import {
     X
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './company.module.css'
-import Notification from '../../components/Notification/Notification'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 
 
 function Company() {
-    const { theme, toggleTheme, language, setLanguage, t } = useApp()
-    const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
-            const isLanguageMenu = target.closest('.language-menu');
-            if (!isLanguageButton && !isLanguageMenu) {
-                setShowLanguageMenu(false);
-            }
-        };
-        if (showLanguageMenu) {
-            document.addEventListener('click', handleClickOutside);
-        }
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLanguageMenu]);
+    const { language, t } = useApp()
 
     const router = useRouter()
 
@@ -143,10 +118,7 @@ function Company() {
         }
     }
 
-    const changeLanguage = (lang: 'en' | 'ar') => {
-        setLanguage(lang)
-        setShowLanguageMenu(false)
-    }
+
 
     if (loading) {
         return <LoadingScreen />
@@ -210,40 +182,7 @@ function Company() {
                         <p className={styles.pageSubtitle}>{t.companySubtitle}</p>
                     </div>
 
-                    <div className={styles.topBarControls}>
-                        <div className={styles.languageWrapper}>
-                            <button
-                                className={styles.iconButton}
-                                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                                title={t.changeLanguage}
-                            >
-                                <Globe size={20} />
-                            </button>
-                            <div className={`language-menu ${showLanguageMenu ? 'show' : ''}`}>
-                                <div
-                                    className={`language-option ${language === 'en' ? 'active' : ''}`}
-                                    onClick={() => changeLanguage('en')}
-                                >
-                                    {language === 'en' && <Check size={16} />}
-                                    English
-                                </div>
-                                <div
-                                    className={`language-option ${language === 'ar' ? 'active' : ''}`}
-                                    onClick={() => changeLanguage('ar')}
-                                >
-                                    {language === 'ar' && <Check size={16} />}
-                                    العربية
-                                </div>
-                            </div>
-                        </div>
-                        <button className={styles.iconButton} onClick={toggleTheme} title={t.toggleTheme}>
-                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
-                        <Notification />
-                        <button className={styles.iconButton} onClick={() => router.push('/')} title={t.logout}>
-                            <LogOut size={20} />
-                        </button>
-                    </div>
+                    <TopBarControls />
                 </header>
 
                 {/* Stats Grid */}

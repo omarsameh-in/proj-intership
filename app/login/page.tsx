@@ -127,7 +127,7 @@ export default function LoginPage() {
             <h1 className="display-5 fw-bold text-white mb-3">
               {t.welcomeTitle}
             </h1>
-            <p className="text-white fs-5 text-opacity-80">
+            <p className="welcome-subtitle fs-5">
               {t.welcomeSubtitle}
             </p>
           </div>
@@ -201,7 +201,7 @@ export default function LoginPage() {
                       <div className={`role-icon-circle ${selectedRole === role ? role : 'unselected'}`}>
                         {getRoleIcon(role)}
                       </div>
-                      <span className={`small fw-medium ${selectedRole === role ? 'text-white' : 'text-secondary'}`}>
+                      <span className={`small fw-medium ${selectedRole === role ? 'role-text-selected' : 'text-secondary'}`}>
                         {t[role]}
                       </span>
                     </div>

@@ -1,0 +1,358 @@
+'use client'
+import React, { useState, useEffect } from 'react'
+import { Search, Mail, Phone, Calendar, User, GraduationCap, Clock, X, Loader2, CheckCircle } from 'lucide-react'
+import { useApp } from '../../context/AppContext'
+import TopBarControls from '../../components/TopBarControls/TopBarControls'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
+import styles from './MenteesPage.module.css'
+
+// ============================================================
+//  TYPES
+// ============================================================
+interface Mentee {
+    id: number
+    name: string
+    university: string
+    major: string
+    email: string
+    phone: string
+    nextSession: string
+    totalSessions: number
+}
+
+interface AvailableSlot {
+    id: number
+    displayDate: string
+    displayTime: string
+}
+
+// ============================================================
+//  CONFIG
+// ============================================================
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://your-api.com'
+
+const authHeader = (): Record<string, string> => ({
+    'Content-Type': 'application/json',
+})
+
+// ============================================================
+//  API CALLS
+// ============================================================
+async function fetchAvailableSlots(): Promise<AvailableSlot[]> {
+    // TODO: استبدل بـ real API call
+    // const res = await fetch(`${BASE_URL}/api/mentor/available-slots`, { headers: authHeader() })
+    // if (!res.ok) throw new Error('Failed to fetch slots')
+    // return res.json()
+    return new Promise((resolve) =>
+        setTimeout(() => resolve([
+            { id: 1, displayDate: 'Wednesday, Jan 24', displayTime: '2:00 PM – 4:00 PM' },
+            { id: 2, displayDate: 'Friday, Jan 26',    displayTime: '1:00 PM – 2:00 PM' },
+            { id: 3, displayDate: 'Tuesday, Jan 28',   displayTime: '9:00 AM – 10:30 AM' },
+        ]), 800)
+    )
+}
+
+async function createSession(menteeId: number, slotId: number): Promise<void> {
+    const res = await fetch(`${BASE_URL}/api/sessions`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ menteeId, slotId }),
+    })
+    if (!res.ok) throw new Error('Failed to create session')
+}
+
+// ============================================================
+//  MOCK DATA
+// ============================================================
+const MOCK_MENTEES: Mentee[] = [
+    { id: 1, name: 'Layla Ibrahim',  university: 'Cairo University',      major: 'Software Engineering', email: 'layla@example.com', phone: '+20 123 456 7890', nextSession: 'Dec 28, 3:00 PM',  totalSessions: 5 },
+    { id: 2, name: 'Omar Saeed',     university: 'Ain Shams University',  major: 'Data Science',         email: 'omar@example.com',  phone: '+20 123 456 7891', nextSession: 'Dec 30, 10:00 AM', totalSessions: 3 },
+    { id: 3, name: 'Nour Khalil',    university: 'Alexandria University', major: 'UI/UX Design',         email: 'nour@example.com',  phone: '+20 123 456 7892', nextSession: 'Jan 2, 1:00 PM',   totalSessions: 7 },
+    { id: 4, name: 'Ahmed Hassan',   university: 'Cairo University',      major: 'Mobile Development',   email: 'ahmed@example.com', phone: '+20 123 456 7893', nextSession: 'Jan 5, 11:00 AM',  totalSessions: 2 },
+]
+
+// ============================================================
+//  SCHEDULE SESSION MODAL
+// ============================================================
+function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
+    mentee: Mentee
+    onClose: () => void
+    onSuccess: (menteeId: number) => void
+}) {
+    const [slots, setSlots]               = useState<AvailableSlot[]>([])
+    const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null)
+    const [loadingSlots, setLoadingSlots] = useState(true)
+    const [confirming, setConfirming]     = useState(false)
+    const [done, setDone]                 = useState(false)
+    const [error, setError]               = useState<string | null>(null)
+
+    useEffect(() => {
+        fetchAvailableSlots()
+            .then((data) => { setSlots(data); setLoadingSlots(false) })
+            .catch(() => { setError('Failed to load slots.'); setLoadingSlots(false) })
+    }, [])
+
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [onClose])
+
+    const handleConfirm = async () => {
+        if (!selectedSlot) return
+        setConfirming(true)
+        setError(null)
+        try {
+            await createSession(mentee.id, selectedSlot.id)
+            setDone(true)
+            setTimeout(() => { onSuccess(mentee.id); onClose() }, 1200)
+        } catch {
+            setError('Something went wrong. Please try again.')
+            setConfirming(false)
+        }
+    }
+
+
+
+    return (
+        <div
+            className={styles.overlay}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+        >
+            <div className={styles.modal}>
+                {/* Header */}
+                <div className={styles.modalHeader}>
+                    <div>
+                        <p className={styles.modalEyebrow}>New Session</p>
+                        <h2 className={styles.modalTitle}>{mentee.name}</h2>
+                        <p className={styles.modalSubtitle}>{mentee.university}</p>
+                    </div>
+                    <button onClick={onClose} className={styles.closeBtn} title="Close">
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {/* Mentee Info */}
+                <div className={styles.modalMenteeInfo}>
+                    <div className={styles.menteeInfoCard}>
+                        <div className={styles.menteeAvatar}>{mentee.name.charAt(0)}</div>
+                        <div>
+                            <p className={styles.menteeName}>{mentee.name}</p>
+                            <p className={styles.menteeMajor}>{mentee.major}</p>
+                        </div>
+                        <div className={styles.menteeSessions}>
+                            <p className={styles.menteeSessionsLabel}>Total Sessions</p>
+                            <p className={styles.menteeSessionsCount}>{mentee.totalSessions}</p>
+                        </div>
+                    </div>
+                    <p className={styles.slotHint}>Select an available slot for this session</p>
+                    <hr className={styles.divider} />
+                </div>
+
+                {/* Slots List */}
+                <div className={styles.slotList}>
+                    {loadingSlots && (
+                        <div className={styles.loadingState}>
+                            <Loader2 size={24} className="animate-spin" />
+                            <span>Loading available slots...</span>
+                        </div>
+                    )}
+                    {error && !loadingSlots && (
+                        <div className={styles.errorState}>{error}</div>
+                    )}
+                    {!loadingSlots && !error && slots.length === 0 && (
+                        <p className={styles.emptyState}>No available slots at the moment.</p>
+                    )}
+                    {!loadingSlots && !error && slots.map(slot => {
+                        const isSelected = selectedSlot?.id === slot.id
+                        return (
+                            <div
+                                key={slot.id}
+                                onClick={() => setSelectedSlot(slot)}
+                                className={`${styles.slotItem} ${isSelected ? styles.slotItemSelected : styles.slotItemDefault}`}
+                            >
+                                <div className={styles.slotLeft}>
+                                    <div className={`${styles.slotIcon} ${isSelected ? styles.slotIconSelected : styles.slotIconDefault}`}>
+                                        <Calendar size={16} color={isSelected ? '#3b82f6' : '#94a3b8'} />
+                                    </div>
+                                    <div>
+                                        <p className={styles.slotDate}>{slot.displayDate}</p>
+                                        <div className={styles.slotTime}>
+                                            <Clock size={11} color="#94a3b8" />
+                                            <span>{slot.displayTime}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span className={`${styles.slotBadge} ${isSelected ? styles.slotBadgeSelected : styles.slotBadgeDefault}`}>
+                                    {isSelected ? 'Selected' : 'Select'}
+                                </span>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {/* Selected Slot Summary */}
+                {selectedSlot && (
+                    <div className={styles.selectedSummary}>
+                        <div>
+                            <p className={styles.summaryLabel}>Date</p>
+                            <p className={styles.summaryValue}>{selectedSlot.displayDate}</p>
+                        </div>
+                        <div className={styles.summaryDivider} />
+                        <div>
+                            <p className={styles.summaryLabel}>Time</p>
+                            <p className={styles.summaryValue}>{selectedSlot.displayTime}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer */}
+                <div className={styles.modalFooter}>
+                    <button onClick={onClose} className={styles.cancelBtn}>Cancel</button>
+                    <button
+                        onClick={handleConfirm}
+                        disabled={!selectedSlot || confirming || done}
+                        className={`${styles.confirmBtn} ${
+                            done 
+                                ? styles.confirmBtnDone 
+                                : (!selectedSlot || confirming) 
+                                    ? styles.confirmBtnDisabled 
+                                    : styles.confirmBtnDefault
+                        }`}
+                    >
+                        {done
+                            ? <><CheckCircle size={16} /> Session Scheduled!</>
+                            : confirming
+                                ? <><Loader2 size={16} className="animate-spin" /> Scheduling...</>
+                                : 'Confirm Session'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ============================================================
+//  MAIN PAGE
+// ============================================================
+export default function MenteesPage() {
+    const { language } = useApp()
+    const [searchQuery, setSearchQuery]       = useState('')
+    const [mentees, setMentees]               = useState<Mentee[]>(MOCK_MENTEES)
+    const [scheduleTarget, setScheduleTarget] = useState<Mentee | null>(null)
+    const [loading, setLoading]               = useState(true)
+
+    useEffect(() => {
+        const timer = setTimeout(() => setLoading(false), 200)
+        return () => clearTimeout(timer)
+    }, [])
+
+    if (loading) {
+        return <LoadingScreen />
+    }
+
+    const handleScheduleSuccess = (menteeId: number) => {
+        setMentees(prev =>
+            prev.map(m => m.id === menteeId
+                ? { ...m, totalSessions: m.totalSessions + 1 }
+                : m
+            )
+        )
+    }
+
+    const filtered = mentees.filter(m =>
+        m.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    return (
+        <div className={styles.page}>
+            <div className={styles.container}>
+
+                {/* Header */}
+                <div className={styles.pageHeader}>
+                    <div>
+                        <h1 className={styles.title}>
+                            {language === 'ar' ? 'طلابي' : 'My Mentees'}
+                        </h1>
+                        <p className={styles.subtitle}>
+                            {language === 'ar' ? 'إدارة علاقاتك مع الطلاب' : 'Manage your mentee relationships'}
+                        </p>
+                    </div>
+                    <TopBarControls />
+                </div>
+
+                {/* Search */}
+                <div className={styles.searchBar}>
+                    <Search className={styles.searchIcon} size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search mentees..."
+                        className={styles.searchInput}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+
+                {/* Cards Grid */}
+                <div className={styles.grid}>
+                    {filtered.map((mentee) => (
+                        <div key={mentee.id} className={styles.card}>
+                            {/* Profile Row */}
+                            <div className={styles.cardProfileRow}>
+                                <div className={styles.cardAvatar}>
+                                    <User size={26} />
+                                </div>
+                                <div>
+                                    <h3 className={styles.cardName}>{mentee.name}</h3>
+                                    <p className={styles.cardUniversity}>{mentee.university}</p>
+                                    <div className={styles.cardMajor}>
+                                        <GraduationCap size={15} />
+                                        <span>{mentee.major}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Info */}
+                            <div className={styles.contactInfo}>
+                                <div className={styles.contactRow}>
+                                    <Mail size={16} color="#3b82f6" />
+                                    <span>{mentee.email}</span>
+                                </div>
+                                <div className={styles.contactRow}>
+                                    <Phone size={16} color="#3b82f6" />
+                                    <span>{mentee.phone}</span>
+                                </div>
+                                <div className={styles.contactRowBold}>
+                                    <Calendar size={16} color="#3b82f6" />
+                                    <span>Next: {mentee.nextSession}</span>
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className={styles.cardFooter}>
+                                <div>
+                                    <p className={styles.sessionsLabel}>Total Sessions</p>
+                                    <p className={styles.sessionsCount}>{mentee.totalSessions}</p>
+                                </div>
+                                <button
+                                    onClick={() => setScheduleTarget(mentee)}
+                                    className={styles.scheduleBtn}
+                                >
+                                    Schedule Session
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {scheduleTarget && (
+                <ScheduleSessionModal
+                    mentee={scheduleTarget}
+                    onClose={() => setScheduleTarget(null)}
+                    onSuccess={handleScheduleSuccess}
+                />
+            )}
+        </div>
+    )
+}

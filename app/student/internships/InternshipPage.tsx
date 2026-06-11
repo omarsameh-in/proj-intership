@@ -10,12 +10,6 @@ import {
   UserCircle,
   Video,
   ChevronLeft,
-  Globe,
-  Moon,
-  Sun,
-  Bell,
-  LogOut,
-  Check,
   Search,
   MapPin,
   Clock,
@@ -23,11 +17,12 @@ import {
   X,
   AlertCircle,
   ArrowRight,
-  Send,
+  Check,
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+import TopBarControls from '../../components/TopBarControls/TopBarControls'
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './InternshipsStyle.module.css'
-import Notification from '../../components/Notification/Notification'
 import { useAppliedInternships } from '../../hooks/useAppliedInternships'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -170,6 +165,42 @@ const MOCK_RAW_LIST: RawInternshipListItem[] = [
     paidStatus:     'Unpaid',
     price:          0,
   },
+  {
+    internshipId:   4,
+    title:          'UI/UX Designer Intern',
+    companyName:    'Digital Solutions',
+    durationMonths: 4,
+    locationType:   'Hybrid',
+    city:           'Alexandria',
+    deadline:       'Jan 15, 2025',
+    requiredSkills: ['Figma', 'Adobe XD', 'Prototyping'],
+    paidStatus:     'Paid',
+    price:          4500,
+  },
+  {
+    internshipId:   5,
+    title:          'Full Stack Developer',
+    companyName:    'Innovation Hub',
+    durationMonths: 6,
+    locationType:   'Remote',
+    city:           'Remote',
+    deadline:       'Jan 20, 2025',
+    requiredSkills: ['Node.js', 'MongoDB', 'React'],
+    paidStatus:     'Unpaid',
+    price:          0,
+  },
+  {
+    internshipId:   6,
+    title:          'Data Analyst Intern',
+    companyName:    'Startup Labs',
+    durationMonths: 3,
+    locationType:   'On-site',
+    city:           'Giza',
+    deadline:       'Dec 25, 2024',
+    requiredSkills: ['Python', 'SQL', 'Excel'],
+    paidStatus:     'Paid',
+    price:          6000,
+  },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -177,26 +208,7 @@ const MOCK_RAW_LIST: RawInternshipListItem[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 function InternshipPage() {
-  const { theme, toggleTheme, language, setLanguage, t } = useApp()
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
-            const isLanguageMenu = target.closest('.language-menu');
-            if (!isLanguageButton && !isLanguageMenu) {
-                setShowLanguageMenu(false);
-            }
-        };
-        if (showLanguageMenu) {
-            document.addEventListener('click', handleClickOutside);
-        }
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLanguageMenu]);
+  const { t } = useApp()
 
   const router = useRouter()
 
@@ -234,7 +246,7 @@ function InternshipPage() {
     // })
 
     // ── MOCK match scores ─────────────────────────────────────────────────
-    const mockScores: Record<number, number> = { 2: 88, 3: 76 }
+    const mockScores: Record<number, number> = { 2: 88, 3: 76, 4: 88, 5: 82, 6: 75 }
     setInternships(prev =>
       prev.map(i => ({ ...i, matchScore: mockScores[i.id] ?? null }))
     )
@@ -337,17 +349,10 @@ function InternshipPage() {
     )
   })
 
-  const changeLanguage = (lang: 'en' | 'ar') => {
-    setLanguage(lang)
-    setShowLanguageMenu(false)
-  }
+
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ color: '#9ca3af', fontSize: '0.9375rem' }}>Loading internships…</div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (error) {
@@ -408,32 +413,11 @@ function InternshipPage() {
             <p className={styles.pageSubtitle}>{t.perfectOpportunity}</p>
           </div>
 
-          <div className={styles.topBarControls}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle menu">
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
-
-            <div className={styles.languageWrapper}>
-              <button className={styles.iconButton} onClick={() => setShowLanguageMenu(p => !p)} title="Change Language">
-                <Globe size={20} />
-              </button>
-              <div className={`${styles.languageMenu} ${showLanguageMenu ? styles.show : ''}`}>
-                <div className={`${styles.languageOption} ${language === 'en' ? styles.active : ''}`} onClick={() => changeLanguage('en')}>
-                  {language === 'en' && <Check size={16} />} English
-                </div>
-                <div className={`${styles.languageOption} ${language === 'ar' ? styles.active : ''}`} onClick={() => changeLanguage('ar')}>
-                  {language === 'ar' && <Check size={16} />} العربية
-                </div>
-              </div>
-            </div>
-
-            <button className={styles.iconButton} onClick={toggleTheme} title="Toggle Theme">
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <Notification />
-            <button className={styles.iconButton} onClick={() => router.push('/')} title="Logout">
-              <LogOut size={20} />
-            </button>
+            <TopBarControls />
           </div>
         </header>
 

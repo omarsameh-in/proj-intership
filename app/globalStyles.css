@@ -713,6 +713,20 @@ body.light-mode .theme-lang-controls button:hover {
   color: #3b82f6 !important;
 }
 
+.welcome-subtitle {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.light-mode .welcome-subtitle {
+  color: #475569 !important;
+}
+
+body.light-mode .left-panel a,
+body.light-mode .left-panel button {
+  color: #1e293b !important;
+}
+
+
 /* RTL Support */
 [dir="rtl"] .left-panel {
   direction: rtl;
@@ -826,4 +840,11 @@ body.light-mode .theme-lang-controls button:hover {
   .form-control {
     padding: 0.75rem !important;
   }
+}
+
+.role-text-selected {
+  color: #ffffff !important;
+}
+body.light-mode .role-text-selected {
+  color: #1e293b !important;
 }

@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
-import PostInternshipPage from './PostInternshipPage'
+import SessionsPage from './SessionsPage'
 
 export default function Page() {
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <PostInternshipPage />
+            <SessionsPage />
         </Suspense>
     )
 }

@@ -8,11 +8,6 @@ import {
   Briefcase,
   Users,
   Building2,
-  Globe,
-  Moon,
-  Sun,
-  LogOut,
-  Check,
   ChevronLeft,
   Search,
   Mail,
@@ -22,8 +17,8 @@ import {
   X,
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './ApplicationsStyle.module.css'
-import Notification from '../../components/Notification/Notification'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 
 
@@ -88,26 +83,7 @@ const MOCK_APPLICANTS: Applicant[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 function ApplicationsContent() {
-  const { theme, toggleTheme, language, setLanguage, t } = useApp()
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
-            const isLanguageMenu = target.closest('.language-menu');
-            if (!isLanguageButton && !isLanguageMenu) {
-                setShowLanguageMenu(false);
-            }
-        };
-        if (showLanguageMenu) {
-            document.addEventListener('click', handleClickOutside);
-        }
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, [showLanguageMenu]);
+  const { language, t } = useApp()
 
 
   const router = useRouter()
@@ -162,7 +138,7 @@ function ApplicationsContent() {
     alert(`${t.downloadingCv} ${applicant.name}`)
   }
 
-  const changeLanguage = (lang: 'en' | 'ar') => { setLanguage(lang); setShowLanguageMenu(false) }
+
 
   const filtered = applicants.filter(a => {
     const matchesSearch =
@@ -234,29 +210,14 @@ function ApplicationsContent() {
             <h1 className={styles.pageTitle}>{t.applicantsPageTitle}</h1>
             <p className={styles.pageSubtitle}>{t.applicantsPageSubtitle}</p>
           </div>
-          <div className={styles.topBarControls}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               className={styles.hamburgerBtn}
               onClick={() => setSidebarOpen(prev => !prev)}
             >
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
-
-            <div className={styles.languageWrapper}>
-              <button className={styles.iconButton} onClick={() => setShowLanguageMenu(!showLanguageMenu)} title={t.changeLanguage}><Globe size={20} /></button>
-              <div className={`language-menu ${showLanguageMenu ? 'show' : ''}`}>
-                {(['en', 'ar'] as const).map(lang => (
-                  <div key={lang} className={`language-option ${language === lang ? 'active' : ''}`} onClick={() => changeLanguage(lang)}>
-                    {language === lang && <Check size={16} />}{lang === 'en' ? 'English' : 'العربية'}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button className={styles.iconButton} onClick={toggleTheme} title={t.toggleTheme}>{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</button>
-
-            <Notification />
-
-            <button className={styles.iconButton} onClick={() => router.push('/')} title={t.logout}><LogOut size={20} /></button>
+            <TopBarControls />
           </div>
         </header>
 

@@ -5,12 +5,22 @@ import { translations, Language } from '../locales/translations'
 
 type Theme = 'light' | 'dark'
 
+export interface Slot {
+    id: number
+    day: string
+    time: string
+}
+
 interface AppContextType {
     theme: Theme
     language: Language
     toggleTheme: () => void
     setLanguage: (lang: Language) => void
     t: typeof translations.en
+    slots: Slot[]
+    setSlots: (slots: Slot[]) => void
+    addSlots: (newSlots: Slot[]) => void
+    deleteSlot: (id: number) => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -19,6 +29,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light')
     const [language, setLanguage] = useState<Language>('en')
     const [mounted, setMounted] = useState(false)
+    const [slots, setSlots] = useState<Slot[]>([
+        { id: 1, day: 'Monday, Jan 22',    time: '10:00 AM - 11:30 AM' },
+        { id: 2, day: 'Wednesday, Jan 24', time: '2:00 PM - 4:00 PM' },
+        { id: 3, day: 'Friday, Jan 26',    time: '1:00 PM - 2:00 PM' },
+    ])
+
+    const addSlots = (newSlots: Slot[]) => setSlots(prev => [...prev, ...newSlots])
+    const deleteSlot = (id: number) => setSlots(prev => prev.filter(s => s.id !== id))
 
     useEffect(() => {
         // Load saved preferences
@@ -63,7 +81,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         language,
         toggleTheme,
         setLanguage,
-        t: translations[language]
+        t: translations[language],
+        slots,
+        setSlots,
+        addSlots,
+        deleteSlot
     }
 
     // Prevent hydration mismatch by rendering nothing until mounted
