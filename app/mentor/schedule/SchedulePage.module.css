@@ -341,3 +341,39 @@
 :global(body.light-mode) .cancelBtn:hover {
     background: #f8fafc;
 }
+
+/* ============================================================
+   DARK MODE OVERRIDES (default is dark, so fix light-only colors)
+   ============================================================ */
+
+/* slotDay uses #1e293b (dark text) — invisible on dark card */
+:global(body:not(.light-mode)) .slotDay {
+    color: #f1f5f9;
+}
+
+/* slotTime uses #64748b (medium gray) — hard to read on dark */
+:global(body:not(.light-mode)) .slotTime {
+    color: #94a3b8;
+}
+
+/* slotIcon uses #dbeafe bg (light blue) — out of place on dark */
+:global(body:not(.light-mode)) .slotIcon {
+    background: #1e40af;
+    color: #93c5fd;
+}
+
+/* availableBadge uses light green — too bright on dark */
+:global(body:not(.light-mode)) .availableBadge {
+    background: #14532d;
+    color: #4ade80;
+}
+
+/* deleteBtn hover uses light red bg — not suitable for dark */
+:global(body:not(.light-mode)) .deleteBtn:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+/* closeBtn hover uses very light bg — invisible on dark */
+:global(body:not(.light-mode)) .closeBtn:hover {
+    background: rgba(148, 163, 184, 0.15);
+}
