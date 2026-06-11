@@ -224,7 +224,7 @@ function Company() {
                 <div className={styles.sectionBox}>
                     <div className={styles.sectionHeader}>
                         <h2 className={styles.sectionTitle}>{t.activeListings}</h2>
-                        <button className={styles.postButton} onClick={() => router.push('/company/post')}>
+                        <button className={styles.postButton} onClick={() => router.push('/company/post-internship')}>
                             {t.postNewInternship}
                         </button>
                     </div>
