@@ -252,6 +252,16 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
+                    <label>{t.address}</label>
+                    <FontAwesomeIcon icon={faLocationArrow} className={styles.inputIcon} />
+                    <input
+                        type="text" name="address" placeholder={t.address}
+                        title={t.address}
+                        value={formData.address} onChange={handleChange}
+                    />
+                </div>
+
+                <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
                     <label>{t.website}</label>
                     <FontAwesomeIcon icon={faLink} className={styles.inputIcon} />
                     <input
@@ -261,16 +271,6 @@ export default function CompanySignupPage() {
                         className={errors.website ? styles.inputError : ''}
                     />
                     {errors.website && <span className={styles.errorText}>{errors.website}</span>}
-                </div>
-
-                <div className={styles.inputGroup}>
-                    <label>{t.address}</label>
-                    <FontAwesomeIcon icon={faLocationArrow} className={styles.inputIcon} />
-                    <input
-                        type="text" name="address" placeholder={t.address}
-                        title={t.address}
-                        value={formData.address} onChange={handleChange}
-                    />
                 </div>
 
                 <div className={styles.textareaGroup}>
