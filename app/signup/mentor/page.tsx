@@ -133,7 +133,7 @@ export default function MentorSignupPage() {
                     jobTitle: formData.jobTitle,
                     yearsExperience: formData.yearsExperience,
                     linkedin: formData.linkedin || '',
-                    phone: formData.phoneNumber
+                    phoneNumber: formData.phoneNumber
                 }).toString()
 
                 const payload = new FormData()
