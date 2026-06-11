@@ -63,13 +63,16 @@ export default function LoginPage() {
       const response = await api.post('/Account/login', {
         email,
         password,
-        role: selectedRole
+        userType: selectedRole
       })
 
-      const { token, user } = response.data
+      const { token, refreshToken, user } = response.data
 
       // Store auth data
       localStorage.setItem('token', token)
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken)
+      }
       if (user) {
         localStorage.setItem('user', JSON.stringify(user))
       }
@@ -87,7 +90,7 @@ export default function LoginPage() {
 
     } catch (error: any) {
       console.error('Login error:', error)
-      const message = error.response?.data?.message || (language === 'ar' ? 'حدث خطأ في تسجيل الدخول' : 'Login failed')
+      const message = error.response?.data?.message || error.response?.data?.errorMessage || (language === 'ar' ? 'حدث خطأ في تسجيل الدخول' : 'Login failed')
       alert(message)
     } finally {
       setLoading(false)

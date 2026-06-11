@@ -60,27 +60,56 @@ export default function CompanySignupPage() {
         if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
 
-        if (formData.password.length < 8) newErrors.password = t.passwordTooShort
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+        if (!formData.password) {
+            newErrors.password = t.passwordRequired
+        } else if (formData.password.length < 8) {
+            newErrors.password = t.passwordTooShort
+        } else if (!passwordRegex.test(formData.password)) {
+            newErrors.password = language === 'ar'
+                ? "يجب أن تحتوي كلمة المرور على حرف كبير، حرف صغير، رقم، ورمز خاص (@$!%*?&)"
+                : "Password must contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&)"
+        }
+
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
         if (!formData.confirmPassword.trim()) newErrors.confirmPassword = t.passwordRequired
 
         if (!formData.companyName.trim()) newErrors.companyName = t.companyNameRequired
         if (!formData.industry.trim()) newErrors.industry = t.industryRequired
-        if (!formData.location.trim()) newErrors.location = t.locationRequired
 
-
-        const phoneRegex = /^\+?[0-9]{7,15}$/
-        if (formData.phoneNumber.trim() && !phoneRegex.test(formData.phoneNumber.trim())) {
-            newErrors.phoneNumber = "Invalid format (e.g. +20...)"
+        const locationRegex = /^[A-Za-z]+(?: [A-Za-z]+)*\s*,\s*[A-Za-z]+(?: [A-Za-z]+)*$/
+        if (!formData.location.trim()) {
+            newErrors.location = t.locationRequired
+        } else if (!locationRegex.test(formData.location)) {
+            newErrors.location = language === 'ar'
+                ? "يجب أن يكون التنسيق: المدينة، الدولة (مثال: Cairo, Egypt)"
+                : "Must be in format: City, Country (e.g. Cairo, Egypt)"
         }
 
-        const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})$/
+        const phoneRegex = /^(010|011|012|015)[0-9]{8}$/
+        if (!formData.phoneNumber.trim()) {
+            newErrors.phoneNumber = t.phoneRequired
+        } else if (!phoneRegex.test(formData.phoneNumber.trim())) {
+            newErrors.phoneNumber = language === 'ar'
+                ? "يجب أن يكون رقم هاتف مصري صالح من 11 رقماً يبدأ بـ 010/011/012/015"
+                : "Must be a valid Egyptian number (11 digits, starts with 010/011/012/015)"
+        }
+
+        if (!formData.address.trim()) {
+            newErrors.address = language === 'ar' ? "العنوان مطلوب" : "Address is required"
+        }
+
+        const urlRegex = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
         if (formData.website.trim() && !urlRegex.test(formData.website.trim())) {
             newErrors.website = t.invalidUrl
         }
 
-        if (formData.description.trim() && formData.description.trim().length < 20) {
-            newErrors.description = "Min 20 chars"
+        if (!formData.description.trim()) {
+            newErrors.description = language === 'ar' ? "الوصف مطلوب" : "Description is required"
+        } else if (formData.description.trim().length < 20) {
+            newErrors.description = language === 'ar' ? "يجب ألا يقل الوصف عن 20 حرفاً" : "Description must be at least 20 characters"
+        } else if (formData.description.trim().length > 500) {
+            newErrors.description = language === 'ar' ? "يجب ألا يزيد الوصف عن 500 حرف" : "Description must not exceed 500 characters"
         }
 
         setErrors(newErrors)
@@ -92,16 +121,39 @@ export default function CompanySignupPage() {
         if (validateForm()) {
             setLoading(true)
             try {
-                // Remove confirmPassword before sending
-                const { confirmPassword, ...payload } = formData
+                const payload = {
+                    companyName: formData.companyName,
+                    email: formData.email,
+                    password: formData.password,
+                    confirmPassword: formData.confirmPassword,
+                    industry: formData.industry,
+                    location: formData.location,
+                    description: formData.description,
+                    webSite: formData.website,
+                    address: formData.address,
+                    phone: formData.phoneNumber
+                }
 
-                await api.post('/auth/register/company', payload)
+                await api.post('/Account/signUp/company', payload)
 
                 alert("Account Created Successfully!")
                 router.push('/login')
             } catch (error: any) {
                 console.error("Registration Error:", error)
-                const msg = error.response?.data?.message || 'Registration failed. Please try again.'
+                let msg = 'Registration failed. Please try again.'
+                if (error.response?.data) {
+                    if (error.response.data.message) {
+                        msg = error.response.data.message
+                    } else if (error.response.data.errorMessage) {
+                        msg = error.response.data.errorMessage
+                    } else if (error.response.data.errors) {
+                        const errorsObj = error.response.data.errors
+                        const messages = Object.keys(errorsObj).map(key => `${key}: ${errorsObj[key].join(', ')}`)
+                        if (messages.length > 0) {
+                            msg = messages.join('\n')
+                        }
+                    }
+                }
                 alert(msg)
             } finally {
                 setLoading(false)
@@ -227,7 +279,7 @@ export default function CompanySignupPage() {
                     <label className={styles.required}>{t.location}</label>
                     <FontAwesomeIcon icon={faMapMarkerAlt} className={styles.inputIcon} />
                     <input
-                        type="text" name="location" placeholder={t.location}
+                        type="text" name="location" placeholder="e.g. Cairo, Egypt"
                         title={t.location}
                         value={formData.location} onChange={handleChange}
                         className={errors.location ? styles.inputError : ''}
@@ -239,10 +291,10 @@ export default function CompanySignupPage() {
 
 
                 <div className={styles.inputGroup}>
-                    <label>{t.phoneNumberLabel}</label>
+                    <label className={styles.required}>{t.phoneNumberLabel}</label>
                     <FontAwesomeIcon icon={faPhone} className={styles.inputIcon} />
                     <input
-                        type="tel" name="phoneNumber" placeholder="+20..."
+                        type="tel" name="phoneNumber" placeholder="01012345678"
                         title={t.phoneNumberLabel}
                         value={formData.phoneNumber} onChange={handleChange}
                         className={errors.phoneNumber ? styles.inputError : ''}
@@ -252,13 +304,15 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.address}</label>
+                    <label className={styles.required}>{t.address}</label>
                     <FontAwesomeIcon icon={faLocationArrow} className={styles.inputIcon} />
                     <input
                         type="text" name="address" placeholder={t.address}
                         title={t.address}
                         value={formData.address} onChange={handleChange}
+                        className={errors.address ? styles.inputError : ''}
                     />
+                    {errors.address && <span className={styles.errorText}>{errors.address}</span>}
                 </div>
 
                 <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
@@ -274,14 +328,16 @@ export default function CompanySignupPage() {
                 </div>
 
                 <div className={styles.textareaGroup}>
-                    <label>{t.companyDescription}</label>
+                    <label className={styles.required}>{t.companyDescription}</label>
                     <textarea
                         name="description"
                         placeholder={t.companyPlaceholder}
                         title={t.companyDescription}
                         value={formData.description}
                         onChange={handleChange}
+                        className={errors.description ? styles.inputError : ''}
                     ></textarea>
+                    {errors.description && <span className={styles.errorText}>{errors.description}</span>}
                     <div className={styles.charCount}>{formData.description.length} chars</div>
                 </div>
 

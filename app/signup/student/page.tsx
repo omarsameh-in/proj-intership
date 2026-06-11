@@ -61,26 +61,50 @@ export default function StudentSignupPage() {
 
     const validateForm = () => {
         let newErrors: Record<string, string> = {}
-        if (!formData.fullName.trim()) newErrors.fullName = t.fullNameRequired
+        
+        const nameRegex = /^[A-Za-z\s]+$/
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = t.fullNameRequired
+        } else if (!nameRegex.test(formData.fullName)) {
+            newErrors.fullName = language === 'ar'
+                ? "يجب أن يحتوي الاسم على أحرف إنجليزية ومسافات فقط"
+                : "Full name must contain only English letters and spaces"
+        }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
         
-        const phoneRegex = /^\+?[0-9]{7,15}$/
+        const phoneRegex = /^(010|011|012|015)[0-9]{8}$/
         if (!formData.phoneNumber.trim()) {
             newErrors.phoneNumber = t.phoneRequired
         } else if (!phoneRegex.test(formData.phoneNumber.trim())) {
-            newErrors.phoneNumber = "Invalid format (e.g. +20...)"
+            newErrors.phoneNumber = language === 'ar'
+                ? "يجب أن يكون رقم هاتف مصري صالح من 11 رقماً يبدأ بـ 010/011/012/015"
+                : "Must be a valid Egyptian number (11 digits, starts with 010/011/012/015)"
         }
         
-        if (formData.password.length < 8) newErrors.password = t.passwordTooShort
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+        if (!formData.password) {
+            newErrors.password = t.passwordRequired
+        } else if (formData.password.length < 8) {
+            newErrors.password = t.passwordTooShort
+        } else if (!passwordRegex.test(formData.password)) {
+            newErrors.password = language === 'ar'
+                ? "يجب أن تحتوي كلمة المرور على حرف كبير، حرف صغير، رقم، ورمز خاص (@$!%*?&)"
+                : "Password must contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&)"
+        }
+
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
         if (!formData.confirmPassword.trim()) newErrors.confirmPassword = t.passwordRequired
 
         if (!formData.university.trim()) newErrors.university = t.universityRequired
         if (!formData.college.trim()) newErrors.college = t.collegeRequired
         if (!formData.major.trim()) newErrors.major = t.majorRequired
+        
+        if (!formData.gradYear.trim()) {
+            newErrors.gradYear = language === 'ar' ? "سنة التخرج مطلوبة" : "Graduation year is required"
+        }
         
         if (formData.cvFile && formData.cvFile.size > 5 * 1024 * 1024) newErrors.cvFile = "Max 5MB"
         if (!formData.cvFile) newErrors.cvFile = t.cvRequired
@@ -94,26 +118,25 @@ export default function StudentSignupPage() {
         if (validateForm()) {
             setLoading(true)
             try {
+                const queryParams = new URLSearchParams({
+                    fullName: formData.fullName,
+                    email: formData.email,
+                    password: formData.password,
+                    confirmPassword: formData.confirmPassword,
+                    university: formData.university,
+                    college: formData.college,
+                    degree: formData.degree,
+                    major: formData.major,
+                    gradYear: formData.gradYear,
+                    phone: formData.phoneNumber
+                }).toString()
+
                 const payload = new FormData()
-
-                // Append all fields
-                payload.append('fullName', formData.fullName)
-                payload.append('email', formData.email)
-                payload.append('password', formData.password)
-                payload.append('university', formData.university)
-                payload.append('college', formData.college)
-                payload.append('degree', formData.degree)
-                payload.append('major', formData.major)
-                payload.append('gradYear', formData.gradYear)
-                if (formData.phoneNumber) {
-                    payload.append('phoneNumber', formData.phoneNumber)
-                }
-
                 if (formData.cvFile) {
                     payload.append('cvFile', formData.cvFile)
                 }
 
-                await api.post('/auth/register/student', payload, {
+                await api.post(`/Account/signUp/student?${queryParams}`, payload, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 })
 
@@ -121,7 +144,20 @@ export default function StudentSignupPage() {
                 router.push('/login')
             } catch (error: any) {
                 console.error("Registration Error:", error)
-                const msg = error.response?.data?.message || 'Registration failed. Please try again.'
+                let msg = 'Registration failed. Please try again.'
+                if (error.response?.data) {
+                    if (error.response.data.message) {
+                        msg = error.response.data.message
+                    } else if (error.response.data.errorMessage) {
+                        msg = error.response.data.errorMessage
+                    } else if (error.response.data.errors) {
+                        const errorsObj = error.response.data.errors
+                        const messages = Object.keys(errorsObj).map(key => `${key}: ${errorsObj[key].join(', ')}`)
+                        if (messages.length > 0) {
+                            msg = messages.join('\n')
+                        }
+                    }
+                }
                 alert(msg)
             } finally {
                 setLoading(false)
@@ -278,20 +314,22 @@ export default function StudentSignupPage() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                    <label>{t.gradYear}</label>
+                    <label className={styles.required}>{t.gradYear}</label>
                     <FontAwesomeIcon icon={faCalendarDays} className={styles.inputIcon} />
                     <input
                         type="text" name="gradYear" placeholder={t.gradYear}
                         title={t.gradYear}
                         value={formData.gradYear} onChange={handleChange}
+                        className={errors.gradYear ? styles.inputError : ''}
                     />
+                    {errors.gradYear && <span className={styles.errorText}>{errors.gradYear}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label className={styles.required}>{t.phoneNumberLabel}</label>
                     <FontAwesomeIcon icon={faPhone} className={styles.inputIcon} />
                     <input
-                        type="tel" name="phoneNumber" placeholder="+20..."
+                        type="tel" name="phoneNumber" placeholder="01012345678"
                         title={t.phoneNumberLabel}
                         value={formData.phoneNumber} onChange={handleChange}
                         className={errors.phoneNumber ? styles.inputError : ''}

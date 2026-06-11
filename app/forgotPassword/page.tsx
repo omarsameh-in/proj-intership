@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Mail, CheckCircle, AlertCircle, Globe, Moon, Sun, Check } from 'lucide-react'
 
+import api from '../lib/api'
+
 type Language = 'en' | 'ar'
 type Theme = 'dark' | 'light'
 
@@ -121,25 +123,12 @@ export default function ForgotPasswordPage() {
         setIsLoading(true)
 
         try {
-            // TODO: Replace with actual API call
-            const response = await fetch('/api/forgot-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email }),
-            })
-
-            if (response.ok) {
-                setIsSubmitted(true)
-            } else {
-                const data = await response.json()
-                setError(data.message || 'An error occurred. Please try again.')
-            }
-        } catch (err) {
-            // For now, simulate success since backend is not ready
-            console.log('Forgot password request for:', email)
+            await api.post('/Account/forgetpassword', { email })
             setIsSubmitted(true)
+        } catch (err: any) {
+            console.error('Forgot password error:', err)
+            const msg = err.response?.data?.errorMessage || err.response?.data?.message || 'An error occurred. Please try again.'
+            setError(msg)
         } finally {
             setIsLoading(false)
         }

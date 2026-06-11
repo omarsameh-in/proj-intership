@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Globe, Moon, Sun, Check } from 'lucide-react'
+import api from '../lib/api'
 
 type Language = 'en' | 'ar'
 type Theme = 'dark' | 'light'
@@ -167,36 +168,29 @@ function ResetPasswordContent() {
         setIsLoading(true)
 
         try {
-            // TODO: Replace with actual API call
-            const response = await fetch('/api/reset-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    token,
-                    email,
-                    newPassword,
-                }),
+            await api.post('/Account/resetpassword', {
+                token,
+                email,
+                newPassword,
             })
-
-            if (response.ok) {
-                setIsSubmitted(true)
-                // Redirect to login after 3 seconds
-                setTimeout(() => {
-                    router.push('/login')
-                }, 3000)
-            } else {
-                const data = await response.json()
-                setError(data.message || t.invalidToken)
-            }
-        } catch (err) {
-            // For now, simulate success since backend is not ready
-            console.log('Reset password request:', { token, email, newPassword })
             setIsSubmitted(true)
             setTimeout(() => {
                 router.push('/login')
             }, 3000)
+        } catch (err: any) {
+            console.error('Reset password error:', err)
+            let msg = t.invalidToken
+            if (err.response?.data) {
+                if (err.response.data.errorMessage) {
+                    msg = err.response.data.errorMessage
+                } else if (err.response.data.message) {
+                    msg = err.response.data.message
+                } else if (Array.isArray(err.response.data.errors)) {
+                    const firstDesc = err.response.data.errors[0]?.errorDescription
+                    if (firstDesc) msg = firstDesc
+                }
+            }
+            setError(msg)
         } finally {
             setIsLoading(false)
         }
