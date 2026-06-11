@@ -60,7 +60,7 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      const response = await api.post('/auth/login', {
+      const response = await api.post('/Account/login', {
         email,
         password,
         role: selectedRole
@@ -74,9 +74,16 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(user))
       }
 
-      // Redirect based on role or to dashboard
-      // For now, redirect to home page
-      router.push('/')
+      // Redirect based on selected role
+      if (selectedRole === 'student') {
+        router.push('/student/dashboard')
+      } else if (selectedRole === 'mentor') {
+        router.push('/mentor/dashboard')
+      } else if (selectedRole === 'company') {
+        router.push('/company/dashboard')
+      } else {
+        router.push('/')
+      }
 
     } catch (error: any) {
       console.error('Login error:', error)
