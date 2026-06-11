@@ -67,6 +67,7 @@ export default function MentorSignupPage() {
         if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
 
+        if (formData.password.length < 8) newErrors.password = t.passwordTooShort
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
         
         const phoneRegex = /^\+?[0-9]{7,15}$/

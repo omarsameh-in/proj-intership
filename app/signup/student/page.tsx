@@ -74,7 +74,7 @@ export default function StudentSignupPage() {
             newErrors.phoneNumber = "Invalid format (e.g. +20...)"
         }
         
-        if (formData.password.length < 8) newErrors.password = "Min 8 chars"
+        if (formData.password.length < 8) newErrors.password = t.passwordTooShort
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
         if (!formData.confirmPassword.trim()) newErrors.confirmPassword = t.passwordRequired
 

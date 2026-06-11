@@ -60,7 +60,7 @@ export default function CompanySignupPage() {
         if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
 
-        if (formData.password.length < 8) newErrors.password = "Min 8 chars"
+        if (formData.password.length < 8) newErrors.password = t.passwordTooShort
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
         if (!formData.confirmPassword.trim()) newErrors.confirmPassword = t.passwordRequired
 
