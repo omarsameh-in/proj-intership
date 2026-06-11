@@ -1,4 +1,3 @@
-/* Dashboard Page Styles - Matching Sessions Design */
 
 /* App Layout */
 .appLayout {
@@ -51,7 +50,7 @@
 /* Sidebar */
 .sidebar {
     width: 260px;
-    background-color: rgba(15, 23, 42, 0.8);
+    background-color: rgba(0, 6, 22, 0.8);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     min-height: 100vh;
@@ -210,7 +209,40 @@
     position: relative;
 }
 
-/* language menu moved to global */
+.languageMenu {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px 0;
+    min-width: 150px;
+    display: none;
+    z-index: 100;
+}
+
+.languageMenu.show {
+    display: block;
+}
+
+.languageOption {
+    padding: 8px 16px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.languageOption:hover {
+    background: #334155;
+}
+
+.languageOption.active {
+    background: #3b82f6;
+}
 
 /* Stats Grid */
 .statsGrid {
@@ -221,18 +253,24 @@
 }
 
 .statCard {
-    background: #1a1f2e;
-    border: 1px solid #2d3548;
-    border-radius: 0.75rem;
+   background: rgba(15, 23, 42, 0.4);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
     padding: 1.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 10;
 }
 
 .statCard:hover {
-    border-color: #3b82f6;
+   border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+    background: rgba(15, 23, 42, 0.8);
 }
 
 .statIcon {
@@ -283,15 +321,17 @@
 }
 
 .card {
-    background: #1a1f2e;
-    border: 1px solid #2d3548;
-    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 1rem;
     padding: 1.5rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .card:hover {
-    border-color: #3b82f6;
+     background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
 }
 
 .cardContent {
@@ -322,70 +362,7 @@
     font-weight: 500;
 }
 
-/* Mentors Grid */
-.mentorsGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
 
-.mentorCard {
-    background: #1a1f2e;
-    border: 1px solid #2d3548;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1rem;
-    transition: all 0.2s ease;
-}
-
-.mentorCard:hover {
-    border-color: #3b82f6;
-}
-
-.mentorAvatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.mentorInfo {
-    flex: 1;
-}
-
-.mentorName {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: white;
-    margin: 0 0 0.25rem 0;
-}
-
-.mentorField {
-    font-size: 0.875rem;
-    color: #9ca3af;
-    margin: 0 0 0.5rem 0;
-}
-
-.mentorRating {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
-    color: #fbbf24;
-    font-size: 0.875rem;
-}
-
-.mentorRating span {
-    color: #9ca3af;
-}
 
 /* Buttons */
 .primaryButton {
@@ -488,30 +465,43 @@
     color: #1e293b;
 }
 
-/* light mode overrides removed */
+:global(body.light-mode) .languageMenu {
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+:global(body.light-mode) .languageOption {
+    color: #1e293b;
+}
+
+:global(body.light-mode) .languageOption:hover {
+    background: #f1f5f9;
+}
+
+:global(body.light-mode) .languageOption.active {
+    background: #3b82f6;
+    color: white;
+}
 
 :global(body.light-mode) .statCard,
-:global(body.light-mode) .card,
-:global(body.light-mode) .mentorCard {
+:global(body.light-mode) .card  {
     background: #ffffff;
     border-color: #e2e8f0;
 }
 
 :global(body.light-mode) .statCard:hover,
-:global(body.light-mode) .card:hover,
-:global(body.light-mode) .mentorCard:hover {
+:global(body.light-mode) .card:hover {
     border-color: #3b82f6;
 }
 
 :global(body.light-mode) .statLabel,
-:global(body.light-mode) .cardSubtitle,
-:global(body.light-mode) .mentorField {
+:global(body.light-mode) .cardSubtitle
+  {
     color: #64748b;
 }
 
 :global(body.light-mode) .statValue,
 :global(body.light-mode) .cardTitle,
-:global(body.light-mode) .mentorName,
 :global(body.light-mode) .sectionTitle {
     color: #000000;
 }
@@ -537,7 +527,10 @@
     margin-right: 260px;
 }
 
-/* rtl handled by global */
+[dir="rtl"] .languageMenu {
+    right: auto;
+    left: 0;
+}
 
 /* Search Section */
 .searchSection {
@@ -821,16 +814,18 @@
     border: none;
     border-radius: 0.5rem;
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .applyButton:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
 }
-
 .detailsButton {
     padding: 0.625rem 1.25rem;
     background-color: transparent;
@@ -897,10 +892,236 @@
     color: #000000;
 }
 
+
 :global(body.light-mode) .companyName {
     color: #64748b;
 }
 
 :global(body.light-mode) .metaItem {
     color: #64748b;
+}
+
+
+/* ─── Hamburger ─────────────── */
+.hamburgerBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.hamburgerBtn:hover {
+  background: #252b3d;
+  color: white;
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+.overlayVisible {
+  display: block;
+}
+
+.sidebarOpen {
+  display: flex !important;
+}
+
+@media (max-width: 768px) {
+  .hamburgerBtn {
+    display: flex;
+  }
+}
+
+:global(body.light-mode) .hamburgerBtn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+
+
+/* Dashboard Page Styles - Matching Sessions Design */
+
+/* App Layout */
+.appLayout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #030712; /* لون داكن أساسي للدارك مود */
+    position: relative;
+    overflow: hidden;
+    color: white;
+        background-color: rgba(1, 13, 37, 0.993);
+    -webkit-backdrop-filter: blur(12px);
+
+}
+
+/* Glow Effects */
+.glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+    border-radius: 50%;
+    top: -150px;
+    right: -100px;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+}
+
+.glowSecondary {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0) 70%);
+    border-radius: 50%;
+    bottom: 5%;
+    left: 10%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(70px);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: rgba(15, 23, 42, 0.9);
+    background-color: rgba(1, 13, 37, 0.993);
+
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    min-height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 100;
+}
+
+/* Logo & Nav */
+.logoText { color: white; font-weight: 700; }
+.navItem {
+    color: #94a3b8;
+    transition: all 0.2s;
+    border-radius: 8px;
+    margin: 0.25rem 1rem;
+}
+.navItem:hover { background-color: rgba(255, 255, 255, 0.05); color: white; }
+.navItem.active { background-color: #3b82f6; color: white; }
+
+/* Main Content Area */
+.mainContent {
+    margin-left: 260px;
+    flex: 1;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.pageTitle { color: white; font-size: 2rem; font-weight: 700; }
+.pageSubtitle { color: #94a3b8; }
+
+/* Stats & Cards - Dark Mode Fix */
+.statCard, .card, .internshipCard, .mentorCard {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.statCard:hover, .card:hover, .internshipCard:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(30, 41, 59, 0.6);
+    transform: translateY(-4px);
+}
+
+.statValue, .cardTitle, .internshipTitle, .mentorName, .sectionTitle {
+    color: white;
+}
+
+.statLabel, .cardSubtitle, .companyName, .metaItem, .deadlineText {
+    color: #94a3b8;
+}
+
+/* Search Bar Fix */
+.searchInput {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 3rem;
+    background-color: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: white;
+}
+
+/* ----------------------------------------------------------- */
+/* LIGHT MODE OVERRIDES - التصحيح الكامل للوضع الفاتح */
+/* ----------------------------------------------------------- */
+
+:global(body.light-mode) .appLayout {
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+:global(body.light-mode) .sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+}
+
+:global(body.light-mode) .logoText,
+:global(body.light-mode) .pageTitle,
+:global(body.light-mode) .sectionTitle,
+:global(body.light-mode) .statValue,
+:global(body.light-mode) .cardTitle,
+:global(body.light-mode) .internshipTitle,
+:global(body.light-mode) .mentorName {
+    color: #0f172a;
+}
+
+:global(body.light-mode) .navItem { color: #475569; }
+:global(body.light-mode) .navItem:hover { background-color: #f1f5f9; color: #0f172a; }
+
+:global(body.light-mode) .statCard, 
+:global(body.light-mode) .card, 
+:global(body.light-mode) .internshipCard,
+:global(body.light-mode) .mentorCard {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+:global(body.light-mode) .statLabel,
+:global(body.light-mode) .pageSubtitle,
+:global(body.light-mode) .cardSubtitle,
+:global(body.light-mode) .companyName,
+:global(body.light-mode) .deadlineText {
+    color: #64748b;
+}
+
+:global(body.light-mode) .searchInput {
+    background-color: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+/* RTL & Responsive */
+[dir="rtl"] .sidebar { left: auto; right: 0; border-right: none; border-left: 1px solid rgba(255, 255, 255, 0.08); }
+[dir="rtl"] .mainContent { margin-left: 0; margin-right: 260px; }
+
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .mainContent { margin-left: 0; margin-right: 0; padding: 1rem; }
+    .sidebarOpen { display: flex !important; width: 260px; }
 }
