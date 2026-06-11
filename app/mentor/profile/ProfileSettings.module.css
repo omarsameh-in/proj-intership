@@ -53,11 +53,74 @@
     opacity: 0.75;
 }
 
+.editActionBtns {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cancelEditBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding: 0 1rem;
+    background: transparent;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancelEditBtn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.saveEditBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding: 0 1rem;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.saveEditBtn:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.fieldReadOnly {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    cursor: default;
+    border-color: #e2e8f0 !important;
+    resize: none;
+}
+
 /* Sections Stack */
 .sectionsStack {
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+/* Edit Bar above first section */
+.editBarTop {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: -8px;
 }
 
 /* Section Card */
@@ -291,6 +354,10 @@
     color: #ef4444;
     padding: 2px;
     display: flex;
+}
+
+.hidden {
+    display: none;
 }
 
 .dropZone {
@@ -878,4 +945,78 @@
 }
 :global(body.light-mode) .closeBtn:hover {
     background: #f1f5f9;
+}
+
+/* ─── Dark Mode: Field & Section overrides ─────────────────────────── */
+
+:global(body:not(.light-mode)) .section {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(body:not(.light-mode)) .sectionHeader {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(body:not(.light-mode)) .sectionTitle {
+    color: #f1f5f9;
+}
+
+:global(body:not(.light-mode)) .sectionHeader svg {
+    color: #94a3b8;
+}
+
+:global(body:not(.light-mode)) .fieldLabel {
+    color: #94a3b8;
+}
+
+:global(body:not(.light-mode)) .fieldInput {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+:global(body:not(.light-mode)) .fieldInput:focus {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+:global(body:not(.light-mode)) .fieldTextarea {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+:global(body:not(.light-mode)) .fieldTextarea:focus {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+:global(body:not(.light-mode)) .fieldReadOnly {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    color: #cbd5e1 !important;
+    cursor: default;
+}
+
+:global(body:not(.light-mode)) .slotItem {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+:global(body:not(.light-mode)) .slotDay {
+    color: #e2e8f0;
+}
+
+:global(body:not(.light-mode)) .manageBtn {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+:global(body:not(.light-mode)) .pageTitle {
+    color: #f1f5f9;
+}
+
+:global(body:not(.light-mode)) .pageSubtitle {
+    color: #94a3b8;
 }
