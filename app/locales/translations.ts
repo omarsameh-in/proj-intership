@@ -237,7 +237,7 @@ export const translations = {
         // Company Dashboard
         companyWelcome: "Welcome back, Company!",
         companySubtitle: "Manage your internships and find top talent",
-        activeListings: "Active Listings",
+        activeListings: "Active Internships",
         totalApplicants: "Total Applicants",
         interviewsScheduled: "Interviews Scheduled",
         recentApplicants: "Recent Applicants",
