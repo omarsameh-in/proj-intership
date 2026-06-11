@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect,  useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -28,6 +28,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            const isLanguageButton = target.closest('button') && 
+                (target.closest('button')?.querySelector('.lucide-globe') || 
+                 target.closest('svg')?.classList.contains('lucide-globe') ||
+                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
+                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
+            const isLanguageMenu = target.closest('.language-menu');
+            if (!isLanguageButton && !isLanguageMenu) {
+                setShowLanguageMenu(false);
+            }
+        };
+        if (showLanguageMenu) {
+            document.addEventListener('click', handleClickOutside);
+        }
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [showLanguageMenu]);
+
 
   const router = useRouter()
   const [loading, setLoading] = useState(false)

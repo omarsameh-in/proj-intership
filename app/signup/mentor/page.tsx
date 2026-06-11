@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect,  useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -17,6 +17,25 @@ export default function MentorSignupPage() {
     const { theme, toggleTheme, language, setLanguage, t } = useApp()
     const router = useRouter()
     const [showLanguageMenu, setShowLanguageMenu] = useState(false)
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            const isLanguageButton = target.closest('button') && 
+                (target.closest('button')?.querySelector('.lucide-globe') || 
+                 target.closest('svg')?.classList.contains('lucide-globe') ||
+                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
+                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
+            const isLanguageMenu = target.closest('.language-menu');
+            if (!isLanguageButton && !isLanguageMenu) {
+                setShowLanguageMenu(false);
+            }
+        };
+        if (showLanguageMenu) {
+            document.addEventListener('click', handleClickOutside);
+        }
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [showLanguageMenu]);
+
     const [formData, setFormData] = useState({
         fullName: '', email: '', password: '', confirmPassword: '',
         yearsExperience: '', jobTitle: '', linkedin: '', phoneNumber: '', cvFile: null as File | null
