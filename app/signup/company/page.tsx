@@ -38,7 +38,7 @@ export default function CompanySignupPage() {
 
     const [formData, setFormData] = useState({
         email: '', password: '', confirmPassword: '',
-        companyName: '', industry: '', location: '', address: '', phoneNumber: '', description: ''
+        companyName: '', industry: '', location: '', address: '', phoneNumber: '', website: '', description: ''
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(false)
@@ -72,6 +72,11 @@ export default function CompanySignupPage() {
         const phoneRegex = /^\+?[0-9]{7,15}$/
         if (formData.phoneNumber.trim() && !phoneRegex.test(formData.phoneNumber.trim())) {
             newErrors.phoneNumber = "Invalid format (e.g. +20...)"
+        }
+
+        const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})$/
+        if (formData.website.trim() && !urlRegex.test(formData.website.trim())) {
+            newErrors.website = t.invalidUrl
         }
 
         if (formData.description.trim() && formData.description.trim().length < 20) {
@@ -244,6 +249,18 @@ export default function CompanySignupPage() {
                     />
                     <span className={styles.helpText}>{t.phoneHelpText}</span>
                     {errors.phoneNumber && <span className={styles.errorText}>{errors.phoneNumber}</span>}
+                </div>
+
+                <div className={styles.inputGroup}>
+                    <label>{t.website}</label>
+                    <FontAwesomeIcon icon={faLink} className={styles.inputIcon} />
+                    <input
+                        type="url" name="website" placeholder="https://www.company.com"
+                        title={t.website}
+                        value={formData.website} onChange={handleChange}
+                        className={errors.website ? styles.inputError : ''}
+                    />
+                    {errors.website && <span className={styles.errorText}>{errors.website}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
