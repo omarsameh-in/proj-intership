@@ -316,11 +316,17 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
 // ============================================================
 //  PROFILE FIELD
 // ============================================================
-function ProfileField({ label, defaultValue }: { label: string; defaultValue: string }) {
+function ProfileField({ label, value, onChange, isEditing }: { label: string; value: string; onChange: (v: string) => void; isEditing: boolean }) {
     return (
         <div className={styles.widthFull}>
             <label className={styles.fieldLabel}>{label}</label>
-            <input defaultValue={defaultValue} className={styles.fieldInput} aria-label={label} />
+            <input
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                className={`${styles.fieldInput} ${!isEditing ? styles.fieldReadOnly : ''}`}
+                readOnly={!isEditing}
+                aria-label={label}
+            />
         </div>
     )
 }
@@ -331,8 +337,40 @@ function ProfileField({ label, defaultValue }: { label: string; defaultValue: st
 export default function ProfileSettings() {
     const { slots, deleteSlot, language } = useApp()
     const [showManagement, setShowManagement]   = useState(false)
-    const [showEditProfile, setShowEditProfile] = useState(false)
+    const [isEditing, setIsEditing]             = useState(false)
     const [loading, setLoading]                 = useState(true)
+
+    const [profileData, setProfileData] = useState({
+        fullName:    'Dr. Ahmed Hassan',
+        email:       'ahmed.hassan@example.com',
+        phone:       '+20 123 456 7890',
+        location:    'Cairo, Egypt',
+        jobTitle:    'Senior Software Engineer',
+        experience:  '15',
+        linkedin:    'linkedin.com/in/ahmedhassan',
+        bio:         'Passionate about mentoring young developers and helping them navigate their career paths. With 15 years in the industry, I specialize in software architecture and team leadership.',
+    })
+    const [editData, setEditData] = useState({ ...profileData })
+
+    const handleEdit = () => {
+        setEditData({ ...profileData })
+        setIsEditing(true)
+    }
+
+    const handleCancel = () => {
+        setIsEditing(false)
+    }
+
+    const handleSave = () => {
+        setProfileData({ ...editData })
+        setIsEditing(false)
+    }
+
+    const handleChange = (field: keyof typeof editData, value: string) => {
+        setEditData(prev => ({ ...prev, [field]: value }))
+    }
+
+    const displayed = isEditing ? editData : profileData
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 200)
@@ -346,7 +384,6 @@ export default function ProfileSettings() {
     return (
         <>
             {showManagement && <ManagementModal onClose={() => setShowManagement(false)} />}
-            {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
 
             <div className={styles.page}>
                 <div className={styles.container}>
@@ -361,14 +398,28 @@ export default function ProfileSettings() {
                             </p>
                         </div>
                         <div className={styles.flexCenter}>
-                            <button onClick={() => setShowEditProfile(true)} className={styles.editProfileBtn} title={language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}>
-                                <Edit size={16} /> {language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
-                            </button>
                             <TopBarControls />
                         </div>
                     </div>
 
                     <div className={styles.sectionsStack}>
+
+                        <div className={styles.editBarTop}>
+                            {!isEditing ? (
+                                <button onClick={handleEdit} className={styles.editProfileBtn} title={language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}>
+                                    <Edit size={16} /> {language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
+                                </button>
+                            ) : (
+                                <div className={styles.editActionBtns}>
+                                    <button onClick={handleCancel} className={styles.cancelEditBtn}>
+                                        <X size={16} /> {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                                    </button>
+                                    <button onClick={handleSave} className={styles.saveEditBtn}>
+                                        <Save size={16} /> {language === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Personal Information */}
                         <section className={styles.section}>
@@ -377,10 +428,10 @@ export default function ProfileSettings() {
                                 <h2 className={styles.sectionTitle}>Personal Information</h2>
                             </div>
                             <div className={styles.twoColGrid}>
-                                <ProfileField label="Full Name"    defaultValue="Dr. Ahmed Hassan" />
-                                <ProfileField label="Email"        defaultValue="ahmed.hassan@example.com" />
-                                <ProfileField label="Phone Number" defaultValue="+20 123 456 7890" />
-                                <ProfileField label="Location"     defaultValue="Cairo, Egypt" />
+                                <ProfileField label="Full Name"    value={displayed.fullName}   onChange={v => handleChange('fullName', v)}   isEditing={isEditing} />
+                                <ProfileField label="Email"        value={displayed.email}       onChange={v => handleChange('email', v)}       isEditing={isEditing} />
+                                <ProfileField label="Phone Number" value={displayed.phone}       onChange={v => handleChange('phone', v)}       isEditing={isEditing} />
+                                <ProfileField label="Location"     value={displayed.location}    onChange={v => handleChange('location', v)}    isEditing={isEditing} />
                             </div>
                         </section>
 
@@ -391,17 +442,19 @@ export default function ProfileSettings() {
                                 <h2 className={styles.sectionTitle}>Professional Information</h2>
                             </div>
                             <div className={`${styles.twoColGrid} ${styles.marginBottom20}`}>
-                                <ProfileField label="Current Job Title"   defaultValue="Senior Software Engineer" />
-                                <ProfileField label="Years of Experience" defaultValue="15" />
+                                <ProfileField label="Current Job Title"   value={displayed.jobTitle}   onChange={v => handleChange('jobTitle', v)}   isEditing={isEditing} />
+                                <ProfileField label="Years of Experience" value={displayed.experience} onChange={v => handleChange('experience', v)} isEditing={isEditing} />
                                 <div className={styles.fullWidth}>
-                                    <ProfileField label="LinkedIn Profile" defaultValue="linkedin.com/in/ahmedhassan" />
+                                    <ProfileField label="LinkedIn Profile" value={displayed.linkedin}   onChange={v => handleChange('linkedin', v)}   isEditing={isEditing} />
                                 </div>
                             </div>
                             <div>
                                 <label className={styles.fieldLabel}>Bio</label>
                                 <textarea
-                                    className={styles.fieldTextarea}
-                                    defaultValue="Passionate about mentoring young developers and helping them navigate their career paths. With 15 years in the industry, I specialize in software architecture and team leadership."
+                                    className={`${styles.fieldTextarea} ${!isEditing ? styles.fieldReadOnly : ''}`}
+                                    value={displayed.bio}
+                                    onChange={e => handleChange('bio', e.target.value)}
+                                    readOnly={!isEditing}
                                     aria-label="Bio"
                                 />
                             </div>
@@ -449,10 +502,6 @@ export default function ProfileSettings() {
                             </button>
                         </section>
 
-                        {/* Save Changes */}
-                        <button className={styles.saveBtn}>
-                            <Save size={20} /> Save Changes
-                        </button>
                     </div>
                 </div>
             </div>

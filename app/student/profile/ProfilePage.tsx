@@ -20,7 +20,8 @@ import {
     Plus,
     X,
     User,
-    GraduationCap
+    GraduationCap,
+    Edit
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
@@ -48,22 +49,44 @@ function ProfilePage() {
         graduationYear: "2025",
         skills: ["React", "TypeScript", "Node.js", "Python"],
     })
-
+    const [editData, setEditData] = useState({ ...profileData })
+    const [isEditing, setIsEditing] = useState(false)
     const [newSkill, setNewSkill] = useState("")
     const [cvFile, setCvFile] = useState<File | null>(null)
 
+    const handleEdit = () => {
+        setEditData({ ...profileData })
+        setIsEditing(true)
+    }
+
+    const handleCancel = () => {
+        setIsEditing(false)
+    }
+
+    const handleSaveProfile = () => {
+        setProfileData({ ...editData })
+        setIsEditing(false)
+    }
+
+    const handleFieldChange = (field: keyof Omit<typeof editData, 'skills'>, value: string) => {
+        setEditData(prev => ({ ...prev, [field]: value }))
+    }
+
+    const displayed = isEditing ? editData : profileData
+
     const handleSkillAdd = () => {
-        if (newSkill && !profileData.skills.includes(newSkill)) {
-            setProfileData({ ...profileData, skills: [...profileData.skills, newSkill] })
+        if (newSkill && !editData.skills.includes(newSkill)) {
+            setEditData(prev => ({ ...prev, skills: [...prev.skills, newSkill] }))
             setNewSkill("")
         }
     }
 
     const handleSkillRemove = (skillToRemove: string) => {
-        setProfileData({
-            ...profileData,
-            skills: profileData.skills.filter((skill) => skill !== skillToRemove),
-        })
+        setEditData(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skillToRemove) }))
+    }
+
+    if (loading) {
+        return <LoadingScreen />
     }
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,15 +123,6 @@ function ProfilePage() {
         document.getElementById('cv-file-input')?.click()
     }
 
-    const handleSaveProfile = () => {
-        alert(t.profileSaved)
-    }
-
-
-
-    if (loading) {
-        return <LoadingScreen />
-    }
 
     return (
         <div className={styles.appLayout}>
@@ -160,6 +174,26 @@ function ProfilePage() {
                     <TopBarControls />
                 </header>
 
+                <div className={styles.editBarTop}>
+                    {!isEditing ? (
+                        <button className={styles.editProfileBtn} onClick={handleEdit}>
+                            <Edit size={16} />
+                            {t.editProfile}
+                        </button>
+                    ) : (
+                        <div className={styles.editActionBtns}>
+                            <button className={styles.cancelEditBtn} onClick={handleCancel}>
+                                <X size={16} />
+                                {t.cancel ?? 'Cancel'}
+                            </button>
+                            <button className={styles.saveEditBtn} onClick={handleSaveProfile}>
+                                <Check size={16} />
+                                {t.saveChanges}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
                 <div className={styles.card}>
                     <div className={styles.profileSection}>
                         {/* Personal Information Section */}
@@ -171,46 +205,27 @@ function ProfilePage() {
                             <div className={styles.twoColumnGrid}>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.fullNameLabel}</label>
-                                    <input
-                                        type="text"
-                                        className={styles.input}
-                                        value={profileData.name}
-                                        onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                                        placeholder={t.fullNameLabel}
-                                    />
+                                    <input type="text" className={styles.input} value={displayed.name}
+                                        onChange={(e) => handleFieldChange('name', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.fullNameLabel} />
                                 </div>
-
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.emailAddress}</label>
-                                    <input
-                                        type="email"
-                                        className={styles.input}
-                                        value={profileData.email}
-                                        onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                                        placeholder={t.emailPlaceholder}
-                                    />
+                                    <input type="email" className={styles.input} value={displayed.email}
+                                        onChange={(e) => handleFieldChange('email', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.emailPlaceholder} />
                                 </div>
-
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.phoneNumberLabel}</label>
-                                    <input
-                                        type="tel"
-                                        className={styles.input}
-                                        value={profileData.phoneNumber}
-                                        onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
-                                        placeholder={t.phoneNumberPlaceholder}
-                                    />
+                                    <input type="tel" className={styles.input} value={displayed.phoneNumber}
+                                        onChange={(e) => handleFieldChange('phoneNumber', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.phoneNumberPlaceholder} />
                                 </div>
-
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.locationLabel}</label>
-                                    <input
-                                        type="text"
-                                        className={styles.input}
-                                        value={profileData.location}
-                                        onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
-                                        placeholder={t.locationPlaceholder}
-                                    />
+                                    <input type="text" className={styles.input} value={displayed.location}
+                                        onChange={(e) => handleFieldChange('location', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.locationPlaceholder} />
                                 </div>
                             </div>
                         </div>
@@ -224,46 +239,27 @@ function ProfilePage() {
                             <div className={styles.twoColumnGrid}>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.universityLabel}</label>
-                                    <input
-                                        type="text"
-                                        className={styles.input}
-                                        value={profileData.university}
-                                        onChange={(e) => setProfileData({ ...profileData, university: e.target.value })}
-                                        placeholder={t.universityPlaceholder}
-                                    />
+                                    <input type="text" className={styles.input} value={displayed.university}
+                                        onChange={(e) => handleFieldChange('university', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.universityPlaceholder} />
                                 </div>
-
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.collegeLabel}</label>
-                                    <input
-                                        type="text"
-                                        className={styles.input}
-                                        value={profileData.college}
-                                        onChange={(e) => setProfileData({ ...profileData, college: e.target.value })}
-                                        placeholder={t.collegePlaceholder}
-                                    />
+                                    <input type="text" className={styles.input} value={displayed.college}
+                                        onChange={(e) => handleFieldChange('college', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.collegePlaceholder} />
                                 </div>
-
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.majorLabel}</label>
-                                    <input
-                                        type="text"
-                                        className={styles.input}
-                                        value={profileData.major}
-                                        onChange={(e) => setProfileData({ ...profileData, major: e.target.value })}
-                                        placeholder={t.majorPlaceholder}
-                                    />
+                                    <input type="text" className={styles.input} value={displayed.major}
+                                        onChange={(e) => handleFieldChange('major', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.majorPlaceholder} />
                                 </div>
-
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>{t.graduationYearLabel}</label>
-                                    <input
-                                        type="text"
-                                        className={styles.input}
-                                        value={profileData.graduationYear}
-                                        onChange={(e) => setProfileData({ ...profileData, graduationYear: e.target.value })}
-                                        placeholder={t.graduationYearPlaceholder}
-                                    />
+                                    <input type="text" className={styles.input} value={displayed.graduationYear}
+                                        onChange={(e) => handleFieldChange('graduationYear', e.target.value)}
+                                        readOnly={!isEditing} placeholder={t.graduationYearPlaceholder} />
                                 </div>
                             </div>
                         </div>
@@ -304,39 +300,29 @@ function ProfilePage() {
                         <div className={styles.sectionContainer}>
                             <h3 className={styles.uploadSectionTitle}>{t.skillsLabel}</h3>
                             <div className={styles.skillsContainer}>
-                                {profileData.skills.map((skill) => (
+                                {displayed.skills.map((skill) => (
                                     <span key={skill} className={styles.skillBadge}>
                                         {skill}
-                                        <button
-                                            className={styles.removeSkillBtn}
-                                            onClick={() => handleSkillRemove(skill)}
-                                            title={`Remove ${skill}`}
-                                        >
-                                            <X size={14} />
-                                        </button>
+                                        {isEditing && (
+                                            <button className={styles.removeSkillBtn} onClick={() => handleSkillRemove(skill)} title={`Remove ${skill}`}>
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                     </span>
                                 ))}
                             </div>
 
-                            <div className={styles.addSkillContainer}>
-                                <input
-                                    type="text"
-                                    className={styles.input}
-                                    placeholder={t.addSkillPlaceholder}
-                                    value={newSkill}
-                                    onChange={(e) => setNewSkill(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSkillAdd()}
-                                />
-                                <button className={styles.addButton} onClick={handleSkillAdd}>
-                                    {t.addButton}
-                                </button>
-                            </div>
+                            {isEditing && (
+                                <div className={styles.addSkillContainer}>
+                                    <input type="text" className={styles.input} placeholder={t.addSkillPlaceholder}
+                                        value={newSkill} onChange={(e) => setNewSkill(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleSkillAdd()} />
+                                    <button className={styles.addButton} onClick={handleSkillAdd}>{t.addButton}</button>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Save Button */}
-                        <button className={styles.gradientSaveButton} onClick={handleSaveProfile}>
-                            {t.saveChanges}
-                        </button>
+                        {/* No bottom save button - handled by editBarTop */}
                     </div>
                 </div>
             </main>

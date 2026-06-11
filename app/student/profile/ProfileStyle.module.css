@@ -845,6 +845,81 @@
     display: none;
 }
 
+.editBarTop {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
+}
+
+.editProfileBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding: 0 1.125rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.editProfileBtn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.editActionBtns {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cancelEditBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding: 0 1.125rem;
+    background: transparent;
+    color: #9ca3af;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancelEditBtn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.saveEditBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding: 0 1.125rem;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.saveEditBtn:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
 .gradientSaveButton {
     width: 100%;
     padding: 1rem;

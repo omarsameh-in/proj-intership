@@ -251,6 +251,19 @@
   margin-bottom: 1rem;
 }
 
+.editBarTop {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 1000px;
+  margin: 0 auto 0.75rem auto;
+}
+
+.editActionBtns {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .editButton {
   display: flex;
   align-items: center;

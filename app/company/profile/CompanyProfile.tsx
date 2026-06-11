@@ -250,6 +250,26 @@ function CompanyProfile() {
           </div>
         </header>
 
+        <div className={styles.editBarTop}>
+          {!isEditing ? (
+            <button className={styles.editButton} onClick={handleEdit}>
+              <Edit size={16} />
+              {t.editProfile}
+            </button>
+          ) : (
+            <div className={styles.editActionBtns}>
+              <button className={styles.cancelButton} onClick={handleCancel}>
+                <X size={16} />
+                {t.cancel}
+              </button>
+              <button className={styles.saveButton} onClick={handleSave} disabled={saving}>
+                <Save size={16} />
+                {saving ? t.saving : t.saveChanges}
+              </button>
+            </div>
+          )}
+        </div>
+
         <section className={styles.card}>
           <h2 className={styles.sectionTitle}><Building2 size={20} /> {t.companyInformation}</h2>
           <div className={styles.formGrid}>
@@ -309,27 +329,6 @@ function CompanyProfile() {
           </div>
         )}
 
-        <div className={styles.editBar}>
-          {!isEditing ? (
-            <button className={styles.editButton} onClick={handleEdit}>
-              <Edit size={16} />
-              {t.editProfile}
-            </button>
-          ) : (
-            <button className={styles.cancelButton} onClick={handleCancel}>
-              <X size={16} />
-              {t.cancel}
-            </button>
-          )}
-        </div>
-        {isEditing && (
-          <div className={styles.saveBar}>
-            <button className={styles.saveButton} onClick={handleSave} disabled={saving}>
-              <Save size={18} />
-              {saving ? t.saving : t.saveChanges}
-            </button>
-          </div>
-        )}
       </main>
     </div>
   )
