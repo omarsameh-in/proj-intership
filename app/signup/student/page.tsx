@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect,  useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -20,11 +20,11 @@ export default function StudentSignupPage() {
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
+            const isLanguageButton = target.closest('button') &&
+                (target.closest('button')?.querySelector('.lucide-globe') ||
+                    target.closest('svg')?.classList.contains('lucide-globe') ||
+                    target.closest('button')?.getAttribute('title')?.includes('Language') ||
+                    target.closest('button')?.getAttribute('title')?.includes('اللغة'));
             const isLanguageMenu = target.closest('.language-menu');
             if (!isLanguageButton && !isLanguageMenu) {
                 setShowLanguageMenu(false);
@@ -61,7 +61,7 @@ export default function StudentSignupPage() {
 
     const validateForm = () => {
         let newErrors: Record<string, string> = {}
-        
+
         const nameRegex = /^[A-Za-z\s]+$/
         if (!formData.fullName.trim()) {
             newErrors.fullName = t.fullNameRequired
@@ -74,7 +74,7 @@ export default function StudentSignupPage() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!formData.email) newErrors.email = t.emailRequired
         else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email"
-        
+
         const phoneRegex = /^(010|011|012|015)[0-9]{8}$/
         if (!formData.phoneNumber.trim()) {
             newErrors.phoneNumber = t.phoneRequired
@@ -83,7 +83,7 @@ export default function StudentSignupPage() {
                 ? "يجب أن يكون رقم هاتف مصري صالح من 11 رقماً يبدأ بـ 010/011/012/015"
                 : "Must be a valid Egyptian number (11 digits, starts with 010/011/012/015)"
         }
-        
+
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
         if (!formData.password) {
             newErrors.password = t.passwordRequired
@@ -101,14 +101,14 @@ export default function StudentSignupPage() {
         if (!formData.university.trim()) newErrors.university = t.universityRequired
         if (!formData.college.trim()) newErrors.college = t.collegeRequired
         if (!formData.major.trim()) newErrors.major = t.majorRequired
-        
+
         if (!formData.gradYear.trim()) {
             newErrors.gradYear = language === 'ar' ? "سنة التخرج مطلوبة" : "Graduation year is required"
         }
-        
+
         if (formData.cvFile && formData.cvFile.size > 5 * 1024 * 1024) newErrors.cvFile = "Max 5MB"
         if (!formData.cvFile) newErrors.cvFile = t.cvRequired
-        
+
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }

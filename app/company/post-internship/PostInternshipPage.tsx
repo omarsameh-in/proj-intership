@@ -18,7 +18,6 @@ import styles from './PostInternshipStyle.module.css'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import api from '../../lib/api'
 
-
 const EGYPT_GOVERNORATES = [
   'Cairo', 'Giza', 'Alexandria', 'Dakahlia', 'Red Sea',
   'Beheira', 'Fayoum', 'Gharbia', 'Ismailia', 'Menofia',
@@ -28,74 +27,86 @@ const EGYPT_GOVERNORATES = [
   'North Sinai', 'Sohag',
 ]
 
+const DURATION_OPTIONS = [
+  { label: '1 Month',  value: 1 },
+  { label: '2 Months', value: 2 },
+  { label: '3 Months', value: 3 },
+  { label: '6 Months', value: 6 },
+  { label: '9 Months', value: 9 },
+  { label: '12 Months', value: 12 },
+]
+
 interface PostFormData {
   title: string
   description: string
-  duration: string
-  workType: 'Remote' | 'On-site' | 'Hybrid'
-  governorate: string
+  duration: number          // int months — 0 means "not selected yet"
+  workType: 'Remote' | 'Onsite' | 'Hybrid'
+  governorate: string       // selected governorate (all work types)
   deadline: string
   isPaid: 'paid' | 'unpaid'
-  stipend: string
+  salary: number            // always a number; 0 when unpaid
 }
 
 function PostInternshipContent() {
   const { language, t } = useApp()
-
-  const router = useRouter()
+  const router       = useRouter()
   const searchParams = useSearchParams()
-  const editId = searchParams.get('id')
-  const isEditMode = !!editId
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const editId       = searchParams.get('id') // internId
+  const isEditMode   = !!editId
 
-  const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(isEditMode)
-  const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [loading,     setLoading]     = useState(false)
+  const [fetching,    setFetching]    = useState(isEditMode)
+  const [errors,      setErrors]      = useState<Partial<Record<string, string>>>({})
 
   const today = new Date().toISOString().split('T')[0]
 
   const [form, setForm] = useState<PostFormData>({
-    title: '', description: '', duration: '',
-    workType: 'Remote', governorate: '',
-    deadline: '', isPaid: 'unpaid', stipend: '',
+    title: '', description: '',
+    duration: 0,
+    workType: 'Remote',
+    governorate: '',
+    deadline: '',
+    isPaid: 'unpaid', salary: 0,
   })
 
   const [requirements, setRequirements] = useState<string[]>([''])
-  const [skills, setSkills] = useState<string[]>([''])
+  const [skills,       setSkills]       = useState<string[]>([''])
 
+  // ─── Load for edit ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isEditMode) return
-    const loadInternship = async () => {
+    const load = async () => {
       try {
         setFetching(true)
         const token = localStorage.getItem('token')
-        const res = await api.get(`/api/company/internships/${editId}`, {
-          headers: { Authorization: `Bearer ${token}` }
+        const res   = await api.get(`/api/company/internships/${editId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         })
         const data = res.data?.data || res.data
+
         setForm({
-          title: data.title || '',
+          title:       data.title       || '',
           description: data.description || '',
-          duration: data.duration || '',
-          workType: data.workType || 'Remote',
+          duration:    typeof data.duration === 'number' ? data.duration : 0,
+          workType:    data.workType    || 'Remote',
           governorate: data.governorate || '',
-          deadline: data.deadline ? data.deadline.split('T')[0] : '',
-          isPaid: data.isPaid ? 'paid' : 'unpaid',
-          stipend: data.salary || data.stipend || '',
+          deadline:    data.deadline ? data.deadline.split('T')[0] : '',
+          isPaid:      data.isPaid ? 'paid' : 'unpaid',
+          salary:      typeof data.salary === 'number' ? data.salary : 0,
         })
-        setRequirements(data.requirements || [''])
-        setSkills(data.skills || [''])
+        setRequirements(data.requirements?.length ? data.requirements : [''])
+        setSkills(data.skills?.length ? data.skills : [''])
       } catch (err: any) {
-        console.warn('[loadInternship] API failed, falling back to mock edit data:', err)
+        console.warn('[loadInternship] API failed, using mock data:', err)
         setForm({
           title: 'Frontend Developer Intern',
           description: 'Work on our main product frontend.',
-          duration: '3 months',
-          workType: 'Remote',
-          governorate: '',
+          duration: 3, workType: 'Remote',
+          governorate: 'Cairo',
           deadline: '2024-12-30',
-          isPaid: 'paid',
-          stipend: '5,000 EGP/month',
+          isPaid: 'paid', 
+          salary: 5000,
         })
         setRequirements(['Strong knowledge of React', 'TypeScript experience'])
         setSkills(['React', 'TypeScript', 'CSS'])
@@ -103,9 +114,10 @@ function PostInternshipContent() {
         setFetching(false)
       }
     }
-    loadInternship()
-  }, [editId, isEditMode, router])
+    load()
+  }, [editId, isEditMode])
 
+  // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -114,58 +126,78 @@ function PostInternshipContent() {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
-  const handleRequirementChange = (idx: number, value: string) => {
-    setRequirements(prev => prev.map((r, i) => i === idx ? value : r))
+  const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = parseInt(e.target.value, 10)
+    setForm(prev => ({ ...prev, duration: isNaN(val) ? 0 : val }))
+    if (errors.duration) setErrors(prev => ({ ...prev, duration: '' }))
   }
-  const addRequirement = () => setRequirements(prev => [...prev, ''])
+
+  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value)
+    setForm(prev => ({ ...prev, salary: isNaN(val) ? 0 : val }))
+  }
+
+  // requirements
+  const handleRequirementChange = (idx: number, value: string) =>
+    setRequirements(prev => prev.map((r, i) => (i === idx ? value : r)))
+  const addRequirement    = () => setRequirements(prev => [...prev, ''])
   const removeRequirement = (idx: number) => {
     if (requirements.length === 1) return
     setRequirements(prev => prev.filter((_, i) => i !== idx))
   }
 
-  const handleSkillChange = (idx: number, value: string) => {
-    setSkills(prev => prev.map((s, i) => i === idx ? value : s))
-  }
-  const addSkill = () => setSkills(prev => [...prev, ''])
+  // skills
+  const handleSkillChange = (idx: number, value: string) =>
+    setSkills(prev => prev.map((s, i) => (i === idx ? value : s)))
+  const addSkill    = () => setSkills(prev => [...prev, ''])
   const removeSkill = (idx: number) => {
     if (skills.length === 1) return
     setSkills(prev => prev.filter((_, i) => i !== idx))
   }
 
+  // ─── Validation ───────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const e: Record<string, string> = {}
-    if (!form.title.trim()) e.title = t.titleRequired
-    if (!form.description.trim()) e.description = t.descriptionRequired
-    if (!form.duration) e.duration = t.durationRequired
-    if (!form.workType) e.workType = t.workTypeRequired
-    if (form.workType === 'On-site' && !form.governorate) e.governorate = t.governorateRequired
-    if (!form.deadline) e.deadline = t.deadlineRequired
-    const validSkills = skills.filter(s => s.trim())
-    if (validSkills.length === 0) e.skills = t.skillRequired
+    if (!form.title.trim())          e.title       = t.titleRequired
+    if (!form.description.trim())    e.description = t.descriptionRequired
+    if (!form.duration)              e.duration    = t.durationRequired
+    if (!form.workType)              e.workType    = t.workTypeRequired
+    if (!form.governorate)           e.governorate = t.governorateRequired
+    if (!form.deadline)              e.deadline    = t.deadlineRequired
+    if (!skills.some(s => s.trim())) e.skills      = t.skillRequired
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
+  // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
+
     try {
       const token = localStorage.getItem('token')
+  
       const payload = {
-        ...form,
-        isPaid: form.isPaid === 'paid',
+        internId:     isEditMode ? Number(editId) : undefined,
+        title:        form.title.trim(),
+        description:  form.description.trim(),
+        duration:     form.duration,
+        workType:     form.workType,
+        governorate:  `${form.governorate}, Egypt`,
+        deadline:     form.deadline,
+        isPaid:       form.isPaid === 'paid',
+        salary:       form.isPaid === 'paid' ? form.salary : 0,
         requirements: requirements.filter(r => r.trim()),
-        skills: skills.filter(s => s.trim()),
+        skills:       skills.filter(s => s.trim()),
       }
-
       if (isEditMode) {
         await api.put(`/api/company/internships/${editId}`, payload, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
       } else {
         await api.post('/api/company/internships', payload, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
       }
 
@@ -180,17 +212,11 @@ function PostInternshipContent() {
     }
   }
 
-
-
-  if (fetching) {
-    return <LoadingScreen />
-  }
-
   return (
     <div className={styles.appLayout} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <div className={styles.glow} aria-hidden="true" />
+      <div className={styles.glow}          aria-hidden="true" />
       <div className={styles.glowSecondary} aria-hidden="true" />
-      <div className={styles.glowTertiary} aria-hidden="true" />
+      <div className={styles.glowTertiary}  aria-hidden="true" />
 
       <div
         className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
@@ -207,7 +233,6 @@ function PostInternshipContent() {
             <span className={styles.logoText}>{t.appName}</span>
           </div>
         </div>
-
         <nav className={styles.nav}>
           <Link href="/company/dashboard" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
             <LayoutDashboard size={20} /><span>{t.dashboard}</span>
@@ -227,17 +252,15 @@ function PostInternshipContent() {
       <main className={styles.mainContent}>
         <header className={styles.topBar}>
           <div className={styles.pageHeader}>
-            <h1 className={styles.pageTitle}>{isEditMode ? t.editInternship : t.postNewInternship}</h1>
+            <h1 className={styles.pageTitle}>
+              {isEditMode ? t.editInternship : t.postNewInternship}
+            </h1>
             <p className={styles.pageSubtitle}>
               {isEditMode ? t.updateInternshipDetails : t.createNewInternshipOpportunity}
             </p>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button
-              className={styles.hamburgerBtn}
-              onClick={() => setSidebarOpen(prev => !prev)}
-            >
+          <div className={styles.topBarActions}>
+            <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} title="Toggle Sidebar" aria-label="Toggle Sidebar">
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
             <TopBarControls />
@@ -246,10 +269,13 @@ function PostInternshipContent() {
 
         <div className={styles.formWrapper}>
           <form onSubmit={handleSubmit} className={styles.form} noValidate>
+
+            {/* Row 1 — Title + Work Type */}
             <div className={styles.formRow}>
               <div className={`${styles.formGroup} ${errors.title ? styles.hasError : ''}`}>
-                <label>{t.internshipTitle}</label>
+                <label htmlFor="title-input">{t.internshipTitle}</label>
                 <input
+                  id="title-input"
                   name="title"
                   value={form.title}
                   onChange={handleChange}
@@ -258,19 +284,21 @@ function PostInternshipContent() {
                 {errors.title && <span className={styles.fieldError}>{errors.title}</span>}
               </div>
               <div className={`${styles.formGroup} ${errors.workType ? styles.hasError : ''}`}>
-                <label>{t.workTypeLabel}</label>
-                <select name="workType" value={form.workType} onChange={handleChange} title={t.workTypeLabel}>
+                <label htmlFor="workType-select">{t.workTypeLabel}</label>
+                <select id="workType-select" name="workType" value={form.workType} onChange={handleChange} title={t.workTypeLabel}>
                   <option value="Remote">{t.remote}</option>
                   <option value="Hybrid">{t.hybrid}</option>
-                  <option value="On-site">{t.onSite}</option>
+                  <option value="Onsite">{t.onSite}</option>
                 </select>
                 {errors.workType && <span className={styles.fieldError}>{errors.workType}</span>}
               </div>
             </div>
 
+            {/* Description */}
             <div className={`${styles.formGroup} ${errors.description ? styles.hasError : ''}`}>
-              <label>{t.descriptionLabel}</label>
+              <label htmlFor="description-textarea">{t.descriptionLabel}</label>
               <textarea
+                id="description-textarea"
                 name="description"
                 value={form.description}
                 onChange={handleChange}
@@ -280,61 +308,81 @@ function PostInternshipContent() {
               {errors.description && <span className={styles.fieldError}>{errors.description}</span>}
             </div>
 
+            {/* Row 2 — Location + Duration + Salary */}
             <div className={styles.formRow}>
-              {form.workType === 'On-site' ? (
-                <div className={`${styles.formGroup} ${errors.governorate ? styles.hasError : ''}`}>
-                  <label>{t.locationLabel}</label>
-                  <select name="governorate" value={form.governorate} onChange={handleChange} title={t.locationLabel}>
-                    <option value="">{t.selectGovernorate}</option>
-                    {EGYPT_GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                  {errors.governorate && <span className={styles.fieldError}>{errors.governorate}</span>}
-                </div>
-              ) : (
-                <div className={styles.formGroup}>
-                  <label>{t.locationLabel}</label>
-                  <input value={form.workType === 'Remote' ? t.remote : t.hybrid} disabled className={styles.disabledInput} title={t.locationLabel} />
-                </div>
-              )}
 
+              {/* Location → governorate dropdown for ALL work types */}
+              <div className={`${styles.formGroup} ${errors.governorate ? styles.hasError : ''}`}>
+                <label htmlFor="governorate-select">{t.locationLabel}</label>
+                <select id="governorate-select" name="governorate" value={form.governorate} onChange={handleChange} title={t.locationLabel}>
+                  <option value="">{t.selectGovernorate}</option>
+                  {EGYPT_GOVERNORATES.map(g => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+                {errors.governorate && <span className={styles.fieldError}>{errors.governorate}</span>}
+              </div>
+
+              {/* Duration → stored as number (months) */}
               <div className={`${styles.formGroup} ${errors.duration ? styles.hasError : ''}`}>
-                <label>{t.duration}</label>
-                <select name="duration" value={form.duration} onChange={handleChange} title={t.duration}>
+                <label htmlFor="duration-select">{t.duration}</label>
+                <select
+                  id="duration-select"
+                  name="duration"
+                  value={form.duration === 0 ? '' : String(form.duration)}
+                  onChange={handleDurationChange}
+                  title={t.duration}
+                >
                   <option value="">{t.selectDuration}</option>
-                  <option value="1 month">{t.oneMonth}</option>
-                  <option value="2 months">{t.twoMonths}</option>
-                  <option value="3 months">{t.threeMonths}</option>
-                  <option value="6 months">{t.sixMonths}</option>
+                  {DURATION_OPTIONS.map(opt => (
+                    <option key={opt.value} value={String(opt.value)}>{opt.label}</option>
+                  ))}
                 </select>
                 {errors.duration && <span className={styles.fieldError}>{errors.duration}</span>}
               </div>
 
-              <div className={styles.formGroup}>
-                <label>{t.stipendOptional}</label>
-                <input
-                  name="stipend"
-                  value={form.stipend}
-                  onChange={handleChange}
-                  placeholder={t.stipendPlaceholder}
-                />
-              </div>
+              {/* Salary → only shown when isPaid === 'paid' */}
+              {form.isPaid === 'paid' && (
+                <div className={styles.formGroup}>
+                  <label htmlFor="salary-input">{t.stipendOptional}</label>
+                  <input
+                    id="salary-input"
+                    type="number"
+                    name="salary"
+                    min={0}
+                    value={form.salary || ''}
+                    onChange={handleSalaryChange}
+                    placeholder={t.stipendPlaceholder ?? 'e.g. 3000'}
+                  />
+                </div>
+              )}
             </div>
 
+            {/* Row 3 — Deadline + Compensation */}
             <div className={styles.formRow}>
               <div className={`${styles.formGroup} ${errors.deadline ? styles.hasError : ''}`}>
-                <label>{t.applicationDeadline}</label>
-                <input type="date" name="deadline" value={form.deadline} min={today} onChange={handleChange} title={t.applicationDeadline} />
+                <label htmlFor="deadline-input">{t.applicationDeadline}</label>
+                <input
+                  id="deadline-input"
+                  type="date"
+                  name="deadline"
+                  value={form.deadline}
+                  min={today}
+                  onChange={handleChange}
+                  title={t.applicationDeadline}
+                />
                 {errors.deadline && <span className={styles.fieldError}>{errors.deadline}</span>}
               </div>
               <div className={styles.formGroup}>
-                <label>{t.compensation}</label>
-                <select name="isPaid" value={form.isPaid} onChange={handleChange} title={t.compensation}>
+                <label htmlFor="isPaid-select">{t.compensation}</label>
+                <select id="isPaid-select" name="isPaid" value={form.isPaid} onChange={handleChange} title={t.compensation}>
                   <option value="unpaid">{t.unpaid}</option>
                   <option value="paid">{t.paid}</option>
                 </select>
               </div>
             </div>
 
+            {/* Requirements */}
             <div className={styles.formGroup}>
               <label>{t.requirements}</label>
               <div className={styles.dynamicList}>
@@ -346,7 +394,12 @@ function PostInternshipContent() {
                       placeholder={t.enterRequirement}
                     />
                     {requirements.length > 1 && (
-                      <button type="button" className={styles.removeItemBtn} onClick={() => removeRequirement(idx)} title={t.delete}>
+                      <button
+                        type="button"
+                        className={styles.removeItemBtn}
+                        onClick={() => removeRequirement(idx)}
+                        title={t.delete}
+                      >
                         <X size={14} />
                       </button>
                     )}
@@ -358,6 +411,7 @@ function PostInternshipContent() {
               </button>
             </div>
 
+            {/* Skills */}
             <div className={`${styles.formGroup} ${errors.skills ? styles.hasError : ''}`}>
               <label>{t.requiredSkills}</label>
               <div className={styles.dynamicList}>
@@ -369,7 +423,12 @@ function PostInternshipContent() {
                       placeholder={t.enterSkill}
                     />
                     {skills.length > 1 && (
-                      <button type="button" className={styles.removeItemBtn} onClick={() => removeSkill(idx)} title={t.delete}>
+                      <button
+                        type="button"
+                        className={styles.removeItemBtn}
+                        onClick={() => removeSkill(idx)}
+                        title={t.delete}
+                      >
                         <X size={14} />
                       </button>
                     )}
@@ -382,16 +441,22 @@ function PostInternshipContent() {
               {errors.skills && <span className={styles.fieldError}>{errors.skills}</span>}
             </div>
 
+            {/* Actions */}
             <div className={styles.formActions}>
-              <button type="button" className={styles.cancelBtn} onClick={() => router.push('/company/internships')}>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={() => router.push('/company/internships')}
+              >
                 {t.cancel}
               </button>
               <button type="submit" className={styles.submitBtn} disabled={loading}>
                 {loading
-                  ? (isEditMode ? t.updating : t.publishing)
+                  ? (isEditMode ? t.updating        : t.publishing)
                   : (isEditMode ? t.updateInternship : t.postNewInternship)}
               </button>
             </div>
+
           </form>
         </div>
       </main>

@@ -11,13 +11,12 @@ import {
   MapPin,
   DollarSign,
   Calendar,
-  Eye,
   FileText,
   Edit2,
   Trash2,
   XCircle,
+  RotateCcw,
   Plus,
-  Clock,
   ChevronLeft,
   Menu,
   X,
@@ -26,77 +25,45 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './InternshipsStyle.module.css'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
-import api from '../../lib/api'
-
 
 interface Internship {
   id: number
   title: string
-  location: string
   city?: string
-  isPaid: boolean
+  isPaid: 'Paid' | 'Unpaid'
   salary?: string
   deadline: string
-  duration: string
-  skills: string[]
-  description: string
   applicants: number
-  views: number
-  status: 'active' | 'closed'
-  workType: 'Remote' | 'On-site' | 'Hybrid'
+  status: 'Open' | 'Closed'
+  workType: 'Remote' | 'Onsite' | 'Hybrid'
 }
 
 const MOCK_INTERNSHIPS: Internship[] = [
   {
     id: 1,
     title: 'Frontend Developer Intern',
-    location: 'Remote',
     workType: 'Remote',
-    isPaid: true,
+    isPaid: 'Paid',
     salary: '5,000 EGP/month',
     deadline: '2024-12-30',
-    duration: '3 months',
-    skills: ['React', 'TypeScript', 'CSS'],
-    description: 'Work on our main product frontend.',
     applicants: 45,
-    views: 234,
-    status: 'active',
+    status: 'Open',
   },
   {
     id: 2,
     title: 'Backend Developer Intern',
-    location: 'On-site',
     city: 'Alexandria',
-    workType: 'On-site',
-    isPaid: true,
+    workType: 'Onsite',
+    isPaid: 'Paid',
     salary: '5,500 EGP/month',
     deadline: '2025-01-15',
-    duration: '6 months',
-    skills: ['Node.js', 'PostgreSQL'],
-    description: 'Build APIs and backend services.',
     applicants: 32,
-    views: 189,
-    status: 'active',
-  },
-  {
-    id: 3,
-    title: 'UI/UX Designer Intern',
-    location: 'Remote',
-    workType: 'Remote',
-    isPaid: false,
-    deadline: '2025-01-20',
-    duration: '1 month',
-    skills: ['Figma', 'Adobe XD'],
-    description: 'Design user interfaces for our platform.',
-    applicants: 18,
-    views: 120,
-    status: 'closed',
+    status: 'Closed',
   },
 ]
 
 function MyInternshipPage() {
   const { language, t } = useApp()
-
   const router = useRouter()
 
   const [internships, setInternships] = useState<Internship[]>([])
@@ -105,60 +72,125 @@ function MyInternshipPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // ── Reopen modal state ───────────────────────────────────────────────────
+  const [reopenModalOpen, setReopenModalOpen] = useState(false)
+  const [reopenTargetId, setReopenTargetId] = useState<number | null>(null)
+  const [reopenDeadline, setReopenDeadline] = useState('')
+
+  // ── Fetch Internships ──────────────────────────────────────────────────────
   const fetchInternships = async () => {
     try {
       setLoading(true)
       setError(null)
-      const token = localStorage.getItem('token')
-      const res = await api.get('/api/company/internships', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const data = res.data?.data || res.data
-      setInternships(data || [])
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.push('/login')
-        return
-      }
-      console.warn('[fetchInternships] API failed, falling back to mock internships:', err)
+
+      // ── BACKEND INTEGRATION ───────────────────────────────────────────────
+      // Expected endpoint: GET /company/internships
+      // Expected response: Internship[]
+      //
+      // const token = localStorage.getItem('token')
+      // const res = await fetch('/api/company/internships', {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // })
+      // if (!res.ok) throw new Error('Failed to fetch internships')
+      // const data = await res.json()
+      // setInternships(data)
+      // ────────────────────────────────────────────────
+
+      await new Promise(r => setTimeout(r, 400))
       setInternships(MOCK_INTERNSHIPS)
+    } catch (err: any) {
+      setError(err.message || t.failedToLoadInternships)
     } finally {
       setLoading(false)
     }
+  }
+
+  // ── Close posting ──────────────────────────────────────────────────────────
+  const handleClosePosting = async (id: number) => {
+    if (!confirm(t.confirmClosePosting)) return
+    try {
+      // ── BACKEND INTEGRATION ───────────────────────────────────────────────
+      // const token = localStorage.getItem('token')
+      // await fetch(`/api/company/internships/${id}/close`, {
+      //   method: 'PATCH',
+      //   headers: { Authorization: `Bearer ${token}` },
+      // })
+      // ─────────────────────────────────────────────────────────────────────
+
+      setInternships(prev => prev.map(i => i.id === id ? { ...i, status: 'Closed' } : i))
+    } catch (err: any) {
+      alert(err.message || t.failedToClose)
+    }
+  }
+
+  // ── Reopen posting ────────────────────────────────────────────────────────
+  const handleOpenReopenModal = (id: number) => {
+    setReopenTargetId(id)
+    const current = internships.find(i => i.id === id)
+    setReopenDeadline(current?.deadline || '')
+    setReopenModalOpen(true)
+  }
+
+  const handleCloseReopenModal = () => {
+    setReopenModalOpen(false)
+    setReopenTargetId(null)
+    setReopenDeadline('')
   }
 
   useEffect(() => {
     fetchInternships()
   }, [])
 
-  const handleClosePosting = async (id: number) => {
-    if (!confirm(t.confirmClosePosting)) return
+  const handleReopen = async () => {
+    if (!reopenTargetId) return
+    const id = reopenTargetId
+
+    // If the old deadline already passed, a new deadline is required.
+    const current = internships.find(i => i.id === id)
+    const oldDeadlineExpired = current ? new Date(current.deadline) < new Date() : false
+
+    if (oldDeadlineExpired && !reopenDeadline) {
+      alert(t.pleaseSelectDeadline)
+      return
+    }
+
+    const payload: { deadline: string | null } = {
+      deadline: reopenDeadline || null,
+    }
+
     try {
-      const token = localStorage.getItem('token')
-      try {
-        await api.put(`/api/company/internships/${id}/close`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      } catch (apiErr) {
-        console.warn('[handleClosePosting] API failed, updating local state only:', apiErr)
-      }
-      setInternships(prev => prev.map(i => i.id === id ? { ...i, status: 'closed' } : i))
+      // ── BACKEND INTEGRATION ───────────────────────────────────────────────
+      // Expected endpoint: PATCH /company/internships/:id/reopen
+      // const token = localStorage.getItem('token')
+      // await fetch(`/api/company/internships/${id}/reopen`, {
+      //   method: 'PATCH',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      //   body: JSON.stringify(payload),
+      // })
+      // ─────────────────────────────────────────────────────────────────────
+
+      setInternships(prev => prev.map(i => i.id === id ? { ...i, status: 'Open', deadline: payload.deadline || i.deadline } : i))
+      handleCloseReopenModal()
     } catch (err: any) {
-      alert(err.message || t.failedToClose)
+      alert(err.message || t.failedToReopen)
     }
   }
 
+  // ── Delete ─────────────────────────────────────────────────────────────────
   const handleDelete = async (id: number) => {
     if (!confirm(t.confirmDelete)) return
     try {
-      const token = localStorage.getItem('token')
-      try {
-        await api.delete(`/api/company/internships/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      } catch (apiErr) {
-        console.warn('[handleDelete] API failed, updating local state only:', apiErr)
-      }
+      // ── BACKEND INTEGRATION ───────────────────────────────────────────────
+      // const token = localStorage.getItem('token')
+      // await fetch(`/api/company/internships/${id}`, {
+      //   method: 'DELETE',
+      //   headers: { Authorization: `Bearer ${token}` },
+      // })
+      // ─────────────────────────────────────────────────────────────────────
+
       setInternships(prev => prev.filter(i => i.id !== id))
     } catch (err: any) {
       alert(err.message || t.failedToDelete)
@@ -169,15 +201,14 @@ function MyInternshipPage() {
     router.push(`/company/post-internship?id=${id}`)
   }
 
+  // ── View Applications → pass internshipId so page shows only that internship's applicants
   const handleViewApplications = (id: number) => {
-    router.push(`/company/applicants?internshipId=${id}`)
+    router.push(`/company/applicants?internId=${id}`)
   }
-
-
 
   const filtered = internships.filter(i =>
     i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (i.city || i.location || '').toLowerCase().includes(searchQuery.toLowerCase())
+    (i.city || i.workType || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const formatDeadline = (dateStr: string) => {
@@ -243,10 +274,12 @@ function MyInternshipPage() {
             <h1 className={styles.pageTitle}>{t.myInternships}</h1>
             <p className={styles.pageSubtitle}>{t.managePostings}</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className={styles.topBarActions}>
             <button
               className={styles.hamburgerBtn}
               onClick={() => setSidebarOpen(prev => !prev)}
+              title="Toggle Sidebar"
+              aria-label="Toggle Sidebar"
             >
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -274,78 +307,109 @@ function MyInternshipPage() {
             <div className={styles.emptyMessage}>{t.noInternshipsFound}</div>
           )}
 
-          {filtered.map(internship => (
-            <div key={internship.id} className={styles.internshipCard}>
-              <span className={`${styles.statusBadge} ${internship.status === 'active' ? styles.statusActive : styles.statusClosed}`}>
-                {internship.status === 'active' ? t.active : t.closed}
-              </span>
+          {filtered.map(internship => {
+            const isPaid = internship.isPaid === 'Paid' || (internship.isPaid as any) === true
+            return (
+              <div key={internship.id} className={styles.internshipCard}>
+                <span className={`${styles.statusBadge} ${internship.status === 'Open' ? styles.statusActive : styles.statusClosed}`}>
+                  {internship.status === 'Open' ? t.active : t.closed}
+                </span>
 
-              <div className={styles.cardTop}>
-                <h3 className={styles.cardTitle}>{internship.title}</h3>
-                <div className={styles.cardMeta}>
-                  <span className={styles.metaItem}>
-                    <MapPin size={14} />
-                    {internship.workType === 'On-site' && internship.city
-                      ? `${internship.city} (${t.onSite})`
-                      : internship.workType === 'Remote'
-                        ? t.remote
-                        : t.hybrid}
-                  </span>
-                  <span className={`${styles.metaItem} ${internship.isPaid ? styles.paidColor : styles.unpaidColor}`}>
-                    <DollarSign size={14} />
-                    {internship.isPaid ? (internship.salary || t.paid) : t.unpaid}
-                  </span>
-                  <span className={styles.metaItem}>
-                    <Calendar size={14} /> {t.deadline}: {formatDeadline(internship.deadline)}
-                  </span>
-                  <span className={styles.metaItem}>
-                    <Clock size={14} /> {internship.duration}
-                  </span>
-                </div>
-                {internship.skills?.length > 0 && (
-                  <div className={styles.skillsTags}>
-                    {internship.skills.map(skill => (
-                      <span key={skill} className={styles.skillTag}>{skill}</span>
-                    ))}
+                <div className={styles.cardTop}>
+                  <h3 className={styles.cardTitle}>{internship.title}</h3>
+                  <div className={styles.cardMeta}>
+                    <span className={styles.metaItem}>
+                      <MapPin size={14} />
+                      {internship.workType === 'Onsite' && internship.city
+                        ? `${internship.city} (${t.onSite})`
+                        : internship.workType === 'Remote'
+                          ? t.remote
+                          : t.hybrid}
+                    </span>
+                    <span className={`${styles.metaItem} ${isPaid ? styles.paidColor : styles.unpaidColor}`}>
+                      <DollarSign size={14} />
+                      {isPaid ? (internship.salary || t.paid) : t.unpaid}
+                    </span>
+                    <span className={styles.metaItem}>
+                      <Calendar size={14} /> {t.deadline}: {formatDeadline(internship.deadline)}
+                    </span>
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div className={styles.statsRow}>
-                <div className={styles.statBox}>
-                  <span className={styles.statLabel}>{t.applicants}</span>
-                  <span className={styles.statValue}><FileText size={16} /> {internship.applicants}</span>
+                <div className={styles.statsRow}>
+                  <div className={styles.statBox}>
+                    <span className={styles.statLabel}>{t.applicants}</span>
+                    <span className={styles.statValue}><FileText size={16} /> {internship.applicants}</span>
+                  </div>
+                  <div className={styles.statBox}>
+                    <span className={styles.statLabel}>{t.status}</span>
+                    <span className={styles.statValue}>{isPaid ? t.paid : t.unpaid}</span>
+                  </div>
                 </div>
-                <div className={styles.statBox}>
-                  <span className={styles.statLabel}>{t.views}</span>
-                  <span className={styles.statValue}><Eye size={16} /> {internship.views}</span>
-                </div>
-                <div className={styles.statBox}>
-                  <span className={styles.statLabel}>{t.status}</span>
-                  <span className={styles.statValue}>{internship.isPaid ? t.paid : t.unpaid}</span>
-                </div>
-              </div>
 
-              <div className={styles.cardActions}>
-                <button className={styles.viewBtn} onClick={() => handleViewApplications(internship.id)}>
-                  {t.viewApplicants} ({internship.applicants})
-                </button>
-                <button className={styles.editBtn} onClick={() => handleEdit(internship.id)}>
-                  <Edit2 size={15} /> {t.edit}
-                </button>
-                {internship.status === 'active' && (
-                  <button className={styles.closeBtn} onClick={() => handleClosePosting(internship.id)}>
-                    <XCircle size={15} /> {t.closePosting}
+                <div className={styles.cardActions}>
+                  <button className={styles.viewBtn} onClick={() => handleViewApplications(internship.id)}>
+                    {t.viewApplicants} ({internship.applicants})
                   </button>
-                )}
-                <button className={styles.deleteBtn} onClick={() => handleDelete(internship.id)}>
-                  <Trash2 size={15} /> {t.delete}
-                </button>
+                  <button className={styles.editBtn} onClick={() => handleEdit(internship.id)}>
+                    <Edit2 size={15} /> {t.edit}
+                  </button>
+                  {internship.status === 'Open' ? (
+                    <button className={styles.closeBtn} onClick={() => handleClosePosting(internship.id)}>
+                      <XCircle size={15} /> {t.closePosting}
+                    </button>
+                  ) : (
+                    <button className={styles.closeBtn} onClick={() => handleOpenReopenModal(internship.id)}>
+                      <RotateCcw size={15} /> {t.reopenPosting}
+                    </button>
+                  )}
+                  <button className={styles.deleteBtn} onClick={() => handleDelete(internship.id)}>
+                    <Trash2 size={15} /> {t.delete}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </main>
+
+      {/* ── Reopen Modal ───────────────────────────────────────────────── */}
+      {reopenModalOpen && (
+        <div className={styles.modalOverlay} onClick={handleCloseReopenModal}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>
+              {t.reopenPosting}
+            </h3>
+
+            <label htmlFor="reopen-deadline-input" className={styles.modalLabel}>
+              {t.deadline}
+            </label>
+            <input
+              id="reopen-deadline-input"
+              type="date"
+              value={reopenDeadline}
+              onChange={e => setReopenDeadline(e.target.value)}
+              className={styles.modalInput}
+              title="Deadline Date"
+            />
+
+            <div className={styles.modalBtnGroup}>
+              <button
+                onClick={handleCloseReopenModal}
+                className={styles.cancelBtn}
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleReopen}
+                className={styles.confirmBtn}
+              >
+                {t.ok}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

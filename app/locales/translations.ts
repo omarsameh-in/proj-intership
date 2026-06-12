@@ -376,6 +376,11 @@ export const translations = {
         oct: "Oct",
         nov: "Nov",
         dec: "Dec",
+        failedToReopen: "Failed to reopen internship",
+        pleaseSelectDeadline: "Please select a deadline",
+        reopenPosting: "Reopen Posting",
+        ok: "ok",
+        failedToDownloadCv: "failedToDownloadCv",
     },
     ar: {
         // Mentor Dashboard
@@ -753,7 +758,12 @@ export const translations = {
         sep: "سبتمبر",
         oct: "أكتوبر",
         nov: "نوفمبر",
-        dec: "ديسمبر"
+        dec: "ديسمبر",
+        failedToReopen: "فشل إعادة فتح التدريب",
+        pleaseSelectDeadline: "يرجى اختيار موعد نهائي",
+        reopenPosting: "إعادة فتح التدريب",
+        ok: "موافق",
+        failedToDownloadCv: "فشل التنزيل"
     }
 }
 

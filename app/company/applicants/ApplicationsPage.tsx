@@ -1,4 +1,3 @@
-
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
@@ -22,80 +21,89 @@ import styles from './ApplicationsStyle.module.css'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import api from '../../lib/api'
 
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Applicant {
   id: number
-  internshipId: number
+  internId: number
+  internTitle: string
   name: string
   university: string
   major: string
   email: string
   phone: string
   appliedAt: string
-  status: 'pending' | 'accepted' | 'rejected'
-  matchPercent: number
-  cvUrl?: string
+  status: 'Pending' | 'Accept' | 'Rejected'
+  cvUrl: string
 }
 
 const MOCK_APPLICANTS: Applicant[] = [
   {
-    id: 1, internshipId: 1,
+    id: 1,
+    internId: 1,
+    internTitle: 'Frontend Developer Intern',
     name: 'Ahmed Khaled',
     university: 'Cairo University',
     major: 'Computer Science',
     email: 'ahmed@example.com',
     phone: '+20 123 456 7890',
     appliedAt: '2 hours ago',
-    status: 'pending',
-    matchPercent: 95,
+    status: 'Pending',
+    cvUrl: '/cv/ahmed-khaled.pdf'
   },
   {
-    id: 2, internshipId: 1,
-    name: 'Sara Mohamed', university: 'Ain Shams University', major: 'Software Engineering',
-    email: 'sara@example.com', phone: '+20 111 222 3333',
-    appliedAt: '5 hours ago', status: 'pending', matchPercent: 88,
+    id: 2,
+    internId: 2,
+    internTitle: 'Back end Developer Intern',
+    name: 'maryam Khaled',
+    university: 'Cairo University',
+    major: 'Computer Science',
+    email: 'ahmed@example.com',
+    phone: '+20 123 456 7890',
+    appliedAt: '2 hours ago',
+    status: 'Pending',
+    cvUrl: '/cv/ahmed-khaled.pdf'
   },
   {
-    id: 3, internshipId: 1,
-    name: 'Youssef Ali', university: 'Alexandria University', major: 'IT',
-    email: 'youssef@example.com', phone: '+20 100 000 0000',
-    appliedAt: '1 day ago', status: 'accepted', matchPercent: 72,
+    id: 3,
+    internId: 3,
+    internTitle: 'Frontend Developer Intern',
+    name: 'dina Khaled',
+    university: 'Cairo University',
+    major: 'IT',
+    email: 'ahmed@example.com',
+    phone: '+20 123 456 7890',
+    appliedAt: '2 hours ago',
+    status: 'Pending',
+    cvUrl: '/cv/ahmed-khaled.pdf'
   },
   {
-    id: 4, internshipId: 2,
-    name: 'Layla Ibrahim', university: 'Cairo University', major: 'Computer Engineering',
-    email: 'layla@example.com', phone: '+20 122 333 4444',
-    appliedAt: '30 minutes ago', status: 'pending', matchPercent: 91,
-  },
-  {
-    id: 5, internshipId: 2,
-    name: 'Omar Hassan', university: 'Helwan University', major: 'Information Systems',
-    email: 'omar@example.com', phone: '+20 155 666 7777',
-    appliedAt: '3 hours ago', status: 'rejected', matchPercent: 60,
-  },
-  {
-    id: 6, internshipId: 3,
-    name: 'Nour Mahmoud', university: 'Future University', major: 'Graphic Design',
-    email: 'nour@example.com', phone: '+20 100 888 9999',
-    appliedAt: '2 days ago', status: 'pending', matchPercent: 85,
-  },
+    id: 4,
+    internId: 4,
+    internTitle: 'Frontend Developer Intern',
+    name: 'amira ahmed',
+    university: 'Cairo University',
+    major: 'AI',
+    email: 'ahmed@example.com',
+    phone: '+20 123 456 7890',
+    appliedAt: '2 hours ago',
+    status: 'Pending',
+    cvUrl: '/cv/ahmed-khaled.pdf'
+  }
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
 function ApplicationsContent() {
   const { language, t } = useApp()
 
-
   const router = useRouter()
   const searchParams = useSearchParams()
-  const internshipId = searchParams.get('internshipId')
+  const internshipId = searchParams.get('internId')
 
   const [applicants, setApplicants] = useState<Applicant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Accept' | 'Rejected'>('all')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const fetchApplicants = async () => {
@@ -103,7 +111,7 @@ function ApplicationsContent() {
       setLoading(true)
       setError(null)
       const token = localStorage.getItem('token')
-      const endpoint = internshipId ? `/api/company/applicants?internshipId=${internshipId}` : '/api/company/applicants'
+      const endpoint = internshipId ? `/api/company/applicants?internId=${internshipId}` : '/api/company/applicants'
       const res = await api.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -116,7 +124,7 @@ function ApplicationsContent() {
       }
       console.warn('[fetchApplicants] API failed, falling back to mock applicants:', err)
       if (internshipId) {
-        setApplicants(MOCK_APPLICANTS.filter(a => a.internshipId === Number(internshipId)))
+        setApplicants(MOCK_APPLICANTS.filter(a => a.internId === Number(internshipId)))
       } else {
         setApplicants(MOCK_APPLICANTS)
       }
@@ -133,13 +141,15 @@ function ApplicationsContent() {
     try {
       const token = localStorage.getItem('token')
       try {
-        await api.put(`/api/company/applicants/${id}/status`, { status: 'accepted' }, {
+        await api.put(`/api/company/applicants/${id}/status/${internshipId}`, {
+          status: 'Accept'
+        }, {
           headers: { Authorization: `Bearer ${token}` }
         })
       } catch (apiErr) {
         console.warn('[handleAccept] API failed, updating local state only:', apiErr)
       }
-      setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: 'accepted' } : a))
+      setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: 'Accept' } : a))
     } catch (err: any) {
       alert(err.message || t.failedToAccept)
     }
@@ -149,23 +159,53 @@ function ApplicationsContent() {
     try {
       const token = localStorage.getItem('token')
       try {
-        await api.put(`/api/company/applicants/${id}/status`, { status: 'rejected' }, {
+        await api.put(`/api/company/applicants/${id}/status/${internshipId}`, {
+          status: 'Rejected'
+        }, {
           headers: { Authorization: `Bearer ${token}` }
         })
       } catch (apiErr) {
         console.warn('[handleReject] API failed, updating local state only:', apiErr)
       }
-      setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: 'rejected' } : a))
+      setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: 'Rejected' } : a))
     } catch (err: any) {
       alert(err.message || t.failedToReject)
     }
   }
 
-  const handleDownloadCV = (applicant: Applicant) => {
-    alert(`${t.downloadingCv} ${applicant.name}`)
+  const handleDownloadCV = async (applicant: Applicant) => {
+    try {
+      const token = localStorage.getItem('token')
+
+      const response = await api.get(
+        `/api/company/applicants/${applicant.id}/cv`,
+        {
+          responseType: 'blob',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute(
+        'download',
+        `${applicant.name}-CV.pdf`
+      )
+
+      document.body.appendChild(link)
+      link.click()
+
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err: any) {
+      console.error(err)
+      alert(err.message || t.failedToDownloadCv)
+    }
   }
-
-
 
   const filtered = applicants.filter(a => {
     const matchesSearch =
@@ -265,9 +305,9 @@ function ApplicationsContent() {
             title={t.allApplications}
           >
             <option value="all">{t.allApplications}</option>
-            <option value="pending">{t.statusPending}</option>
-            <option value="accepted">{t.statusAccepted}</option>
-            <option value="rejected">{t.statusRejected}</option>
+            <option value="Pending">{t.statusPending}</option>
+            <option value="Accept">{t.statusAccepted}</option>
+            <option value="Rejected">{t.statusRejected}</option>
           </select>
         </div>
 
@@ -289,15 +329,16 @@ function ApplicationsContent() {
                     </p>
                   </div>
                   <div className={styles.badges}>
-                    <span className={`${styles.statusBadge} ${styles[`status_${applicant.status}`]}`}>
-                      {applicant.status === 'pending'
+                    <span className={`${styles.statusBadge} ${
+                      applicant.status === 'Pending' ? styles.status_pending :
+                      applicant.status === 'Accept' ? styles.status_accepted :
+                      styles.status_rejected
+                    }`}>
+                      {applicant.status === 'Pending'
                         ? t.statusPending
-                        : applicant.status === 'accepted'
+                        : applicant.status === 'Accept'
                           ? t.statusAccepted
                           : t.statusRejected}
-                    </span>
-                    <span className={styles.matchBadge}>
-                      {applicant.matchPercent}% {t.match}
                     </span>
                   </div>
                 </div>
@@ -311,12 +352,12 @@ function ApplicationsContent() {
                     <button className={styles.downloadBtn} onClick={() => handleDownloadCV(applicant)}>
                       <Download size={14} /> {t.downloadCv}
                     </button>
-                    {applicant.status !== 'accepted' && (
+                    {applicant.status !== 'Accept' && (
                       <button className={styles.acceptBtn} onClick={() => handleAccept(applicant.id)}>
                         {t.accept}
                       </button>
                     )}
-                    {applicant.status !== 'rejected' && (
+                    {applicant.status !== 'Rejected' && (
                       <button className={styles.rejectBtn} onClick={() => handleReject(applicant.id)}>
                         {t.rejectApplicant}
                       </button>

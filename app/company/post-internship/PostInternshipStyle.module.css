@@ -150,6 +150,12 @@
   margin-bottom: 2rem;
 }
 
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .pageHeader {
   display: flex;
   flex-direction: column;

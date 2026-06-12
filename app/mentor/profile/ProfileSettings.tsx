@@ -12,6 +12,8 @@ import api from '../../lib/api'
 // ============================================================
 interface PendingSlot {
     id: number
+    date: string
+    startTime: string
     day: string
     time: string
 }
@@ -25,22 +27,18 @@ const authHeader = (): Record<string, string> => ({
     'Content-Type': 'application/json',
 })
 
-// ============================================================
-//  API CALLS
-// ============================================================
-async function saveSlots(slots: PendingSlot[]): Promise<void> {
-    const res = await fetch(`${BASE_URL}/api/mentor/slots`, {
-        method: 'POST',
-        headers: authHeader(),
-        body: JSON.stringify({ slots }),
-    })
-    if (!res.ok) throw new Error('Failed to save slots')
+const minutesToHHMMSS = (minutesStr: string) => {
+    const totalMinutes = parseInt(minutesStr) || 60
+    const hrs = Math.floor(totalMinutes / 60)
+    const mins = totalMinutes % 60
+    const secs = 0
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
 // ============================================================
 //  MANAGEMENT SETTINGS MODAL
 // ============================================================
-function ManagementModal({ onClose }: { onClose: () => void }) {
+function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSaveSuccess: () => void }) {
     const { slots, addSlots, deleteSlot } = useApp()
 
     const [day, setDay]   = useState('')
@@ -49,10 +47,15 @@ function ManagementModal({ onClose }: { onClose: () => void }) {
     const [saving, setSaving] = useState(false)
     const [error, setError]   = useState<string | null>(null)
 
+    const [sessionType, setSessionType] = useState('Paid Sessions')
+    const [hourlyRate, setHourlyRate]   = useState('500')
+    const [durationMinutes, setDurationMinutes] = useState('60')
+    const [meetingPlatform, setMeetingPlatform] = useState('Zoom')
+
     const handleAddSlot = () => {
         if (!day || !time) return
-        const date = new Date(day)
-        const displayDay = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+        const dateObj = new Date(day)
+        const displayDay = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
         const [h, m]  = time.split(':').map(Number)
         const ampm    = h >= 12 ? 'PM' : 'AM'
         const hour12  = h % 12 || 12
@@ -60,7 +63,13 @@ function ManagementModal({ onClose }: { onClose: () => void }) {
 
         setPendingSlots(prev => [
             ...prev,
-            { id: Date.now(), day: displayDay, time: displayTime },
+            { 
+                id: Date.now(), 
+                date: day, 
+                startTime: time, 
+                day: displayDay, 
+                time: displayTime 
+            },
         ])
         setDay('')
         setTime('')
@@ -75,11 +84,27 @@ function ManagementModal({ onClose }: { onClose: () => void }) {
         setError(null)
         try {
             if (pendingSlots.length > 0) {
-                await saveSlots(pendingSlots)
-                addSlots(pendingSlots.map(s => ({ id: s.id, day: s.day, time: s.time })))
+                const token = localStorage.getItem('token')
+                for (const s of pendingSlots) {
+                    const durStr = minutesToHHMMSS(durationMinutes)
+                    const mappedSessionType = sessionType === 'Free Sessions' ? 'Free' : 'Paid Sessions'
+                    const decimalPrice = sessionType === 'Free Sessions' ? 0 : parseFloat(hourlyRate) || 0
+
+                    await api.post('/Mentor/Profile/availabilities', {
+                        date: s.date,
+                        startTime: s.startTime,
+                        duration: durStr,
+                        sessionType: mappedSessionType,
+                        price: decimalPrice,
+                        platform: meetingPlatform
+                    }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                }
             }
-            onClose()
-        } catch {
+            onSaveSuccess()
+        } catch (err: any) {
+            console.error('Error saving availabilities:', err)
             setError('Failed to save. Please try again.')
             setSaving(false)
         }
@@ -172,7 +197,13 @@ function ManagementModal({ onClose }: { onClose: () => void }) {
                         <h3 className={styles.sessionDetailsTitle}>Session Details</h3>
                         <div className={styles.formField}>
                             <label htmlFor="session-type" className={styles.formLabel}>Session Type</label>
-                            <select id="session-type" className={styles.formSelect} title="Session Type">
+                            <select 
+                                id="session-type" 
+                                className={styles.formSelect} 
+                                title="Session Type"
+                                value={sessionType}
+                                onChange={e => setSessionType(e.target.value)}
+                            >
                                 <option>Paid Sessions</option>
                                 <option>Free Sessions</option>
                                 <option>Both</option>
@@ -180,15 +211,33 @@ function ManagementModal({ onClose }: { onClose: () => void }) {
                         </div>
                         <div className={styles.formField}>
                             <label htmlFor="hourly-rate" className={styles.formLabel}>Session Salary / Hourly Rate (EGP)</label>
-                            <input id="hourly-rate" type="number" defaultValue="500" className={styles.formInput} />
+                            <input 
+                                id="hourly-rate" 
+                                type="number" 
+                                value={hourlyRate}
+                                onChange={e => setHourlyRate(e.target.value)}
+                                className={styles.formInput} 
+                            />
                         </div>
                         <div className={styles.formField}>
                             <label htmlFor="session-duration" className={styles.formLabel}>Default Session Duration (minutes)</label>
-                            <input id="session-duration" type="number" defaultValue="60" className={styles.formInput} />
+                            <input 
+                                id="session-duration" 
+                                type="number" 
+                                value={durationMinutes}
+                                onChange={e => setDurationMinutes(e.target.value)}
+                                className={styles.formInput} 
+                            />
                         </div>
                         <div className={styles.formField}>
                             <label htmlFor="meeting-platform" className={styles.formLabel}>Meeting Platform</label>
-                            <select id="meeting-platform" className={styles.formSelect} title="Meeting Platform">
+                            <select 
+                                id="meeting-platform" 
+                                className={styles.formSelect} 
+                                title="Meeting Platform"
+                                value={meetingPlatform}
+                                onChange={e => setMeetingPlatform(e.target.value)}
+                            >
                                 <option>Zoom</option>
                                 <option>Google Meet</option>
                                 <option>Microsoft Teams</option>
@@ -336,7 +385,7 @@ function ProfileField({ label, value, onChange, isEditing }: { label: string; va
 //  MAIN PAGE
 // ============================================================
 export default function ProfileSettings() {
-    const { slots, deleteSlot, language } = useApp()
+    const { slots, deleteSlot, setSlots, language } = useApp()
     const [showManagement, setShowManagement]   = useState(false)
     const [isEditing, setIsEditing]             = useState(false)
     const [loading, setLoading]                 = useState(true)
@@ -344,10 +393,10 @@ export default function ProfileSettings() {
     const defaultProfile = {
         fullName:    'Dr. Ahmed Hassan',
         email:       'ahmed.hassan@example.com',
-        phone:       '+20 123 456 7890',
+        phoneNumber: '+20 123 456 7890',
         location:    'Cairo, Egypt',
         jobTitle:    'Senior Software Engineer',
-        experience:  '15',
+        yearsExperience: 15,
         linkedin:    'linkedin.com/in/ahmedhassan',
         bio:         'Passionate about mentoring young developers and helping them navigate their career paths. With 15 years in the industry, I specialize in software architecture and team leadership.',
     }
@@ -359,12 +408,30 @@ export default function ProfileSettings() {
         try {
             setLoading(true)
             const token = localStorage.getItem('token')
-            const res = await api.get('/api/mentor/profile', {
+            const res = await api.get('/Mentor/Profile', {
                 headers: { Authorization: `Bearer ${token}` }
             })
             const data = res.data?.data || res.data
-            setProfileData(data)
-            setEditData(data)
+            const profile = {
+                fullName: data.fullName || '',
+                email: data.email || '',
+                phoneNumber: data.phoneNumber || '',
+                location: data.location || '',
+                jobTitle: data.jobTitle || '',
+                yearsExperience: data.yearsExperience || 0,
+                linkedin: data.linkedin || '',
+                bio: data.bio || '',
+            }
+            setProfileData(profile)
+            setEditData(profile)
+            if (data.availableSlots) {
+                const formattedSlots = data.availableSlots.map((s: any) => ({
+                    id: s.slotId,
+                    day: `${s.day}, ${s.date}`,
+                    time: `${s.startTime} - ${s.endTime}`
+                }))
+                setSlots(formattedSlots)
+            }
         } catch (err: any) {
             console.warn('[fetchProfile] API failed, falling back to localStorage/mock:', err)
             const saved = localStorage.getItem('mentorProfile')
@@ -392,7 +459,17 @@ export default function ProfileSettings() {
     const handleSave = async () => {
         try {
             const token = localStorage.getItem('token')
-            await api.put('/api/mentor/profile', editData, {
+            const payload = {
+                fullName: editData.fullName,
+                email: editData.email,
+                phoneNumber: editData.phoneNumber,
+                location: editData.location,
+                jobTitle: editData.jobTitle,
+                yearsExperience: parseInt(editData.yearsExperience as any) || 0,
+                linkedin: editData.linkedin || null,
+                bio: editData.bio || null
+            }
+            await api.put('/Mentor/Profile/SaveChange', payload, {
                 headers: { Authorization: `Bearer ${token}` }
             })
         } catch (err: any) {
@@ -406,6 +483,19 @@ export default function ProfileSettings() {
         setEditData(prev => ({ ...prev, [field]: value }))
     }
 
+    const handleDeleteSlot = async (slotId: number) => {
+        try {
+            const token = localStorage.getItem('token')
+            await api.delete(`/Mentor/Profile/time-slots/${slotId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            deleteSlot(slotId)
+        } catch (err: any) {
+            console.error('Failed to delete slot:', err)
+            alert('Failed to delete slot. Please try again.')
+        }
+    }
+
     const displayed = isEditing ? editData : profileData
 
     if (loading) {
@@ -414,7 +504,15 @@ export default function ProfileSettings() {
 
     return (
         <>
-            {showManagement && <ManagementModal onClose={() => setShowManagement(false)} />}
+            {showManagement && (
+                <ManagementModal 
+                    onClose={() => setShowManagement(false)} 
+                    onSaveSuccess={() => {
+                        fetchProfile()
+                        setShowManagement(false)
+                    }}
+                />
+            )}
 
             <div className={styles.page}>
                 <div className={styles.container}>
@@ -461,7 +559,7 @@ export default function ProfileSettings() {
                             <div className={styles.twoColGrid}>
                                 <ProfileField label="Full Name"    value={displayed.fullName}   onChange={v => handleChange('fullName', v)}   isEditing={isEditing} />
                                 <ProfileField label="Email"        value={displayed.email}       onChange={v => handleChange('email', v)}       isEditing={isEditing} />
-                                <ProfileField label="Phone Number" value={displayed.phone}       onChange={v => handleChange('phone', v)}       isEditing={isEditing} />
+                                <ProfileField label="Phone Number" value={displayed.phoneNumber} onChange={v => handleChange('phoneNumber', v)} isEditing={isEditing} />
                                 <ProfileField label="Location"     value={displayed.location}    onChange={v => handleChange('location', v)}    isEditing={isEditing} />
                             </div>
                         </section>
@@ -474,9 +572,9 @@ export default function ProfileSettings() {
                             </div>
                             <div className={`${styles.twoColGrid} ${styles.marginBottom20}`}>
                                 <ProfileField label="Current Job Title"   value={displayed.jobTitle}   onChange={v => handleChange('jobTitle', v)}   isEditing={isEditing} />
-                                <ProfileField label="Years of Experience" value={displayed.experience} onChange={v => handleChange('experience', v)} isEditing={isEditing} />
+                                <ProfileField label="Years of Experience" value={String(displayed.yearsExperience)} onChange={v => handleChange('yearsExperience', v)} isEditing={isEditing} />
                                 <div className={styles.fullWidth}>
-                                    <ProfileField label="LinkedIn Profile" value={displayed.linkedin}   onChange={v => handleChange('linkedin', v)}   isEditing={isEditing} />
+                                    <ProfileField label="LinkedIn Profile" value={displayed.linkedin || ''}   onChange={v => handleChange('linkedin', v)}   isEditing={isEditing} />
                                 </div>
                             </div>
                             <div>
@@ -518,7 +616,7 @@ export default function ProfileSettings() {
                                         </div>
                                         <div className={styles.slotRight}>
                                             <span className={styles.slotTime}>{slot.time}</span>
-                                            <button onClick={() => deleteSlot(slot.id)} className={styles.slotDeleteBtn} title="Delete Slot">
+                                            <button onClick={() => handleDeleteSlot(slot.id)} className={styles.slotDeleteBtn} title="Delete Slot">
                                                 <Trash2 size={17} color="#ef4444" />
                                             </button>
                                         </div>

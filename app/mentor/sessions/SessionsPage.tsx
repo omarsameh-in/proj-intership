@@ -11,6 +11,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './SessionsPage.module.css'
+import api from '../../lib/api'
 
 // ============================================================
 //  TYPES
@@ -53,28 +54,22 @@ const authHeader = (): Record<string, string> => ({
 // ============================================================
 async function updateSessionStatus(id: number, status: string): Promise<void> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    const res = await fetch(`${BASE_URL}/api/sessions/${id}/status`, {
-        method: 'PUT',
-        headers: {
-            ...authHeader(),
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ status }),
-    })
-    if (!res.ok) throw new Error('Failed to update status')
+    if (status === 'Confirmed') {
+        await api.put(`/Mentor/MySessions/confirmsession/${id}`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+    } else {
+        await api.delete(`/Mentor/MySessions/cancelSession/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+    }
 }
 
 async function rescheduleSession(sessionId: number, slotId: number): Promise<void> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    const res = await fetch(`${BASE_URL}/api/sessions/${sessionId}/reschedule`, {
-        method: 'PUT',
-        headers: {
-            ...authHeader(),
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ newSlotId: slotId }),
+    await api.put(`/Mentor/MySessions/rescheduleSession/${sessionId}/${slotId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
     })
-    if (!res.ok) throw new Error('Failed to reschedule')
 }
 
 // ============================================================
@@ -127,7 +122,36 @@ function ViewDetailsModal({ session, onClose }: {
     session: Session
     onClose: () => void
 }) {
+    const [details, setDetails] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const fetchDetails = async () => {
+            try {
+                setLoading(true)
+                const token = localStorage.getItem('token')
+                const res = await api.get(`/Mentor/MySessions/viewdetails/${session.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                setDetails(res.data?.data || res.data)
+            } catch (err) {
+                console.error('Failed to fetch session details:', err)
+                setError('Failed to load session details.')
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchDetails()
+    }, [session.id])
+
     const isConfirmed = session.status === 'Confirmed'
+    const studentName = details?.student?.name || session.student
+    const university = details?.student?.university || session.studentUniversity || ''
+    const major = details?.student?.major || session.studentMajor || ''
+    const topic = details?.topic || session.title
+    const notes = details?.notes || session.notes
+    const meetingLink = details?.platformLink || session.meetingLink
 
     return (
         <div
@@ -143,90 +167,99 @@ function ViewDetailsModal({ session, onClose }: {
                     </button>
                 </div>
 
-                <div className={styles.modalBody}>
-                    {/* Student Info */}
-                    <div className={styles.studentInfoCard}>
-                        <div className={styles.studentInfoLeft}>
-                            <div className={styles.studentAvatar}>{session.student.charAt(0)}</div>
-                            <div>
-                                <p className={styles.studentName}>{session.student}</p>
-                                {session.studentUniversity && (
-                                    <p className={styles.studentUniversity}>{session.studentUniversity}</p>
-                                )}
-                                {session.studentMajor && (
-                                    <p className={styles.studentMajor}>{session.studentMajor}</p>
-                                )}
+                {loading ? (
+                    <div className={styles.loadingState} style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                        <Loader2 size={24} className="animate-spin" />
+                        <span>Loading session details...</span>
+                    </div>
+                ) : error ? (
+                    <div className={styles.errorState} style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{error}</div>
+                ) : (
+                    <div className={styles.modalBody}>
+                        {/* Student Info */}
+                        <div className={styles.studentInfoCard}>
+                            <div className={styles.studentInfoLeft}>
+                                <div className={styles.studentAvatar}>{studentName.charAt(0)}</div>
+                                <div>
+                                    <p className={styles.studentName}>{studentName}</p>
+                                    {university && (
+                                        <p className={styles.studentUniversity}>{university}</p>
+                                    )}
+                                    {major && (
+                                        <p className={styles.studentMajor}>{major}</p>
+                                    )}
+                                </div>
+                            </div>
+                            {session.studentProfileId && (
+                                <button className={styles.viewProfileBtn}>
+                                    View Profile <ChevronRight size={13} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Session Info Grid */}
+                        <div>
+                            <p className={styles.infoSectionLabel}>Session Info</p>
+                            <div className={styles.infoGrid}>
+                                <div className={styles.infoCell}>
+                                    <p className={styles.infoCellLabel}>Title</p>
+                                    <p className={styles.infoCellValue}>{topic}</p>
+                                </div>
+                                <div className={styles.infoCell}>
+                                    <p className={styles.infoCellLabel}>Status</p>
+                                    <StatusBadge status={session.status} />
+                                </div>
+                                <div className={styles.infoCell}>
+                                    <p className={styles.infoCellLabel}>Date & Time</p>
+                                    <div className={styles.infoCellMeta}>
+                                        <Calendar size={12} color="#3b82f6" />
+                                        <span>{session.date}</span>
+                                    </div>
+                                </div>
+                                <div className={styles.infoCell}>
+                                    <p className={styles.infoCellLabel}>Duration</p>
+                                    <div className={styles.infoCellMeta}>
+                                        <Clock size={12} color="#3b82f6" />
+                                        <span>{session.duration}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        {session.studentProfileId && (
-                            <button className={styles.viewProfileBtn}>
-                                View Profile <ChevronRight size={13} />
-                            </button>
+
+                        {/* Notes */}
+                        {notes && (
+                            <div>
+                                <p className={styles.infoSectionLabel}>Notes from Student</p>
+                                <div className={styles.notesBox}>
+                                    <BookOpen size={14} color="#3b82f6" style={{ marginTop: 2, flexShrink: 0 }} />
+                                    <p className={styles.notesText}>&quot;{notes}&quot;</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Meeting Link */}
+                        {isConfirmed && meetingLink && (
+                            <div>
+                                <p className={styles.infoSectionLabel}>Session Link</p>
+                                <Link
+                                    href={meetingLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.meetingLink}
+                                >
+                                    <div className={styles.meetingLinkIcon}>
+                                        <Video size={16} color="white" />
+                                    </div>
+                                    <div className={styles.meetingLinkBody}>
+                                        <p className={styles.meetingLinkTitle}>Join Meeting</p>
+                                        <p className={styles.meetingLinkUrl}>{meetingLink}</p>
+                                    </div>
+                                    <ExternalLink size={14} className={styles.meetingLinkArrow} />
+                                </Link>
+                            </div>
                         )}
                     </div>
-
-                    {/* Session Info Grid */}
-                    <div>
-                        <p className={styles.infoSectionLabel}>Session Info</p>
-                        <div className={styles.infoGrid}>
-                            <div className={styles.infoCell}>
-                                <p className={styles.infoCellLabel}>Title</p>
-                                <p className={styles.infoCellValue}>{session.title}</p>
-                            </div>
-                            <div className={styles.infoCell}>
-                                <p className={styles.infoCellLabel}>Status</p>
-                                <StatusBadge status={session.status} />
-                            </div>
-                            <div className={styles.infoCell}>
-                                <p className={styles.infoCellLabel}>Date & Time</p>
-                                <div className={styles.infoCellMeta}>
-                                    <Calendar size={12} color="#3b82f6" />
-                                    <span>{session.date}</span>
-                                </div>
-                            </div>
-                            <div className={styles.infoCell}>
-                                <p className={styles.infoCellLabel}>Duration</p>
-                                <div className={styles.infoCellMeta}>
-                                    <Clock size={12} color="#3b82f6" />
-                                    <span>{session.duration}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Notes */}
-                    {session.notes && (
-                        <div>
-                            <p className={styles.infoSectionLabel}>Notes from Student</p>
-                            <div className={styles.notesBox}>
-                                <BookOpen size={14} color="#3b82f6" style={{ marginTop: 2, flexShrink: 0 }} />
-                                <p className={styles.notesText}>&quot;{session.notes}&quot;</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Meeting Link */}
-                    {isConfirmed && session.meetingLink && (
-                        <div>
-                            <p className={styles.infoSectionLabel}>Session Link</p>
-                            <Link
-                                href={session.meetingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.meetingLink}
-                            >
-                                <div className={styles.meetingLinkIcon}>
-                                    <Video size={16} color="white" />
-                                </div>
-                                <div className={styles.meetingLinkBody}>
-                                    <p className={styles.meetingLinkTitle}>Join Meeting</p>
-                                    <p className={styles.meetingLinkUrl}>{session.meetingLink}</p>
-                                </div>
-                                <ExternalLink size={14} className={styles.meetingLinkArrow} />
-                            </Link>
-                        </div>
-                    )}
-                </div>
+                )}
 
                 {/* Footer */}
                 <div className={styles.detailsModalFooter}>
@@ -253,14 +286,28 @@ function RescheduleModal({ session, onClose, onSuccess }: {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        setTimeout(() => {
-            setSlots([
-                { id: 1, displayDate: 'Wednesday, Jan 24', displayTime: '2:00 PM – 4:00 PM' },
-                { id: 2, displayDate: 'Friday, Jan 26',    displayTime: '1:00 PM – 2:00 PM' },
-                { id: 3, displayDate: 'Tuesday, Jan 28',   displayTime: '9:00 AM – 10:30 AM' },
-            ])
-            setLoadingSlots(false)
-        }, 800)
+        const fetchRescheduleSlots = async () => {
+            try {
+                setLoadingSlots(true)
+                const token = localStorage.getItem('token')
+                const res = await api.get('/Mentor/MySessions/rescheduleSession', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                const data = res.data?.data || res.data || []
+                const mapped = data.map((s: any) => ({
+                    id: s.slotId,
+                    displayDate: `${s.day}, ${s.date}`,
+                    displayTime: `${s.startTime} - ${s.endTime}`
+                }))
+                setSlots(mapped)
+            } catch (err) {
+                console.error('Failed to fetch reschedule slots:', err)
+                setError('Failed to load available slots.')
+            } finally {
+                setLoadingSlots(false)
+            }
+        }
+        fetchRescheduleSlots()
     }, [session.id])
 
     useEffect(() => {
@@ -418,6 +465,24 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
         setLoadingAction(null)
     }
 
+    const handleStartMeeting = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const res = await api.get(`/Mentor/MySessions/joinMeeting/${session.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const link = res.data?.link || res.data
+            if (link) {
+                window.open(link, '_blank', 'noopener,noreferrer')
+            } else {
+                alert('No meeting link available.')
+            }
+        } catch (err) {
+            console.error('Failed to join meeting:', err)
+            alert('Failed to get meeting link.')
+        }
+    }
+
     return (
         <div className={styles.sessionCard}>
             <div className={styles.sessionCardTop}>
@@ -439,7 +504,7 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
 
             <div className={styles.cardActions}>
                 {isConfirmed && (
-                    <button className={styles.btnStartMeeting}>
+                    <button onClick={handleStartMeeting} className={styles.btnStartMeeting}>
                         <Video size={14} />
                         Start Meeting
                     </button>
@@ -499,15 +564,22 @@ export default function SessionsPage() {
         try {
             setLoading(true)
             const token = localStorage.getItem('token')
-            const res = await fetch(`${BASE_URL}/api/sessions`, {
-                headers: {
-                    ...authHeader(),
-                    ...(token ? { Authorization: `Bearer ${token}` } : {})
-                }
+            const res = await api.get('/Mentor/MySessions', {
+                headers: { Authorization: `Bearer ${token}` }
             })
-            if (!res.ok) throw new Error('Failed to fetch sessions')
-            const data = await res.json()
-            setSessions(data?.data || data || [])
+            const data = res.data?.data || res.data || []
+            const mapped = data.map((s: any) => ({
+                id: s.sessionId,
+                title: s.topic || 'Mentorship Session',
+                student: s.menteeName || '',
+                status: s.status as SessionStatus,
+                date: s.formattedDate || '',
+                duration: s.duration || '',
+                studentProfileId: s.menteeId,
+                currentDate: s.formattedDate ? s.formattedDate.split(',')[0] : '',
+                currentTime: s.formattedDate ? s.formattedDate.split(',')[1] || '' : '',
+            }))
+            setSessions(mapped)
         } catch (err: any) {
             console.warn('[fetchSessions] API failed, falling back to MOCK_SESSIONS:', err)
             setSessions(MOCK_SESSIONS)

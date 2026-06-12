@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect,  useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -20,11 +20,11 @@ export default function MentorSignupPage() {
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const isLanguageButton = target.closest('button') && 
-                (target.closest('button')?.querySelector('.lucide-globe') || 
-                 target.closest('svg')?.classList.contains('lucide-globe') ||
-                 target.closest('button')?.getAttribute('title')?.includes('Language') ||
-                 target.closest('button')?.getAttribute('title')?.includes('اللغة'));
+            const isLanguageButton = target.closest('button') &&
+                (target.closest('button')?.querySelector('.lucide-globe') ||
+                    target.closest('svg')?.classList.contains('lucide-globe') ||
+                    target.closest('button')?.getAttribute('title')?.includes('Language') ||
+                    target.closest('button')?.getAttribute('title')?.includes('اللغة'));
             const isLanguageMenu = target.closest('.language-menu');
             if (!isLanguageButton && !isLanguageMenu) {
                 setShowLanguageMenu(false);
@@ -61,7 +61,7 @@ export default function MentorSignupPage() {
 
     const validateForm = () => {
         let newErrors: Record<string, string> = {}
-        
+
         const nameRegex = /^[A-Za-z\s]+$/
         if (!formData.fullName.trim()) {
             newErrors.fullName = t.fullNameRequired
@@ -87,7 +87,7 @@ export default function MentorSignupPage() {
         }
 
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mismatch"
-        
+
         const phoneRegex = /^(010|011|012|015)[0-9]{8}$/
         if (!formData.phoneNumber.trim()) {
             newErrors.phoneNumber = t.phoneRequired
@@ -96,7 +96,7 @@ export default function MentorSignupPage() {
                 ? "يجب أن يكون رقم هاتف مصري صالح من 11 رقماً يبدأ بـ 010/011/012/015"
                 : "Must be a valid Egyptian number (11 digits, starts with 010/011/012/015)"
         }
-        
+
 
         if (!formData.yearsExperience) {
             newErrors.yearsExperience = t.yearsExperienceRequired

@@ -29,8 +29,7 @@ import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 interface CompanyData {
   name: string
   industry: string
-  size: string
-  foundedYear: string
+  foundedYear: number
   website: string
   description: string
   email: string
@@ -47,8 +46,7 @@ interface CompanyData {
 const defaultData: CompanyData = {
   name: 'Tech Corp',
   industry: 'Technology & Software',
-  size: '50-200 employees',
-  foundedYear: '2010',
+  foundedYear: 2010,
   website: 'www.techcorp.com',
   description:
     'We are a leading technology company specializing in innovative software solutions. Our mission is to empower businesses through cutting-edge technology and exceptional talent.',
@@ -126,20 +124,34 @@ function CompanyProfile() {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const res = await api.get('/api/company/profile', {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await api.get('/company/Profile', {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      const profile = res.data?.data || res.data || defaultData
-      setData(profile)
-      setEditData(profile)
-    } catch (err: any) {
-      console.warn('[fetchProfile] API failed, falling back to mock/localStorage:', err)
+      const d = res.data
+      const mapped: CompanyData = {
+        name: d.companyName ?? '',
+        industry: d.industry ?? '',
+        foundedYear: d.foundedYear ?? 0,
+        website: d.website ?? '',
+        description: d.description ?? '',
+        email: d.email ?? '',
+        phone: d.phoneNumber ?? '',
+        address: d.officeAddress ?? '',
+        city: d.city ?? '',
+        country: d.country ?? '',
+        linkedin: d.linkedin ?? '',
+        twitter: d.twitter ?? '',
+        facebook: d.facebook ?? '',
+        instagram: d.instagram ?? '',
+      }
+      setData(mapped)
+      setEditData(mapped)
+    } catch {
       const saved = localStorage.getItem('companyProfile')
       const profile = saved ? JSON.parse(saved) : defaultData
       setData(profile)
       setEditData(profile)
     } finally {
-      await new Promise(r => setTimeout(r, 200))
       setLoading(false)
     }
   }
@@ -160,14 +172,32 @@ function CompanyProfile() {
   }
 
   const handleChange = (field: keyof CompanyData, value: string) => {
-    setEditData(prev => ({ ...prev, [field]: value }))
+    setEditData(prev => ({
+      ...prev,
+      [field]: field === 'foundedYear' ? Number(value) : value,
+    }))
   }
 
   const handleSave = async () => {
     try {
       setSaving(true)
       const token = localStorage.getItem('token')
-      await api.put('/api/company/profile', editData, {
+      await api.put('/company/Profile/SaveChange', {
+        companyName: editData.name,
+        industry: editData.industry,
+        foundedYear: editData.foundedYear,
+        description: editData.description,
+        officeAddress: editData.address,
+        city: editData.city,
+        country: editData.country,
+        phoneNumber: editData.phone,
+        email: editData.email,
+        website: editData.website,
+        linkedin: editData.linkedin,
+        facebook: editData.facebook,
+        twitter: editData.twitter,
+        instagram: editData.instagram,
+      }, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setData({ ...editData })
@@ -175,8 +205,7 @@ function CompanyProfile() {
       setIsEditing(false)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-    } catch (err: any) {
-      console.warn('[handleSave] API failed, saving locally:', err)
+    } catch {
       localStorage.setItem('companyProfile', JSON.stringify(editData))
       setData({ ...editData })
       setIsEditing(false)
@@ -186,8 +215,6 @@ function CompanyProfile() {
       setSaving(false)
     }
   }
-
-
 
   if (loading) {
     return <LoadingScreen />
@@ -283,7 +310,7 @@ function CompanyProfile() {
               <Field label={t.industry} field="industry" isEditing={isEditing} value={displayed.industry} onChange={handleChange} />
             </div>
             <div className={styles.row}>
-              <Field label={t.foundedYear} field="foundedYear" isEditing={isEditing} value={displayed.foundedYear} onChange={handleChange} />
+              <Field label={t.foundedYear} field="foundedYear" isEditing={isEditing} value={String(displayed.foundedYear)} onChange={handleChange} />
               <Field label={t.website} field="website" icon={<Globe size={16} />} isEditing={isEditing} value={displayed.website} onChange={handleChange} />
             </div>
             <Field label={t.companyDescription} field="description" textarea isEditing={isEditing} value={displayed.description} onChange={handleChange} />

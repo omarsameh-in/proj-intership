@@ -5,6 +5,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './MenteesPage.module.css'
+import api from '../../lib/api'
 
 // ============================================================
 //  TYPES
@@ -39,23 +40,20 @@ const authHeader = (): Record<string, string> => ({
 //  API CALLS
 // ============================================================
 async function fetchAvailableSlots(): Promise<AvailableSlot[]> {
-    // Commented-out integration template:
-    // TODO: يستبدل بـ real API call
-    // const res = await fetch(`${BASE_URL}/api/mentor/available-slots`, { headers: authHeader() })
-    // if (!res.ok) throw new Error('Failed to fetch slots')
-    // return res.json()
-
     try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-        const res = await fetch(`${BASE_URL}/api/mentor/available-slots`, {
-            headers: {
-                ...authHeader(),
-                ...(token ? { Authorization: `Bearer ${token}` } : {})
-            }
+        const res = await api.get('/Mentor/Profile', {
+            headers: { Authorization: `Bearer ${token}` }
         })
-        if (!res.ok) throw new Error('Failed to fetch slots')
-        const data = await res.json()
-        return data?.data || data || []
+        const data = res.data?.data || res.data
+        const slotsList = data?.availableSlots || []
+        // Filter out booked slots
+        const freeSlots = slotsList.filter((s: any) => !s.isBooked)
+        return freeSlots.map((s: any) => ({
+            id: s.slotId,
+            displayDate: `${s.day}, ${s.date}`,
+            displayTime: `${s.startTime} - ${s.endTime}`
+        }))
     } catch (err) {
         console.warn('[fetchAvailableSlots] API failed, falling back to mock slots:', err)
         return [
@@ -68,15 +66,13 @@ async function fetchAvailableSlots(): Promise<AvailableSlot[]> {
 
 async function createSession(menteeId: number, slotId: number): Promise<void> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    const res = await fetch(`${BASE_URL}/api/sessions`, {
-        method: 'POST',
-        headers: {
-            ...authHeader(),
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ menteeId, slotId }),
+    await api.post('/Mentor/MyMentees/scheduleSession', {
+        studentId: menteeId,
+        slotId: slotId,
+        topicId: 1 // Default topicId as required by backend contract
+    }, {
+        headers: { Authorization: `Bearer ${token}` }
     })
-    if (!res.ok) throw new Error('Failed to create session')
 }
 
 // ============================================================
@@ -264,15 +260,21 @@ export default function MenteesPage() {
         try {
             setLoading(true)
             const token = localStorage.getItem('token')
-            const res = await fetch(`${BASE_URL}/api/mentor/mentees`, {
-                headers: {
-                    ...authHeader(),
-                    ...(token ? { Authorization: `Bearer ${token}` } : {})
-                }
+            const res = await api.get('/Mentor/MyMentees', {
+                headers: { Authorization: `Bearer ${token}` }
             })
-            if (!res.ok) throw new Error('Failed to fetch mentees')
-            const data = await res.json()
-            setMentees(data?.data || data || [])
+            const data = res.data?.data || res.data || []
+            const mapped = data.map((item: any) => ({
+                id: item.studentId,
+                name: item.fullName || '',
+                university: item.university || '',
+                major: item.major || '',
+                email: item.email || '',
+                phone: item.phone || '',
+                nextSession: item.nextSession || 'None',
+                totalSessions: item.totalSessions || 0
+            }))
+            setMentees(mapped)
         } catch (err: any) {
             console.warn('[fetchMentees] API failed, falling back to MOCK_MENTEES:', err)
             setMentees(MOCK_MENTEES)
