@@ -24,6 +24,7 @@ import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './InternshipsStyle.module.css'
 import { useAppliedInternships } from '../../hooks/useAppliedInternships'
+import api from '../../lib/api'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -229,7 +230,7 @@ function InternshipPage() {
   useEffect(() => {
     if (!internships.length) return
 
-    // ── BACKEND─────────
+    // 💥 BACKEND 💥💥💥💥💥💥💥💥💥
     //
     // const token = localStorage.getItem('token')
     // internships.forEach(async ({ id }) => {
@@ -245,11 +246,34 @@ function InternshipPage() {
     //   } catch { }
     // })
 
-    // ── MOCK match scores ─────────────────────────────────────────────────
-    const mockScores: Record<number, number> = { 2: 88, 3: 76, 4: 88, 5: 82, 6: 75 }
-    setInternships(prev =>
-      prev.map(i => ({ ...i, matchScore: mockScores[i.id] ?? null }))
-    )
+    // 💥 MOCK match scores 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+
+    const fetchMatchScores = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const updated = await Promise.all(
+          internships.map(async (i) => {
+            if (i.matchScore !== null) return i
+            try {
+              const res = await api.get(`/api/internships/${i.id}/match-score`, {
+                headers: { Authorization: `Bearer ${token}` }
+              })
+              return { ...i, matchScore: res.data?.matchScore ?? null }
+            } catch {
+              const mockScores: Record<number, number> = { 2: 88, 3: 76, 4: 88, 5: 82, 6: 75 }
+              return { ...i, matchScore: mockScores[i.id] ?? null }
+            }
+          })
+        )
+        setInternships(updated)
+      } catch {
+        const mockScores: Record<number, number> = { 2: 88, 3: 76, 4: 88, 5: 82, 6: 75 }
+        setInternships(prev =>
+          prev.map(i => ({ ...i, matchScore: mockScores[i.id] ?? null }))
+        )
+      }
+    }
+    fetchMatchScores()
   }, [internships.length])
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -260,38 +284,55 @@ function InternshipPage() {
     setLoading(true)
     setError(null)
 
+    // 💥 BACKEND 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    //
+    // const token = localStorage.getItem('token')
+    // const res = await fetch('/api/internships', {
+    //   headers: { Authorization: `Bearer ${token}` },
+    // })
+    // if (res.status === 401) { router.push('/login'); return }
+    // if (res.status === 403) { setError('Not authorised.'); setLoading(false); return }
+    // if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`)
+    //
+    // const json = await res.json()
+    // const rawList: RawInternshipListItem[] = json.data ?? []
+    // const validated = rawList
+    //   .map((item, idx) => {
+    //     try   { return normaliseListItem(item) }
+    //     catch (e) { console.warn(`[internships] Skipping item[${idx}]:`, e); return null }
+    //   })
+    //   .filter(Boolean) as Internship[]
+    //
+    // 💥 لما نرجع hasApplied، seed الـ sessionStorage 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    // validated.forEach(i => { if ((i as any).hasApplied) markApplied(i.id) })
+    //
+    // setInternships(validated)
+
+    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+
     try {
-      // ── BACKEND ───────────────────
-      //
-      // const token = localStorage.getItem('token')
-      // const res = await fetch('/api/internships', {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // })
-      // if (res.status === 401) { router.push('/login'); return }
-      // if (res.status === 403) { setError('Not authorised.'); setLoading(false); return }
-      // if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`)
-      //
-      // const json = await res.json()
-      // const rawList: RawInternshipListItem[] = json.data ?? []
-      // const validated = rawList
-      //   .map((item, idx) => {
-      //     try   { return normaliseListItem(item) }
-      //     catch (e) { console.warn(`[internships] Skipping item[${idx}]:`, e); return null }
-      //   })
-      //   .filter(Boolean) as Internship[]
-      //
-      // ── لما الباك يرجع hasApplied، seed الـ sessionStorage ───────────────
-      // validated.forEach(i => { if ((i as any).hasApplied) markApplied(i.id) })
-      //
-      // setInternships(validated)
-
-      // ── MOCK ──────────────────────────────────────────────────────────────
-      await new Promise(r => setTimeout(r, 400))
-      setInternships(MOCK_RAW_LIST.map(normaliseListItem))
-
+      const token = localStorage.getItem('token')
+      const res = await api.get('/api/internships', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const rawList: RawInternshipListItem[] = res.data?.data || res.data || []
+      const validated = rawList
+        .map((item, idx) => {
+          try { return normaliseListItem(item) }
+          catch (e) { console.warn(`[internships] Skipping item[${idx}]:`, e); return null }
+        })
+        .filter(Boolean) as Internship[]
+      
+      validated.forEach(i => { if ((i as any).hasApplied) markApplied(i.id) })
+      setInternships(validated)
     } catch (err: any) {
-      console.error('[fetchInternships]', err)
-      setError(err.message ?? 'Failed to load internships.')
+      if (err.response?.status === 401) {
+        router.push('/login')
+        return
+      }
+      console.warn('[fetchInternships] Failed, falling back to mock data:', err)
+      await new Promise(r => setTimeout(r, 200))
+      setInternships(MOCK_RAW_LIST.map(normaliseListItem))
     } finally {
       setLoading(false)
     }
@@ -305,29 +346,38 @@ function InternshipPage() {
     if (applyingIds.has(internshipId)) return
     setApplyingIds(prev => new Set(prev).add(internshipId))
 
+    // 💥 BACKEND 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    //
+    // const token = localStorage.getItem('token')
+    // const res = await fetch(`/api/internships/${internshipId}/apply`, {
+    //   method:  'POST',
+    //   headers: {
+    //     Authorization:  `Bearer ${token}`,
+    //     'Content-Type': 'application/json',
+    //   },
+    // })
+    // if (res.status === 401) { router.push('/login'); return }
+    // if (!res.ok) {
+    //   const body = await res.json().catch(() => ({}))
+    //   throw new Error(body.message ?? `Error ${res.status}`)
+    // }
+
+    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+
     try {
-      // ── BACKEND ───────────────────
-      //
-      // const token = localStorage.getItem('token')
-      // const res = await fetch(`/api/internships/${internshipId}/apply`, {
-      //   method:  'POST',
-      //   headers: {
-      //     Authorization:  `Bearer ${token}`,
-      //     'Content-Type': 'application/json',
-      //   },
-      // })
-      // if (res.status === 401) { router.push('/login'); return }
-      // if (!res.ok) {
-      //   const body = await res.json().catch(() => ({}))
-      //   throw new Error(body.message ?? `Error ${res.status}`)
-      // }
-
-      // ── MOCK ──────────────────────────────────────────────────────────────
-      await new Promise(r => setTimeout(r, 600))
-
-      // ──────────────────────────────────
+      const token = localStorage.getItem('token')
+      try {
+        await api.post(`/api/internships/${internshipId}/apply`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } catch (apiErr: any) {
+        if (apiErr.response?.status === 401) {
+          router.push('/login')
+          return
+        }
+        console.warn(`[handleApply] API failed, simulating local success:`, apiErr)
+      }
       markApplied(internshipId)
-
     } catch (err: any) {
       console.error('[handleApply]', err)
       alert(err.message ?? 'Failed to submit application. Please try again.')

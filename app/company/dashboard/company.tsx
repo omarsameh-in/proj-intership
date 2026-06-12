@@ -23,6 +23,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './company.module.css'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
+import api from '../../lib/api'
 
 
 function Company() {
@@ -48,8 +49,25 @@ function Company() {
         try {
             setLoading(true)
             setError(null)
-
-            // Mock data - replace with API calls
+            const token = localStorage.getItem('token')
+            
+            const res = await api.get('/api/company/dashboard', {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = res.data?.data || res.data
+            setActiveListings(data.activeListings || [])
+            setRecentApplicants(data.recentApplicants || [])
+            setStats(data.stats || {
+                activeListingsCount: 0,
+                totalApplicantsCount: 0,
+                hiredInterns: 0
+            })
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                router.push('/login')
+                return
+            }
+            console.warn('[fetchDashboardData] API failed, falling back to mock:', err)
             setActiveListings([
                 {
                     id: 1,
@@ -109,9 +127,6 @@ function Company() {
                 totalApplicantsCount: 156,
                 hiredInterns: 23
             })
-        } catch (err: any) {
-            console.error('Error fetching dashboard data:', err)
-            setError('Failed to load dashboard data. Please try again.')
         } finally {
             await new Promise(r => setTimeout(r, 200))
             setLoading(false)

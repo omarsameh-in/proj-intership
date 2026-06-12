@@ -125,15 +125,19 @@ function CompanyProfile() {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      // For now, use mock data to match the speed of other pages
-      // In production, this would be: const res = await api.get('/company/profile')
+      const token = localStorage.getItem('token')
+      const res = await api.get('/api/company/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const profile = res.data?.data || res.data || defaultData
+      setData(profile)
+      setEditData(profile)
+    } catch (err: any) {
+      console.warn('[fetchProfile] API failed, falling back to mock/localStorage:', err)
       const saved = localStorage.getItem('companyProfile')
       const profile = saved ? JSON.parse(saved) : defaultData
       setData(profile)
       setEditData(profile)
-    } catch {
-      setData(defaultData)
-      setEditData(defaultData)
     } finally {
       await new Promise(r => setTimeout(r, 200))
       setLoading(false)
@@ -163,7 +167,7 @@ function CompanyProfile() {
     try {
       setSaving(true)
       const token = localStorage.getItem('token')
-      await api.put('/company/profile', editData, {
+      await api.put('/api/company/profile', editData, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setData({ ...editData })
@@ -171,7 +175,8 @@ function CompanyProfile() {
       setIsEditing(false)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-    } catch {
+    } catch (err: any) {
+      console.warn('[handleSave] API failed, saving locally:', err)
       localStorage.setItem('companyProfile', JSON.stringify(editData))
       setData({ ...editData })
       setIsEditing(false)

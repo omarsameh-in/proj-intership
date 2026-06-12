@@ -5,6 +5,7 @@ import { useApp, Slot } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './ProfileSettings.module.css'
+import api from '../../lib/api'
 
 // ============================================================
 //  TYPES
@@ -340,7 +341,7 @@ export default function ProfileSettings() {
     const [isEditing, setIsEditing]             = useState(false)
     const [loading, setLoading]                 = useState(true)
 
-    const [profileData, setProfileData] = useState({
+    const defaultProfile = {
         fullName:    'Dr. Ahmed Hassan',
         email:       'ahmed.hassan@example.com',
         phone:       '+20 123 456 7890',
@@ -349,8 +350,35 @@ export default function ProfileSettings() {
         experience:  '15',
         linkedin:    'linkedin.com/in/ahmedhassan',
         bio:         'Passionate about mentoring young developers and helping them navigate their career paths. With 15 years in the industry, I specialize in software architecture and team leadership.',
-    })
-    const [editData, setEditData] = useState({ ...profileData })
+    }
+
+    const [profileData, setProfileData] = useState(defaultProfile)
+    const [editData, setEditData] = useState(defaultProfile)
+
+    const fetchProfile = async () => {
+        try {
+            setLoading(true)
+            const token = localStorage.getItem('token')
+            const res = await api.get('/api/mentor/profile', {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = res.data?.data || res.data
+            setProfileData(data)
+            setEditData(data)
+        } catch (err: any) {
+            console.warn('[fetchProfile] API failed, falling back to localStorage/mock:', err)
+            const saved = localStorage.getItem('mentorProfile')
+            const profile = saved ? JSON.parse(saved) : defaultProfile
+            setProfileData(profile)
+            setEditData(profile)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchProfile()
+    }, [])
 
     const handleEdit = () => {
         setEditData({ ...profileData })
@@ -361,21 +389,24 @@ export default function ProfileSettings() {
         setIsEditing(false)
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            await api.put('/api/mentor/profile', editData, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+        } catch (err: any) {
+            console.warn('[handleSave] API failed, saving locally:', err)
+        }
         setProfileData({ ...editData })
+        localStorage.setItem('mentorProfile', JSON.stringify(editData))
         setIsEditing(false)
     }
-
     const handleChange = (field: keyof typeof editData, value: string) => {
         setEditData(prev => ({ ...prev, [field]: value }))
     }
 
     const displayed = isEditing ? editData : profileData
-
-    useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 200)
-        return () => clearTimeout(timer)
-    }, [])
 
     if (loading) {
         return <LoadingScreen />

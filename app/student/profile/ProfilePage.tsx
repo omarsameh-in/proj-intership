@@ -27,18 +27,14 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './ProfileStyle.module.css'
+import api from '../../lib/api'
 
 function ProfilePage() {
     const { theme, toggleTheme, language, setLanguage, t } = useApp()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 200)
-        return () => clearTimeout(timer)
-    }, [])
-
-    const [profileData, setProfileData] = useState({
+    const defaultProfile = {
         name: "Ahmed Mohamed",
         email: "ahmed@example.com",
         phoneNumber: "+20 123 456 7890",
@@ -48,11 +44,42 @@ function ProfilePage() {
         major: "Computer Science",
         graduationYear: "2025",
         skills: ["React", "TypeScript", "Node.js", "Python"],
-    })
-    const [editData, setEditData] = useState({ ...profileData })
+    }
+
+    const [profileData, setProfileData] = useState(defaultProfile)
+    const [editData, setEditData] = useState(defaultProfile)
     const [isEditing, setIsEditing] = useState(false)
     const [newSkill, setNewSkill] = useState("")
     const [cvFile, setCvFile] = useState<File | null>(null)
+
+    useEffect(() => {
+        fetchProfile()
+    }, [])
+
+    const fetchProfile = async () => {
+        try {
+            setLoading(true)
+            const token = localStorage.getItem('token')
+            const res = await api.get('/api/student/profile', {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = res.data?.data || res.data
+            setProfileData(data)
+            setEditData(data)
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                router.push('/login')
+                return
+            }
+            console.warn('[fetchProfile] API failed, falling back to localStorage/mock:', err)
+            const saved = localStorage.getItem('studentProfile')
+            const profile = saved ? JSON.parse(saved) : defaultProfile
+            setProfileData(profile)
+            setEditData(profile)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleEdit = () => {
         setEditData({ ...profileData })
@@ -63,8 +90,21 @@ function ProfilePage() {
         setIsEditing(false)
     }
 
-    const handleSaveProfile = () => {
+    const handleSaveProfile = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            await api.put('/api/student/profile', editData, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                router.push('/login')
+                return
+            }
+            console.warn('[handleSaveProfile] API failed, saving locally:', err)
+        }
         setProfileData({ ...editData })
+        localStorage.setItem('studentProfile', JSON.stringify(editData))
         setIsEditing(false)
     }
 

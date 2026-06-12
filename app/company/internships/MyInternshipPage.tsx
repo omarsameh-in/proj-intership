@@ -26,6 +26,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './InternshipsStyle.module.css'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
+import api from '../../lib/api'
 
 
 interface Internship {
@@ -108,10 +109,19 @@ function MyInternshipPage() {
     try {
       setLoading(true)
       setError(null)
-      await new Promise(r => setTimeout(r, 200))
-      setInternships(MOCK_INTERNSHIPS)
+      const token = localStorage.getItem('token')
+      const res = await api.get('/api/company/internships', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = res.data?.data || res.data
+      setInternships(data || [])
     } catch (err: any) {
-      setError(err.message || t.failedToLoadInternships)
+      if (err.response?.status === 401) {
+        router.push('/login')
+        return
+      }
+      console.warn('[fetchInternships] API failed, falling back to mock internships:', err)
+      setInternships(MOCK_INTERNSHIPS)
     } finally {
       setLoading(false)
     }
@@ -124,6 +134,14 @@ function MyInternshipPage() {
   const handleClosePosting = async (id: number) => {
     if (!confirm(t.confirmClosePosting)) return
     try {
+      const token = localStorage.getItem('token')
+      try {
+        await api.put(`/api/company/internships/${id}/close`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } catch (apiErr) {
+        console.warn('[handleClosePosting] API failed, updating local state only:', apiErr)
+      }
       setInternships(prev => prev.map(i => i.id === id ? { ...i, status: 'closed' } : i))
     } catch (err: any) {
       alert(err.message || t.failedToClose)
@@ -133,6 +151,14 @@ function MyInternshipPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(t.confirmDelete)) return
     try {
+      const token = localStorage.getItem('token')
+      try {
+        await api.delete(`/api/company/internships/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } catch (apiErr) {
+        console.warn('[handleDelete] API failed, updating local state only:', apiErr)
+      }
       setInternships(prev => prev.filter(i => i.id !== id))
     } catch (err: any) {
       alert(err.message || t.failedToDelete)

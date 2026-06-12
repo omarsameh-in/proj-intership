@@ -39,23 +39,41 @@ const authHeader = (): Record<string, string> => ({
 //  API CALLS
 // ============================================================
 async function fetchAvailableSlots(): Promise<AvailableSlot[]> {
-    // TODO: استبدل بـ real API call
+    // Commented-out integration template:
+    // TODO: يستبدل بـ real API call
     // const res = await fetch(`${BASE_URL}/api/mentor/available-slots`, { headers: authHeader() })
     // if (!res.ok) throw new Error('Failed to fetch slots')
     // return res.json()
-    return new Promise((resolve) =>
-        setTimeout(() => resolve([
+
+    try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        const res = await fetch(`${BASE_URL}/api/mentor/available-slots`, {
+            headers: {
+                ...authHeader(),
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+        })
+        if (!res.ok) throw new Error('Failed to fetch slots')
+        const data = await res.json()
+        return data?.data || data || []
+    } catch (err) {
+        console.warn('[fetchAvailableSlots] API failed, falling back to mock slots:', err)
+        return [
             { id: 1, displayDate: 'Wednesday, Jan 24', displayTime: '2:00 PM – 4:00 PM' },
             { id: 2, displayDate: 'Friday, Jan 26',    displayTime: '1:00 PM – 2:00 PM' },
             { id: 3, displayDate: 'Tuesday, Jan 28',   displayTime: '9:00 AM – 10:30 AM' },
-        ]), 800)
-    )
+        ]
+    }
 }
 
 async function createSession(menteeId: number, slotId: number): Promise<void> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     const res = await fetch(`${BASE_URL}/api/sessions`, {
         method: 'POST',
-        headers: authHeader(),
+        headers: {
+            ...authHeader(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ menteeId, slotId }),
     })
     if (!res.ok) throw new Error('Failed to create session')
@@ -242,9 +260,29 @@ export default function MenteesPage() {
     const [scheduleTarget, setScheduleTarget] = useState<Mentee | null>(null)
     const [loading, setLoading]               = useState(true)
 
+    const fetchMentees = async () => {
+        try {
+            setLoading(true)
+            const token = localStorage.getItem('token')
+            const res = await fetch(`${BASE_URL}/api/mentor/mentees`, {
+                headers: {
+                    ...authHeader(),
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            })
+            if (!res.ok) throw new Error('Failed to fetch mentees')
+            const data = await res.json()
+            setMentees(data?.data || data || [])
+        } catch (err: any) {
+            console.warn('[fetchMentees] API failed, falling back to MOCK_MENTEES:', err)
+            setMentees(MOCK_MENTEES)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 200)
-        return () => clearTimeout(timer)
+        fetchMentees()
     }, [])
 
     if (loading) {

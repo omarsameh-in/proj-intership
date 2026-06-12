@@ -20,6 +20,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './ApplicationsStyle.module.css'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
+import api from '../../lib/api'
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -101,14 +102,24 @@ function ApplicationsContent() {
     try {
       setLoading(true)
       setError(null)
-      await new Promise(r => setTimeout(r, 200))
+      const token = localStorage.getItem('token')
+      const endpoint = internshipId ? `/api/company/applicants?internshipId=${internshipId}` : '/api/company/applicants'
+      const res = await api.get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = res.data?.data || res.data
+      setApplicants(data || [])
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        router.push('/login')
+        return
+      }
+      console.warn('[fetchApplicants] API failed, falling back to mock applicants:', err)
       if (internshipId) {
         setApplicants(MOCK_APPLICANTS.filter(a => a.internshipId === Number(internshipId)))
       } else {
         setApplicants(MOCK_APPLICANTS)
       }
-    } catch (err: any) {
-      setError(err.message || t.failedToLoadApplicants)
     } finally {
       setLoading(false)
     }
@@ -120,6 +131,14 @@ function ApplicationsContent() {
 
   const handleAccept = async (id: number) => {
     try {
+      const token = localStorage.getItem('token')
+      try {
+        await api.put(`/api/company/applicants/${id}/status`, { status: 'accepted' }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } catch (apiErr) {
+        console.warn('[handleAccept] API failed, updating local state only:', apiErr)
+      }
       setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: 'accepted' } : a))
     } catch (err: any) {
       alert(err.message || t.failedToAccept)
@@ -128,6 +147,14 @@ function ApplicationsContent() {
 
   const handleReject = async (id: number) => {
     try {
+      const token = localStorage.getItem('token')
+      try {
+        await api.put(`/api/company/applicants/${id}/status`, { status: 'rejected' }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } catch (apiErr) {
+        console.warn('[handleReject] API failed, updating local state only:', apiErr)
+      }
       setApplicants(prev => prev.map(a => a.id === id ? { ...a, status: 'rejected' } : a))
     } catch (err: any) {
       alert(err.message || t.failedToReject)

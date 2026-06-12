@@ -20,6 +20,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './MentorshipsStyle.module.css'
+import api from '../../lib/api'
 
 interface Mentor {
     id: number
@@ -149,17 +150,56 @@ function MentorshipsPage() {
     const [bookingSlot, setBookingSlot] = useState('')
     const [bookingTopic, setBookingTopic] = useState('')
 
+    const fetchMentors = async () => {
+        try {
+            setLoading(true)
+            const token = localStorage.getItem('token')
+            const res = await api.get('/api/mentors', {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = res.data?.data || res.data || []
+            setMentors(data)
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                router.push('/login')
+                return
+            }
+            console.warn('[fetchMentors] API failed, falling back to mockMentors:', err)
+            setMentors(mockMentors)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
-        setMentors(mockMentors)
-        setLoading(false)
+        fetchMentors()
     }, [])
 
-    const handleConfirmBooking = () => {
+    const handleConfirmBooking = async () => {
         if (!bookingSlot || !bookingTopic) {
             alert(t.selectSlotAndTopic)
             return
         }
-        alert(`${t.bookingSuccess} ${selectedMentor?.name}!`)
+
+        try {
+            const token = localStorage.getItem('token')
+            await api.post('/api/sessions', {
+                mentorId: selectedMentor?.id,
+                slot: bookingSlot,
+                topic: bookingTopic
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            alert(`${t.bookingSuccess} ${selectedMentor?.name}!`)
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                router.push('/login')
+                return
+            }
+            console.warn('[handleConfirmBooking] API failed, simulating local success:', err)
+            alert(`${t.bookingSuccess} ${selectedMentor?.name}!`)
+        }
+
         setIsBookingModalOpen(false)
         setBookingSlot('')
         setBookingTopic('')

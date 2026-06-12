@@ -52,18 +52,26 @@ const authHeader = (): Record<string, string> => ({
 //  API CALLS
 // ============================================================
 async function updateSessionStatus(id: number, status: string): Promise<void> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     const res = await fetch(`${BASE_URL}/api/sessions/${id}/status`, {
         method: 'PUT',
-        headers: authHeader(),
+        headers: {
+            ...authHeader(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ status }),
     })
     if (!res.ok) throw new Error('Failed to update status')
 }
 
 async function rescheduleSession(sessionId: number, slotId: number): Promise<void> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     const res = await fetch(`${BASE_URL}/api/sessions/${sessionId}/reschedule`, {
         method: 'PUT',
-        headers: authHeader(),
+        headers: {
+            ...authHeader(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ newSlotId: slotId }),
     })
     if (!res.ok) throw new Error('Failed to reschedule')
@@ -487,16 +495,37 @@ export default function SessionsPage() {
     const [detailsSession, setDetailsSession]       = useState<Session | null>(null)
     const [rescheduleSession, setRescheduleSession] = useState<Session | null>(null)
 
-    useEffect(() => {
-        setTimeout(() => {
+    const fetchSessions = async () => {
+        try {
+            setLoading(true)
+            const token = localStorage.getItem('token')
+            const res = await fetch(`${BASE_URL}/api/sessions`, {
+                headers: {
+                    ...authHeader(),
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            })
+            if (!res.ok) throw new Error('Failed to fetch sessions')
+            const data = await res.json()
+            setSessions(data?.data || data || [])
+        } catch (err: any) {
+            console.warn('[fetchSessions] API failed, falling back to MOCK_SESSIONS:', err)
             setSessions(MOCK_SESSIONS)
+        } finally {
             setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        const loadData = async () => {
+            await fetchSessions()
             const rescheduleId = searchParams.get('reschedule')
             if (rescheduleId) {
                 const session = MOCK_SESSIONS.find(s => s.studentProfileId === Number(rescheduleId))
                 if (session) setRescheduleSession(session)
             }
-        }, 600)
+        }
+        loadData()
     }, [searchParams])
 
     if (loading) {

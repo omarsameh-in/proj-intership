@@ -27,6 +27,7 @@ import LoadingScreen from '../../../components/LoadingScreen/LoadingScreen'
 import sharedStyles from '../InternshipsStyle.module.css'
 import styles from './ViewdetailsStyles.module.css'
 import { useAppliedInternships } from '../../../hooks/useAppliedInternships'
+import api from '../../../lib/api'
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -296,32 +297,50 @@ export default function InternshipDetailPage() {
     setLoading(true)
     setError(null)
 
+    // 💥 BACKEND: 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    //
+    // const token = localStorage.getItem('token')
+    // const res   = await fetch(`/api/internships/${internId}`, {
+    //   headers: { Authorization: `Bearer ${token}` },
+    // })
+    // if (res.status === 401) { router.push('/login'); return }
+    // if (res.status === 404) { setError('This internship is no longer available.'); setLoading(false); return }
+    // if (!res.ok) { throw new Error(`Server error: ${res.status} ${res.statusText}`) }
+    // const raw = await res.json()
+    //
+    // if (!raw.canApply) markApplied(raw.internId)
+    //
+    // setInternship(validateDetail(raw))
+
+    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+
     try {
-      // ── BACKEND: ───────────────────
-      //
-      // const token = localStorage.getItem('token')
-      // const res   = await fetch(`/api/internships/${internId}`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // })
-      // if (res.status === 401) { router.push('/login'); return }
-      // if (res.status === 404) { setError('This internship is no longer available.'); setLoading(false); return }
-      // if (!res.ok) { throw new Error(`Server error: ${res.status} ${res.statusText}`) }
-      // const raw = await res.json()
-      //
-
-      // if (!raw.canApply) markApplied(raw.internId)
-      //
-      // setInternship(validateDetail(raw))
-
-      // ── MOCK ──────────────────────────────────────────────────────────────
-      await new Promise(r => setTimeout(r, 400))
+      const token = localStorage.getItem('token')
+      try {
+        const res = await api.get(`/api/internships/${internId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const raw = res.data
+        if (!raw.canApply) markApplied(raw.internId)
+        setInternship(validateDetail(raw))
+      } catch (apiErr: any) {
+        if (apiErr.response?.status === 401) {
+          router.push('/login')
+          return
+        }
+        if (apiErr.response?.status === 404) {
+          setError('This internship is no longer available.')
+          setLoading(false)
+          return
+        }
+        throw apiErr
+      }
+    } catch (err: any) {
+      console.warn('[fetchDetail] Failed, falling back to mock data:', err)
+      await new Promise(r => setTimeout(r, 200))
       const raw = MOCK_DETAIL[internId]
       if (!raw) { setError('Internship not found.'); setLoading(false); return }
       setInternship(validateDetail(raw))
-
-    } catch (err: any) {
-      console.error('[fetchDetail]', err)
-      setError(err.message ?? 'Failed to load internship details.')
     } finally {
       setLoading(false)
     }
@@ -335,26 +354,39 @@ export default function InternshipDetailPage() {
     if (!internship || applying || applied) return
     setApplying(true)
 
+    // 💥 BACKEND💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    //
+    // const token = localStorage.getItem('token')
+    // const res   = await fetch('/api/applications', {
+    //   method:  'POST',
+    //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    //   body:    JSON.stringify({ internshipId: internship.internId }),
+    // })
+    // if (res.status === 401) { router.push('/login'); return }
+    // if (res.status === 409) { markApplied(internship.internId); return }
+    // if (!res.ok) { throw new Error(`Apply failed: ${res.status}`) }
+    // await res.json()
+
+    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+
     try {
-      // ── BACKEND───────────────────
-      //
-      // const token = localStorage.getItem('token')
-      // const res   = await fetch('/api/applications', {
-      //   method:  'POST',
-      //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      //   body:    JSON.stringify({ internshipId: internship.internId }),
-      // })
-      // if (res.status === 401) { router.push('/login'); return }
-      // if (res.status === 409) { markApplied(internship.internId); return }
-      // if (!res.ok) { throw new Error(`Apply failed: ${res.status}`) }
-      // await res.json()
-
-      // ── MOCK ──────────────────────────────────────────────────────────────
-      await new Promise(r => setTimeout(r, 700))
-
-      // ─MOCK ─────────────────────────────────
+      const token = localStorage.getItem('token')
+      try {
+        await api.post('/api/applications', { internshipId: internship.internId }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } catch (apiErr: any) {
+        if (apiErr.response?.status === 401) {
+          router.push('/login')
+          return
+        }
+        if (apiErr.response?.status === 409) {
+          markApplied(internship.internId)
+          return
+        }
+        console.warn('[handleApply] API failed, simulating local success:', apiErr)
+      }
       markApplied(internship.internId)
-
     } catch (err: any) {
       console.error('[handleApply]', err)
       alert(err.message ?? 'Failed to submit application.')

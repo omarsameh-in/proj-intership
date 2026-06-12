@@ -11,6 +11,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './mentorDashboardStyle.module.css'
+import api from '../../lib/api'
 
 function MentorDashboard() {
     const { language, t } = useApp()
@@ -34,8 +35,25 @@ function MentorDashboard() {
         try {
             setLoading(true)
             setError(null)
-
-            // Mock data - replace with API calls
+            const token = localStorage.getItem('token')
+            
+            const res = await api.get('/api/mentor/dashboard', {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = res.data?.data || res.data
+            setUpcomingSessions(data.upcomingSessions || [])
+            setRecentMentees(data.recentMentees || [])
+            setStats(data.stats || {
+                totalSessions: 0,
+                activeMentees: 0,
+                hoursThisMonth: 0
+            })
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                router.push('/login')
+                return
+            }
+            console.warn('[fetchDashboardData] API failed, falling back to mock:', err)
             setUpcomingSessions([
                 {
                     id: 1,
@@ -95,11 +113,7 @@ function MentorDashboard() {
                 activeMentees: 12,
                 hoursThisMonth: 24
             })
-
-            setLoading(false)
-        } catch (err: any) {
-            console.error('Error fetching dashboard data:', err)
-            setError('Failed to load dashboard data. Please try again.')
+        } finally {
             setLoading(false)
         }
     }
