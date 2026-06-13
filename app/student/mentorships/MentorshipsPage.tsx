@@ -14,7 +14,8 @@ import {
     Search,
     Calendar,
     Eye,
-    X
+    X,
+    Menu
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
@@ -140,6 +141,7 @@ const mockMentors: Mentor[] = [
 function MentorshipsPage() {
     const { t, language } = useApp()
     const router = useRouter()
+    const [sidebarOpen, setSidebarOpen] = useState(false)
     const [mentors, setMentors] = useState<Mentor[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
@@ -250,7 +252,13 @@ function MentorshipsPage() {
             <div className={styles.glow} aria-hidden="true" />
             <div className={styles.glowSecondary} aria-hidden="true" />
             <div className={styles.glowTertiary} aria-hidden="true" />
-            <aside className={styles.sidebar}>
+
+            <div
+                className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
+                onClick={() => setSidebarOpen(false)}
+            />
+
+            <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoSection}>
                     <div 
                         className={styles.backButton} 
@@ -273,23 +281,23 @@ function MentorshipsPage() {
                 </div>
 
                 <nav className={styles.nav}>
-                    <Link href="/student/dashboard" className={styles.navItem}>
+                    <Link href="/student/dashboard" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <LayoutDashboard size={20} />
                         <span>{t.dashboard}</span>
                     </Link>
-                    <Link href="/student/internships" className={styles.navItem}>
+                    <Link href="/student/internships" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <Briefcase size={20} />
                         <span>{t.internships}</span>
                     </Link>
-                    <Link href="/student/mentorships" className={`${styles.navItem} ${styles.active}`}>
+                    <Link href="/student/mentorships" className={`${styles.navItem} ${styles.active}`} onClick={() => setSidebarOpen(false)}>
                         <Users size={20} />
                         <span>{t.mentorships}</span>
                     </Link>
-                    <Link href="/student/sessions" className={styles.navItem}>
+                    <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <Video size={20} />
                         <span>{t.mySessions}</span>
                     </Link>
-                    <Link href="/student/profile" className={styles.navItem}>
+                    <Link href="/student/profile" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <UserCircle size={20} />
                         <span>{t.profile}</span>
                     </Link>
@@ -312,7 +320,12 @@ function MentorshipsPage() {
                         )}
                     </div>
 
-                    <TopBarControls />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle menu">
+                            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                        </button>
+                        <TopBarControls />
+                    </div>
                 </header>
 
                 {selectedMentor ? (

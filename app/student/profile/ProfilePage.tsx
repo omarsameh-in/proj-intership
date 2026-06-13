@@ -21,7 +21,8 @@ import {
     X,
     User,
     GraduationCap,
-    Edit
+    Edit,
+    Menu
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
@@ -32,6 +33,7 @@ import api from '../../lib/api'
 function ProfilePage() {
     const { theme, toggleTheme, language, setLanguage, t } = useApp()
     const router = useRouter()
+    const [sidebarOpen, setSidebarOpen] = useState(false)
     const [loading, setLoading] = useState(true)
 
     const defaultProfile = {
@@ -169,7 +171,13 @@ function ProfilePage() {
             <div className={styles.glow} aria-hidden="true" />
             <div className={styles.glowSecondary} aria-hidden="true" />
             <div className={styles.glowTertiary} aria-hidden="true" />
-            <aside className={styles.sidebar}>
+
+            <div
+                className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
+                onClick={() => setSidebarOpen(false)}
+            />
+
+            <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoSection}>
                     <div className={styles.backButton} onClick={() => router.push('/student/dashboard')} role="button" title="Back to Dashboard">
                         <ChevronLeft size={20} />
@@ -181,23 +189,23 @@ function ProfilePage() {
                 </div>
 
                 <nav className={styles.nav}>
-                    <Link href="/student/dashboard" className={styles.navItem}>
+                    <Link href="/student/dashboard" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <LayoutDashboard size={20} />
                         <span>{t.dashboard}</span>
                     </Link>
-                    <Link href="/student/internships" className={styles.navItem}>
+                    <Link href="/student/internships" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <Briefcase size={20} />
                         <span>{t.internships}</span>
                     </Link>
-                    <Link href="/student/mentorships" className={styles.navItem}>
+                    <Link href="/student/mentorships" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <Users size={20} />
                         <span>{t.mentorships}</span>
                     </Link>
-                    <Link href="/student/sessions" className={styles.navItem}>
+                    <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <Video size={20} />
                         <span>{t.mySessions}</span>
                     </Link>
-                    <Link href="/student/profile" className={`${styles.navItem} ${styles.active}`}>
+                    <Link href="/student/profile" className={`${styles.navItem} ${styles.active}`} onClick={() => setSidebarOpen(false)}>
                         <UserCircle size={20} />
                         <span>{t.profile}</span>
                     </Link>
@@ -211,7 +219,12 @@ function ProfilePage() {
                         <p className={styles.pageSubtitle}>{t.updateInfo}</p>
                     </div>
 
-                    <TopBarControls />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle menu">
+                            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                        </button>
+                        <TopBarControls />
+                    </div>
                 </header>
 
                 <div className={styles.editBarTop}>

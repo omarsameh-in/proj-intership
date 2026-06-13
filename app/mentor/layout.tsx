@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -9,7 +9,9 @@ import {
     UserCircle,
     Video,
     Calendar,
-    ChevronLeft
+    ChevronLeft,
+    Menu,
+    X
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import styles from './mentorLayout.module.css'
@@ -18,6 +20,7 @@ export default function MentorLayout({ children }: { children: React.ReactNode }
     const { language, t } = useApp()
     const pathname = usePathname()
     const router = useRouter()
+    const [sidebarOpen, setSidebarOpen] = useState(false)
 
     const navItems = [
         { href: '/mentor/dashboard', label: t.dashboard, icon: LayoutDashboard },
@@ -33,8 +36,19 @@ export default function MentorLayout({ children }: { children: React.ReactNode }
             <div className={styles.glowSecondary} aria-hidden="true" />
             <div className={styles.glowTertiary} aria-hidden="true" />
 
+            {/* Overlay */}
+            <div
+                className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
+                onClick={() => setSidebarOpen(false)}
+            />
+
+            {/* Hamburger Button */}
+            <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle menu">
+                {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+
             {/* Sidebar */}
-            <aside className={styles.sidebar}>
+            <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoSection}>
                     <div className={styles.backButton} onClick={() => router.push('/')}>
                         <ChevronLeft size={20} />
@@ -54,6 +68,7 @@ export default function MentorLayout({ children }: { children: React.ReactNode }
                                 key={item.href}
                                 href={item.href}
                                 className={`${styles.navItem} ${isActive ? styles.active : ''}`}
+                                onClick={() => setSidebarOpen(false)}
                             >
                                 <Icon size={20} />
                                 <span>{item.label}</span>
