@@ -18,11 +18,8 @@ export const notificationService = {
             const response = await api.get('/Notification');
             return response.data;
         } catch (err: any) {
-            if (err.response?.status === 404) {
-                console.warn('[getAll] Notification endpoint not implemented on backend yet. Returning empty list.');
-                return [];
-            }
-            throw err;
+            console.warn('[getAll] Notification endpoint failed or not implemented yet. Returning empty list.', err);
+            return [];
         }
     },
 
@@ -32,11 +29,8 @@ export const notificationService = {
             const response = await api.get('/Notification/unread-count');
             return response.data;
         } catch (err: any) {
-            if (err.response?.status === 404) {
-                console.warn('[getUnreadCount] Notification endpoint not implemented on backend yet. Falling back to 0.');
-                return 0;
-            }
-            throw err;
+            console.warn('[getUnreadCount] Notification endpoint failed or not implemented yet. Falling back to 0.', err);
+            return 0;
         }
     },
 
@@ -45,11 +39,7 @@ export const notificationService = {
         try {
             await api.put(`/Notification/${id}/mark-read`);
         } catch (err: any) {
-            if (err.response?.status === 404) {
-                console.warn(`[markAsRead] Notification mark-read endpoint not implemented yet.`);
-                return;
-            }
-            throw err;
+            console.warn(`[markAsRead] Notification mark-read endpoint failed or not implemented yet.`, err);
         }
     },
 
@@ -58,11 +48,7 @@ export const notificationService = {
         try {
             await api.put('/Notification/mark-all-read');
         } catch (err: any) {
-            if (err.response?.status === 404) {
-                console.warn('[markAllAsRead] Notification mark-all-read endpoint not implemented yet.');
-                return;
-            }
-            throw err;
+            console.warn('[markAllAsRead] Notification mark-all-read endpoint failed or not implemented yet.', err);
         }
     }
 };

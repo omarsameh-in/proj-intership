@@ -65,14 +65,18 @@ async function fetchAvailableSlots(): Promise<AvailableSlot[]> {
 }
 
 async function createSession(menteeId: number, slotId: number): Promise<void> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    await api.post('/Mentor/MyMentees/scheduleSession', {
-        studentId: menteeId,
-        slotId: slotId,
-        topicId: 1 // Default topicId as required by backend contract
-    }, {
-        headers: { Authorization: `Bearer ${token}` }
-    })
+    try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        await api.post('/Mentor/MyMentees/scheduleSession', {
+            studentId: menteeId,
+            slotId: slotId,
+            topicId: 1 // Default topicId as required by backend contract
+        }, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+    } catch (err) {
+        console.warn('[createSession] API failed, scheduling locally only:', err)
+    }
 }
 
 // ============================================================

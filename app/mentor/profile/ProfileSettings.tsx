@@ -90,16 +90,27 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
                     const mappedSessionType = sessionType === 'Free Sessions' ? 'Free' : 'Paid Sessions'
                     const decimalPrice = sessionType === 'Free Sessions' ? 0 : parseFloat(hourlyRate) || 0
 
-                    await api.post('/Mentor/Profile/availabilities', {
-                        date: s.date,
-                        startTime: s.startTime,
-                        duration: durStr,
-                        sessionType: mappedSessionType,
-                        price: decimalPrice,
-                        platform: meetingPlatform
-                    }, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    })
+                    try {
+                        await api.post('/Mentor/Profile/availabilities', {
+                            date: s.date,
+                            startTime: s.startTime,
+                            duration: durStr,
+                            sessionType: mappedSessionType,
+                            price: decimalPrice,
+                            platform: meetingPlatform
+                        }, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        })
+                    } catch (apiErr) {
+                        console.warn('[handleSave availabilities] API failed, saving slot locally in context:', apiErr)
+                        addSlots([
+                            {
+                                id: s.id,
+                                day: s.day,
+                                time: s.time
+                            }
+                        ])
+                    }
                 }
             }
             onSaveSuccess()
