@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
-import { User, Briefcase, Clock, Save, Trash2, Edit, Upload, X, Plus, FileText, CheckCircle, Calendar } from 'lucide-react'
+import { User, Briefcase, Clock, Save, Trash2, Edit, Upload, X, Plus, FileText, CheckCircle, Calendar, Menu } from 'lucide-react'
 import { useApp, Slot } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
@@ -41,14 +41,14 @@ const minutesToHHMMSS = (minutesStr: string) => {
 function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSaveSuccess: () => void }) {
     const { slots, addSlots, deleteSlot } = useApp()
 
-    const [day, setDay]   = useState('')
+    const [day, setDay] = useState('')
     const [time, setTime] = useState('')
     const [pendingSlots, setPendingSlots] = useState<PendingSlot[]>([])
     const [saving, setSaving] = useState(false)
-    const [error, setError]   = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     const [sessionType, setSessionType] = useState('Paid Sessions')
-    const [hourlyRate, setHourlyRate]   = useState('500')
+    const [hourlyRate, setHourlyRate] = useState('500')
     const [durationMinutes, setDurationMinutes] = useState('60')
     const [meetingPlatform, setMeetingPlatform] = useState('Zoom')
 
@@ -56,19 +56,19 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
         if (!day || !time) return
         const dateObj = new Date(day)
         const displayDay = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-        const [h, m]  = time.split(':').map(Number)
-        const ampm    = h >= 12 ? 'PM' : 'AM'
-        const hour12  = h % 12 || 12
+        const [h, m] = time.split(':').map(Number)
+        const ampm = h >= 12 ? 'PM' : 'AM'
+        const hour12 = h % 12 || 12
         const displayTime = `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`
 
         setPendingSlots(prev => [
             ...prev,
-            { 
-                id: Date.now(), 
-                date: day, 
-                startTime: time, 
-                day: displayDay, 
-                time: displayTime 
+            {
+                id: Date.now(),
+                date: day,
+                startTime: time,
+                day: displayDay,
+                time: displayTime
             },
         ])
         setDay('')
@@ -197,9 +197,9 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
                         <h3 className={styles.sessionDetailsTitle}>Session Details</h3>
                         <div className={styles.formField}>
                             <label htmlFor="session-type" className={styles.formLabel}>Session Type</label>
-                            <select 
-                                id="session-type" 
-                                className={styles.formSelect} 
+                            <select
+                                id="session-type"
+                                className={styles.formSelect}
                                 title="Session Type"
                                 value={sessionType}
                                 onChange={e => setSessionType(e.target.value)}
@@ -211,29 +211,29 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
                         </div>
                         <div className={styles.formField}>
                             <label htmlFor="hourly-rate" className={styles.formLabel}>Session Salary / Hourly Rate (EGP)</label>
-                            <input 
-                                id="hourly-rate" 
-                                type="number" 
+                            <input
+                                id="hourly-rate"
+                                type="number"
                                 value={hourlyRate}
                                 onChange={e => setHourlyRate(e.target.value)}
-                                className={styles.formInput} 
+                                className={styles.formInput}
                             />
                         </div>
                         <div className={styles.formField}>
                             <label htmlFor="session-duration" className={styles.formLabel}>Default Session Duration (minutes)</label>
-                            <input 
-                                id="session-duration" 
-                                type="number" 
+                            <input
+                                id="session-duration"
+                                type="number"
                                 value={durationMinutes}
                                 onChange={e => setDurationMinutes(e.target.value)}
-                                className={styles.formInput} 
+                                className={styles.formInput}
                             />
                         </div>
                         <div className={styles.formField}>
                             <label htmlFor="meeting-platform" className={styles.formLabel}>Meeting Platform</label>
-                            <select 
-                                id="meeting-platform" 
-                                className={styles.formSelect} 
+                            <select
+                                id="meeting-platform"
+                                className={styles.formSelect}
                                 title="Meeting Platform"
                                 value={meetingPlatform}
                                 onChange={e => setMeetingPlatform(e.target.value)}
@@ -269,11 +269,11 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
 function CVUploadZone() {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-    const [isDragging, setIsDragging]     = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
 
     const acceptedTypes = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    const handleFile   = (file: File) => setUploadedFile(file)
-    const handleDrop   = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }
+    const handleFile = (file: File) => setUploadedFile(file)
+    const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) handleFile(f) }
 
     return (
@@ -315,13 +315,13 @@ function CVUploadZone() {
 // ============================================================
 function EditProfileModal({ onClose }: { onClose: () => void }) {
     const fields = [
-        { label: 'Full Name',           value: 'Dr. Ahmed Hassan' },
-        { label: 'Email',               value: 'ahmed.hassan@example.com' },
-        { label: 'Phone Number',        value: '+20 123 456 7890' },
-        { label: 'Location',            value: 'Cairo, Egypt' },
-        { label: 'Current Job Title',   value: 'Senior Software Engineer' },
+        { label: 'Full Name', value: 'Dr. Ahmed Hassan' },
+        { label: 'Email', value: 'ahmed.hassan@example.com' },
+        { label: 'Phone Number', value: '+20 123 456 7890' },
+        { label: 'Location', value: 'Cairo, Egypt' },
+        { label: 'Current Job Title', value: 'Senior Software Engineer' },
         { label: 'Years of Experience', value: '15' },
-        { label: 'LinkedIn Profile',    value: 'linkedin.com/in/ahmedhassan' },
+        { label: 'LinkedIn Profile', value: 'linkedin.com/in/ahmedhassan' },
     ]
 
     return (
@@ -385,20 +385,20 @@ function ProfileField({ label, value, onChange, isEditing }: { label: string; va
 //  MAIN PAGE
 // ============================================================
 export default function ProfileSettings() {
-    const { slots, deleteSlot, setSlots, language } = useApp()
-    const [showManagement, setShowManagement]   = useState(false)
-    const [isEditing, setIsEditing]             = useState(false)
-    const [loading, setLoading]                 = useState(true)
+    const { slots, deleteSlot, setSlots, language, sidebarOpen, setSidebarOpen } = useApp()
+    const [showManagement, setShowManagement] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
+    const [loading, setLoading] = useState(true)
 
     const defaultProfile = {
-        fullName:    'Dr. Ahmed Hassan',
-        email:       'ahmed.hassan@example.com',
+        fullName: 'Dr. Ahmed Hassan',
+        email: 'ahmed.hassan@example.com',
         phoneNumber: '+20 123 456 7890',
-        location:    'Cairo, Egypt',
-        jobTitle:    'Senior Software Engineer',
+        location: 'Cairo, Egypt',
+        jobTitle: 'Senior Software Engineer',
         yearsExperience: 15,
-        linkedin:    'linkedin.com/in/ahmedhassan',
-        bio:         'Passionate about mentoring young developers and helping them navigate their career paths. With 15 years in the industry, I specialize in software architecture and team leadership.',
+        linkedin: 'linkedin.com/in/ahmedhassan',
+        bio: 'Passionate about mentoring young developers and helping them navigate their career paths. With 15 years in the industry, I specialize in software architecture and team leadership.',
     }
 
     const [profileData, setProfileData] = useState(defaultProfile)
@@ -505,8 +505,8 @@ export default function ProfileSettings() {
     return (
         <>
             {showManagement && (
-                <ManagementModal 
-                    onClose={() => setShowManagement(false)} 
+                <ManagementModal
+                    onClose={() => setShowManagement(false)}
                     onSaveSuccess={() => {
                         fetchProfile()
                         setShowManagement(false)
@@ -526,7 +526,10 @@ export default function ProfileSettings() {
                                 {language === 'ar' ? 'إدارة معلومات ملفك الشخصي كمرشد' : 'Manage your mentor profile information'}
                             </p>
                         </div>
-                        <div className={styles.flexCenter}>
+                        <div className={styles.flexCenter} style={{ gap: '0.5rem' }}>
+                            <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
+                                {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                            </button>
                             <TopBarControls />
                         </div>
                     </div>
@@ -557,10 +560,10 @@ export default function ProfileSettings() {
                                 <h2 className={styles.sectionTitle}>Personal Information</h2>
                             </div>
                             <div className={styles.twoColGrid}>
-                                <ProfileField label="Full Name"    value={displayed.fullName}   onChange={v => handleChange('fullName', v)}   isEditing={isEditing} />
-                                <ProfileField label="Email"        value={displayed.email}       onChange={v => handleChange('email', v)}       isEditing={isEditing} />
+                                <ProfileField label="Full Name" value={displayed.fullName} onChange={v => handleChange('fullName', v)} isEditing={isEditing} />
+                                <ProfileField label="Email" value={displayed.email} onChange={v => handleChange('email', v)} isEditing={isEditing} />
                                 <ProfileField label="Phone Number" value={displayed.phoneNumber} onChange={v => handleChange('phoneNumber', v)} isEditing={isEditing} />
-                                <ProfileField label="Location"     value={displayed.location}    onChange={v => handleChange('location', v)}    isEditing={isEditing} />
+                                <ProfileField label="Location" value={displayed.location} onChange={v => handleChange('location', v)} isEditing={isEditing} />
                             </div>
                         </section>
 
@@ -571,10 +574,10 @@ export default function ProfileSettings() {
                                 <h2 className={styles.sectionTitle}>Professional Information</h2>
                             </div>
                             <div className={`${styles.twoColGrid} ${styles.marginBottom20}`}>
-                                <ProfileField label="Current Job Title"   value={displayed.jobTitle}   onChange={v => handleChange('jobTitle', v)}   isEditing={isEditing} />
+                                <ProfileField label="Current Job Title" value={displayed.jobTitle} onChange={v => handleChange('jobTitle', v)} isEditing={isEditing} />
                                 <ProfileField label="Years of Experience" value={String(displayed.yearsExperience)} onChange={v => handleChange('yearsExperience', v)} isEditing={isEditing} />
                                 <div className={styles.fullWidth}>
-                                    <ProfileField label="LinkedIn Profile" value={displayed.linkedin || ''}   onChange={v => handleChange('linkedin', v)}   isEditing={isEditing} />
+                                    <ProfileField label="LinkedIn Profile" value={displayed.linkedin || ''} onChange={v => handleChange('linkedin', v)} isEditing={isEditing} />
                                 </div>
                             </div>
                             <div>

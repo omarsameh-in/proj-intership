@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { Search, Mail, Phone, Calendar, User, GraduationCap, Clock, X, Loader2, CheckCircle } from 'lucide-react'
+import { Search, Mail, Phone, Calendar, User, GraduationCap, Clock, X, Loader2, CheckCircle, Menu } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
@@ -58,8 +58,8 @@ async function fetchAvailableSlots(): Promise<AvailableSlot[]> {
         console.warn('[fetchAvailableSlots] API failed, falling back to mock slots:', err)
         return [
             { id: 1, displayDate: 'Wednesday, Jan 24', displayTime: '2:00 PM – 4:00 PM' },
-            { id: 2, displayDate: 'Friday, Jan 26',    displayTime: '1:00 PM – 2:00 PM' },
-            { id: 3, displayDate: 'Tuesday, Jan 28',   displayTime: '9:00 AM – 10:30 AM' },
+            { id: 2, displayDate: 'Friday, Jan 26', displayTime: '1:00 PM – 2:00 PM' },
+            { id: 3, displayDate: 'Tuesday, Jan 28', displayTime: '9:00 AM – 10:30 AM' },
         ]
     }
 }
@@ -79,10 +79,10 @@ async function createSession(menteeId: number, slotId: number): Promise<void> {
 //  MOCK DATA
 // ============================================================
 const MOCK_MENTEES: Mentee[] = [
-    { id: 1, name: 'Layla Ibrahim',  university: 'Cairo University',      major: 'Software Engineering', email: 'layla@example.com', phone: '+20 123 456 7890', nextSession: 'Dec 28, 3:00 PM',  totalSessions: 5 },
-    { id: 2, name: 'Omar Saeed',     university: 'Ain Shams University',  major: 'Data Science',         email: 'omar@example.com',  phone: '+20 123 456 7891', nextSession: 'Dec 30, 10:00 AM', totalSessions: 3 },
-    { id: 3, name: 'Nour Khalil',    university: 'Alexandria University', major: 'UI/UX Design',         email: 'nour@example.com',  phone: '+20 123 456 7892', nextSession: 'Jan 2, 1:00 PM',   totalSessions: 7 },
-    { id: 4, name: 'Ahmed Hassan',   university: 'Cairo University',      major: 'Mobile Development',   email: 'ahmed@example.com', phone: '+20 123 456 7893', nextSession: 'Jan 5, 11:00 AM',  totalSessions: 2 },
+    { id: 1, name: 'Layla Ibrahim', university: 'Cairo University', major: 'Software Engineering', email: 'layla@example.com', phone: '+20 123 456 7890', nextSession: 'Dec 28, 3:00 PM', totalSessions: 5 },
+    { id: 2, name: 'Omar Saeed', university: 'Ain Shams University', major: 'Data Science', email: 'omar@example.com', phone: '+20 123 456 7891', nextSession: 'Dec 30, 10:00 AM', totalSessions: 3 },
+    { id: 3, name: 'Nour Khalil', university: 'Alexandria University', major: 'UI/UX Design', email: 'nour@example.com', phone: '+20 123 456 7892', nextSession: 'Jan 2, 1:00 PM', totalSessions: 7 },
+    { id: 4, name: 'Ahmed Hassan', university: 'Cairo University', major: 'Mobile Development', email: 'ahmed@example.com', phone: '+20 123 456 7893', nextSession: 'Jan 5, 11:00 AM', totalSessions: 2 },
 ]
 
 // ============================================================
@@ -93,12 +93,12 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
     onClose: () => void
     onSuccess: (menteeId: number) => void
 }) {
-    const [slots, setSlots]               = useState<AvailableSlot[]>([])
+    const [slots, setSlots] = useState<AvailableSlot[]>([])
     const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null)
     const [loadingSlots, setLoadingSlots] = useState(true)
-    const [confirming, setConfirming]     = useState(false)
-    const [done, setDone]                 = useState(false)
-    const [error, setError]               = useState<string | null>(null)
+    const [confirming, setConfirming] = useState(false)
+    const [done, setDone] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         fetchAvailableSlots()
@@ -226,13 +226,12 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
                     <button
                         onClick={handleConfirm}
                         disabled={!selectedSlot || confirming || done}
-                        className={`${styles.confirmBtn} ${
-                            done 
-                                ? styles.confirmBtnDone 
-                                : (!selectedSlot || confirming) 
-                                    ? styles.confirmBtnDisabled 
+                        className={`${styles.confirmBtn} ${done
+                                ? styles.confirmBtnDone
+                                : (!selectedSlot || confirming)
+                                    ? styles.confirmBtnDisabled
                                     : styles.confirmBtnDefault
-                        }`}
+                            }`}
                     >
                         {done
                             ? <><CheckCircle size={16} /> Session Scheduled!</>
@@ -250,11 +249,11 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
 //  MAIN PAGE
 // ============================================================
 export default function MenteesPage() {
-    const { language } = useApp()
-    const [searchQuery, setSearchQuery]       = useState('')
-    const [mentees, setMentees]               = useState<Mentee[]>(MOCK_MENTEES)
+    const { language, sidebarOpen, setSidebarOpen } = useApp()
+    const [searchQuery, setSearchQuery] = useState('')
+    const [mentees, setMentees] = useState<Mentee[]>(MOCK_MENTEES)
     const [scheduleTarget, setScheduleTarget] = useState<Mentee | null>(null)
-    const [loading, setLoading]               = useState(true)
+    const [loading, setLoading] = useState(true)
 
     const fetchMentees = async () => {
         try {
@@ -318,7 +317,12 @@ export default function MenteesPage() {
                             {language === 'ar' ? 'إدارة علاقاتك مع الطلاب' : 'Manage your mentee relationships'}
                         </p>
                     </div>
-                    <TopBarControls />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
+                            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                        </button>
+                        <TopBarControls />
+                    </div>
                 </div>
 
                 {/* Search */}

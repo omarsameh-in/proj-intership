@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import {
     Users,
     Clock,
-    Calendar
+    Calendar,
+    Menu,
+    X
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
@@ -19,7 +21,7 @@ const getInitials = (name: string) => {
 }
 
 function MentorDashboard() {
-    const { language, t } = useApp()
+    const { language, t, sidebarOpen, setSidebarOpen } = useApp()
     const router = useRouter()
 
     const [upcomingSessions, setUpcomingSessions] = useState<any[]>([])
@@ -41,7 +43,7 @@ function MentorDashboard() {
             setLoading(true)
             setError(null)
             const token = localStorage.getItem('token')
-            
+
             const res = await api.get('/Mentor/Dashboard', {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -147,105 +149,110 @@ function MentorDashboard() {
                     <h1 className={styles.pageTitle}>{t.mentorWelcome}</h1>
                     <p className={styles.pageSubtitle}>{t.mentorSubtitle}</p>
                 </div>
-                <TopBarControls />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
+                        {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                    </button>
+                    <TopBarControls />
+                </div>
             </header>
 
-                {/* Stats Grid */}
-                <div className={styles.statsGrid}>
-                    <div className={styles.statCard}>
-                        <div className={`${styles.statIcon} ${styles.blueIcon}`}>
-                            <Calendar size={24} />
-                        </div>
-                        <div className={styles.statInfo}>
-                            <div className={styles.statLabel}>{t.totalSessions}</div>
-                            <div className={styles.statValue}>{stats.totalSessions}</div>
-                        </div>
+            {/* Stats Grid */}
+            <div className={styles.statsGrid}>
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIcon} ${styles.blueIcon}`}>
+                        <Calendar size={24} />
                     </div>
-
-                    <div className={styles.statCard}>
-                        <div className={`${styles.statIcon} ${styles.purpleIcon}`}>
-                            <Users size={24} />
-                        </div>
-                        <div className={styles.statInfo}>
-                            <div className={styles.statLabel}>{t.activeMentees}</div>
-                            <div className={styles.statValue}>{stats.activeMentees}</div>
-                        </div>
-                    </div>
-
-                    <div className={styles.statCard}>
-                        <div className={`${styles.statIcon} ${styles.orangeIcon}`}>
-                            <Clock size={24} />
-                        </div>
-                        <div className={styles.statInfo}>
-                            <div className={styles.statLabel}>{t.hoursThisMonth}</div>
-                            <div className={styles.statValue}>{stats.hoursThisMonth}</div>
-                        </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statLabel}>{t.totalSessions}</div>
+                        <div className={styles.statValue}>{stats.totalSessions}</div>
                     </div>
                 </div>
 
-                {/* Upcoming Sessions */}
-                <div className={styles.sectionBox}>
-                    <h2 className={styles.sectionTitle}>{t.upcomingSessions}</h2>
-                    <div className={styles.sessionsList}>
-                        {upcomingSessions.length > 0 ? (
-                            upcomingSessions.map((session) => {
-                                const key = session.sessionId || session.id
-                                const avatar = session.avatar || getInitials(session.studentName)
-                                return (
-                                    <div key={key} className={styles.sessionItem}>
-                                        <div className={styles.sessionLeft}>
-                                            <div className={styles.sessionAvatar}>
-                                                {avatar}
-                                            </div>
-                                            <div className={styles.sessionInfo}>
-                                                <h3 className={styles.sessionName}>{session.studentName}</h3>
-                                                <p className={styles.sessionTopic}>{session.topic}</p>
-                                            </div>
-                                        </div>
-                                        <div className={styles.sessionRight}>
-                                            <div className={styles.sessionDateTime}>
-                                                {session.formattedDate || `${session.date || ''}${session.date && session.time ? ', ' : ''}${session.time || ''}`}
-                                            </div>
-                                            <div className={styles.sessionDuration}>{session.duration}</div>
-                                        </div>
-                                    </div>
-                                )
-                            })
-                        ) : (
-                            <p className={styles.emptyMessage}>{t.noSessions}</p>
-                        )}
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIcon} ${styles.purpleIcon}`}>
+                        <Users size={24} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statLabel}>{t.activeMentees}</div>
+                        <div className={styles.statValue}>{stats.activeMentees}</div>
                     </div>
                 </div>
 
-                {/* Recent Mentees */}
-                <div className={styles.sectionBox}>
-                    <h2 className={styles.sectionTitle}>{t.recentMentees}</h2>
-                    <div className={styles.menteesGrid}>
-                        {recentMentees.length > 0 ? (
-                            recentMentees.map((mentee) => {
-                                const key = mentee.studentId || mentee.id
-                                const name = mentee.studentName || mentee.name || ''
-                                const field = mentee.major || mentee.field || ''
-                                const avatar = mentee.avatar || getInitials(name)
-                                const sessionsText = mentee.completedSessionsText || `${mentee.sessionsCompleted || 0} ${t.sessionsCompleted}`
-                                return (
-                                    <div key={key} className={styles.menteeCard}>
-                                        <div className={styles.menteeAvatar}>
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIcon} ${styles.orangeIcon}`}>
+                        <Clock size={24} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statLabel}>{t.hoursThisMonth}</div>
+                        <div className={styles.statValue}>{stats.hoursThisMonth}</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Upcoming Sessions */}
+            <div className={styles.sectionBox}>
+                <h2 className={styles.sectionTitle}>{t.upcomingSessions}</h2>
+                <div className={styles.sessionsList}>
+                    {upcomingSessions.length > 0 ? (
+                        upcomingSessions.map((session) => {
+                            const key = session.sessionId || session.id
+                            const avatar = session.avatar || getInitials(session.studentName)
+                            return (
+                                <div key={key} className={styles.sessionItem}>
+                                    <div className={styles.sessionLeft}>
+                                        <div className={styles.sessionAvatar}>
                                             {avatar}
                                         </div>
-                                        <h3 className={styles.menteeName}>{name}</h3>
-                                        <p className={styles.menteeField}>{field}</p>
-                                        <p className={styles.menteeSessions}>
-                                            {sessionsText}
-                                        </p>
+                                        <div className={styles.sessionInfo}>
+                                            <h3 className={styles.sessionName}>{session.studentName}</h3>
+                                            <p className={styles.sessionTopic}>{session.topic}</p>
+                                        </div>
                                     </div>
-                                )
-                            })
-                        ) : (
-                            <p className={styles.emptyMessage}>{t.noMenteesYet}</p>
-                        )}
-                    </div>
+                                    <div className={styles.sessionRight}>
+                                        <div className={styles.sessionDateTime}>
+                                            {session.formattedDate || `${session.date || ''}${session.date && session.time ? ', ' : ''}${session.time || ''}`}
+                                        </div>
+                                        <div className={styles.sessionDuration}>{session.duration}</div>
+                                    </div>
+                                </div>
+                            )
+                        })
+                    ) : (
+                        <p className={styles.emptyMessage}>{t.noSessions}</p>
+                    )}
                 </div>
+            </div>
+
+            {/* Recent Mentees */}
+            <div className={styles.sectionBox}>
+                <h2 className={styles.sectionTitle}>{t.recentMentees}</h2>
+                <div className={styles.menteesGrid}>
+                    {recentMentees.length > 0 ? (
+                        recentMentees.map((mentee) => {
+                            const key = mentee.studentId || mentee.id
+                            const name = mentee.studentName || mentee.name || ''
+                            const field = mentee.major || mentee.field || ''
+                            const avatar = mentee.avatar || getInitials(name)
+                            const sessionsText = mentee.completedSessionsText || `${mentee.sessionsCompleted || 0} ${t.sessionsCompleted}`
+                            return (
+                                <div key={key} className={styles.menteeCard}>
+                                    <div className={styles.menteeAvatar}>
+                                        {avatar}
+                                    </div>
+                                    <h3 className={styles.menteeName}>{name}</h3>
+                                    <p className={styles.menteeField}>{field}</p>
+                                    <p className={styles.menteeSessions}>
+                                        {sessionsText}
+                                    </p>
+                                </div>
+                            )
+                        })
+                    ) : (
+                        <p className={styles.emptyMessage}>{t.noMenteesYet}</p>
+                    )}
+                </div>
+            </div>
         </>
     )
 }

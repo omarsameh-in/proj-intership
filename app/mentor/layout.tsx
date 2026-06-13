@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -17,10 +17,9 @@ import { useApp } from '../context/AppContext'
 import styles from './mentorLayout.module.css'
 
 export default function MentorLayout({ children }: { children: React.ReactNode }) {
-    const { language, t } = useApp()
+    const { language, t, sidebarOpen, setSidebarOpen } = useApp()
     const pathname = usePathname()
     const router = useRouter()
-    const [sidebarOpen, setSidebarOpen] = useState(false)
 
     const navItems = [
         { href: '/mentor/dashboard', label: t.dashboard, icon: LayoutDashboard },
@@ -42,10 +41,7 @@ export default function MentorLayout({ children }: { children: React.ReactNode }
                 onClick={() => setSidebarOpen(false)}
             />
 
-            {/* Hamburger Button */}
-            <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle menu">
-                {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+
 
             {/* Sidebar */}
             <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>

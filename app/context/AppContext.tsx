@@ -21,6 +21,8 @@ interface AppContextType {
     setSlots: (slots: Slot[]) => void
     addSlots: (newSlots: Slot[]) => void
     deleteSlot: (id: number) => void
+    sidebarOpen: boolean
+    setSidebarOpen: (open: boolean) => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -29,10 +31,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light')
     const [language, setLanguage] = useState<Language>('en')
     const [mounted, setMounted] = useState(false)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
     const [slots, setSlots] = useState<Slot[]>([
-        { id: 1, day: 'Monday, Jan 22',    time: '10:00 AM - 11:30 AM' },
+        { id: 1, day: 'Monday, Jan 22', time: '10:00 AM - 11:30 AM' },
         { id: 2, day: 'Wednesday, Jan 24', time: '2:00 PM - 4:00 PM' },
-        { id: 3, day: 'Friday, Jan 26',    time: '1:00 PM - 2:00 PM' },
+        { id: 3, day: 'Friday, Jan 26', time: '1:00 PM - 2:00 PM' },
     ])
 
     const addSlots = (newSlots: Slot[]) => setSlots(prev => [...prev, ...newSlots])
@@ -60,11 +63,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         } else {
             document.body.classList.remove('light-mode')
         }
-        
+
         // Apply language
         document.documentElement.setAttribute('dir', language === 'ar' ? 'rtl' : 'ltr')
         document.documentElement.setAttribute('lang', language)
-        
+
         // Save to localStorage only on client
         if (typeof window !== 'undefined') {
             localStorage.setItem('theme', theme)
@@ -85,7 +88,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         slots,
         setSlots,
         addSlots,
-        deleteSlot
+        deleteSlot,
+        sidebarOpen,
+        setSidebarOpen
     }
 
     // Prevent hydration mismatch by rendering nothing until mounted

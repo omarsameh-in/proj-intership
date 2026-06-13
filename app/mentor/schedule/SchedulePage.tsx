@@ -1,16 +1,16 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { Calendar as CalendarIcon, Clock, Plus, Trash2, X } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, X, Menu } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './SchedulePage.module.css'
 
 export default function SchedulePage() {
-    const { language, slots, addSlots, deleteSlot } = useApp()
+    const { language, slots, addSlots, deleteSlot, sidebarOpen, setSidebarOpen } = useApp()
 
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [day, setDay]   = useState('')
+    const [day, setDay] = useState('')
     const [time, setTime] = useState('')
     const [loading, setLoading] = useState(true)
 
@@ -31,7 +31,7 @@ export default function SchedulePage() {
             weekday: 'long', month: 'short', day: 'numeric'
         })
         const [h, m] = time.split(':').map(Number)
-        const ampm   = h >= 12 ? 'PM' : 'AM'
+        const ampm = h >= 12 ? 'PM' : 'AM'
         const hour12 = h % 12 || 12
         const displayTime = `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`
 
@@ -59,7 +59,12 @@ export default function SchedulePage() {
                         <Plus size={20} />
                         {language === 'ar' ? 'إضافة موعد' : 'Add Slot'}
                     </button>
-                    <TopBarControls />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
+                            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                        </button>
+                        <TopBarControls />
+                    </div>
                 </div>
             </div>
 

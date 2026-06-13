@@ -878,3 +878,33 @@
 .sessionDateText {
     font-size: 0.875rem;
 }
+
+/* ─── Hamburger ─────────────── */
+.hamburgerBtn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.hamburgerBtn:hover {
+    background: #252b3d;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .hamburgerBtn {
+        display: flex;
+    }
+}
+
+:global(body.light-mode) .hamburgerBtn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}

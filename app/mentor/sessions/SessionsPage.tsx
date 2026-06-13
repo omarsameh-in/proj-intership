@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import {
     Calendar, Clock, Video, Check, X,
     Loader2, CheckCircle, RefreshCw,
-    ChevronRight, ExternalLink, BookOpen
+    ChevronRight, ExternalLink, BookOpen, Menu
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
@@ -108,8 +108,8 @@ const MOCK_SESSIONS: Session[] = [
 function StatusBadge({ status }: { status: SessionStatus }) {
     const cls: Record<SessionStatus, string> = {
         Confirmed: styles.badgeConfirmed,
-        Pending:   styles.badgePending,
-        Declined:  styles.badgeDeclined,
+        Pending: styles.badgePending,
+        Declined: styles.badgeDeclined,
         Completed: styles.badgeCompleted,
     }
     return <span className={`${styles.badge} ${cls[status]}`}>{status}</span>
@@ -426,13 +426,12 @@ function RescheduleModal({ session, onClose, onSuccess }: {
                     <button
                         onClick={handleConfirm}
                         disabled={!selectedSlot || confirming || done}
-                        className={`${styles.rescheduleConfirmBtn} ${
-                            done 
-                                ? styles.confirmBtnDone 
-                                : (!selectedSlot || confirming) 
-                                    ? styles.confirmBtnDisabled 
+                        className={`${styles.rescheduleConfirmBtn} ${done
+                                ? styles.confirmBtnDone
+                                : (!selectedSlot || confirming)
+                                    ? styles.confirmBtnDisabled
                                     : styles.confirmBtnDefault
-                        }`}
+                            }`}
                     >
                         {done
                             ? <><CheckCircle size={16} /> Rescheduled!</>
@@ -457,7 +456,7 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
 }) {
     const [loadingAction, setLoadingAction] = useState<string | null>(null)
     const isConfirmed = session.status === 'Confirmed'
-    const isPending   = session.status === 'Pending'
+    const isPending = session.status === 'Pending'
 
     const handleAction = async (status: string) => {
         setLoadingAction(status)
@@ -551,13 +550,13 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
 //  MAIN PAGE
 // ============================================================
 export default function SessionsPage() {
-    const { language } = useApp()
+    const { language, sidebarOpen, setSidebarOpen } = useApp()
     const searchParams = useSearchParams()
 
-    const [sessions, setSessions]                   = useState<Session[]>([])
-    const [loading, setLoading]                     = useState(true)
-    const [pageError, setPageError]                 = useState<string | null>(null)
-    const [detailsSession, setDetailsSession]       = useState<Session | null>(null)
+    const [sessions, setSessions] = useState<Session[]>([])
+    const [loading, setLoading] = useState(true)
+    const [pageError, setPageError] = useState<string | null>(null)
+    const [detailsSession, setDetailsSession] = useState<Session | null>(null)
     const [rescheduleSession, setRescheduleSession] = useState<Session | null>(null)
 
     const fetchSessions = async () => {
@@ -620,7 +619,7 @@ export default function SessionsPage() {
                     date: `${newSlot.displayDate}, ${newSlot.displayTime}`,
                     currentDate: newSlot.displayDate,
                     currentTime: newSlot.displayTime,
-                  }
+                }
                 : s
             )
         )
@@ -638,7 +637,12 @@ export default function SessionsPage() {
                             {language === 'ar' ? 'إدارة الطلبات والجدول الزمني' : 'Manage your session requests and schedule'}
                         </p>
                     </div>
-                    <TopBarControls />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
+                            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                        </button>
+                        <TopBarControls />
+                    </div>
                 </div>
 
 
