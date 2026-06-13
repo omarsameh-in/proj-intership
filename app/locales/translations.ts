@@ -89,7 +89,7 @@ export const translations = {
         industry: "Industry",
         location: "Location",
         website: "Website (Optional)",
-        address: "Address (Optional)",
+        address: "Address",
         companyOverview: "Company Overview",
         companyPlaceholder: "Tell us about your company vision and what you do...",
 
@@ -590,7 +590,7 @@ export const translations = {
         industry: "المجال",
         location: "الموقع",
         website: "الموقع الإلكتروني (اختياري)",
-        address: "العنوان (اختياري)",
+        address: "العنوان",
         companyOverview: "نبذة عن الشركة",
         companyPlaceholder: "احكي لنا عن رؤية شركتك وماذا تقدم...",
 
