@@ -138,7 +138,7 @@ function Company() {
             const res = await api.get(`/api/company/Dashboard/view/details/${internId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-            const data = res.data?.Data || res.data
+            const data = res.data?.data || res.data?.Data || res.data
             setSelectedIntern(data)
         } catch (err: any) {
             if (err.response?.status === 401) {
