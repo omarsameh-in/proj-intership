@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://jb4swp14-5022.euw.devtunnels.ms',
     headers: {
         'Content-Type': 'application/json',
         'X-Tunnel-Skip-AntiSpam-Page': 'true',
