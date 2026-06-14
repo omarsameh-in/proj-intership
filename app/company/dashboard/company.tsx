@@ -135,7 +135,7 @@ function Company() {
             setShowModal(true)
             setSelectedIntern(null)
             const token = localStorage.getItem('token')
-            const res = await api.get(`/api/company/view/details/${internId}`, {
+            const res = await api.get(`/api/company/Dashboard/view/details/${internId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             const data = res.data?.Data || res.data
