@@ -90,7 +90,32 @@ export default function LoginPage() {
 
     } catch (error: any) {
       console.error('Login error:', error)
-      const message = error.response?.data?.message || error.response?.data?.errorMessage || (language === 'ar' ? 'حدث خطأ في تسجيل الدخول' : 'Login failed')
+      let message = (language === 'ar' ? 'حدث خطأ في تسجيل الدخول' : 'Login failed')
+      if (error.response?.data) {
+        if (error.response.data.message) {
+          message = error.response.data.message
+        } else if (error.response.data.errorMessage) {
+          message = error.response.data.errorMessage
+        } else if (error.response.data.errors) {
+          const errorsObj = error.response.data.errors
+          const messages = Object.keys(errorsObj).map(key => `${key}: ${errorsObj[key].join(', ')}`)
+          if (messages.length > 0) {
+            message = messages.join('\n')
+          }
+        } else {
+          const keys = Object.keys(error.response.data)
+          const messages: string[] = []
+          keys.forEach((key) => {
+            const fieldErrors = error.response.data[key]
+            if (Array.isArray(fieldErrors)) {
+              messages.push(`${key}: ${fieldErrors.join(', ')}`)
+            }
+          })
+          if (messages.length > 0) {
+            message = messages.join('\n')
+          }
+        }
+      }
       alert(message)
     } finally {
       setLoading(false)
