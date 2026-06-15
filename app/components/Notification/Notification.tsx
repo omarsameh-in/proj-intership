@@ -8,38 +8,11 @@ import styles from './Notification.module.css'
 import { notificationService, NotificationItem } from '../../services/notificationService'
 
 const Notification: React.FC = () => {
-    const { theme, language, t } = useApp()
+    const { language, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useApp()
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
-    const [notifications, setNotifications] = useState<NotificationItem[]>([])
-    const [unreadCount, setUnreadCount] = useState(0)
 
     const dropdownRef = useRef<HTMLDivElement>(null)
-
-    // جلب البيانات عند البداية
-    useEffect(() => {
-        fetchInitialData()
-    }, [])
-
-    const fetchInitialData = async () => {
-        try {
-            const count = await notificationService.getUnreadCount()
-            setUnreadCount(count)
-        } catch (error) {
-            console.error('Error fetching unread count:', error)
-        }
-    }
-
-    const fetchNotifications = async () => {
-        try {
-            const data = await notificationService.getAll()
-            setNotifications(data)
-            const count = data.filter(n => !n.isRead).length
-            setUnreadCount(count)
-        } catch (error) {
-            console.error('Error fetching notifications:', error)
-        }
-    }
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -56,36 +29,6 @@ const Notification: React.FC = () => {
             fetchNotifications() // جلب الإشعارات عند فتح القائمة
         }
         setIsOpen(!isOpen)
-    }
-    const markAsRead = async (id: number) => {
-        try {
-            // تحديث الواجهة فوراً (Optimistic Update)
-            setNotifications(notifications.map(n => 
-                n.notificationId === id ? { ...n, isRead: true } : n
-            ))
-            setUnreadCount(prev => Math.max(0, prev - 1))
-            
-            // إرسال الطلب للسيرفر
-            await notificationService.markAsRead(id)
-        } catch (error) {
-            console.error('Error marking as read:', error)
-            // في حالة الفشل يمكن إعادة جلب البيانات
-            fetchNotifications()
-        }
-    }
-
-    const markAllAsRead = async () => {
-        try {
-            // تحديث الواجهة فوراً
-            setNotifications(notifications.map(n => ({ ...n, isRead: true })))
-            setUnreadCount(0)
-            
-            // إرسال الطلب للسيرفر
-            await notificationService.markAllAsRead()
-        } catch (error) {
-            console.error('Error marking all as read:', error)
-            fetchNotifications()
-        }
     }
 
     const handleNotificationClick = async (notification: NotificationItem) => {
