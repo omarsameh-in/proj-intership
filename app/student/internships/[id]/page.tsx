@@ -36,10 +36,11 @@ import api from '../../../lib/api'
 
 interface Company {
   name:     string
-  webSit:   string
-  city:     string
-  country:  string | null
-  industry: string
+  Name?:    string
+  WebSit:   string
+  City:     string
+  Country:  string | null
+  Industry: string
 }
 
 interface InternshipDetail {
@@ -63,43 +64,76 @@ interface InternshipDetail {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VALIDATOR
+// VALIDATOR / NORMALISER
 // ─────────────────────────────────────────────────────────────────────────────
-
+//
+// The Response Guide says GET /Student/Internships/view/details/{id} returns
+// "Message + Data, shape matches the Internship model" without listing every
+// field. The list endpoint (GET /Student/Internships) uses PascalCase /
+// snake_case keys (Internship_Id, location_type, application_deadline,
+// company {...}). We defensively accept BOTH that shape and the camelCase
+// shape this UI was originally built against (internId, locationType,
+// startDate, endDate, etc.), so the page keeps working whichever the
+// backend actually returns — with sensible fallbacks for fields the
+// backend doesn't expose yet (canApply, requirements, applicationsCount,
+// company.webSit/industry).
+// ─────────────────────────────────────────────────────────────────────────────
 function validateDetail(raw: any): InternshipDetail {
   if (!raw || typeof raw !== 'object') throw new Error('Empty response')
 
+  const internId =
+    typeof raw.internId === 'number'        ? raw.internId :
+    typeof raw.Internship_Id === 'number'   ? raw.Internship_Id :
+    (() => { throw new Error('Missing internship id') })()
+
+  const locationType = raw.locationType ?? raw.location_type ?? 'N/A'
+
+  const startDate = raw.startDate ?? 'N/A'
+  const endDate   = raw.endDate
+    ?? (raw.application_deadline
+          ? new Date(raw.application_deadline).toLocaleDateString('en-US', {
+              year: 'numeric', month: 'short', day: 'numeric',
+            })
+          : 'N/A')
+
+  // يدعم isPaid (camelCase) و IsPaid (PascalCase) لو الـ serializer مش معمول عليه camelCase policy
+  const isPaid = typeof raw.isPaid === 'boolean'
+    ? raw.isPaid
+    : typeof raw.IsPaid === 'boolean'
+      ? raw.IsPaid
+      : (raw.paidStatus?.toLowerCase?.() !== 'unpaid' && !!raw.price)
+
   return {
-    internId:           typeof raw.internId === 'number'
-                          ? raw.internId
-                          : (() => { throw new Error('Missing internId') })(),
+    internId,
     title:              raw.title              ?? 'Untitled Position',
     description:        raw.description        ?? '',
-    duration:           Number(raw.duration)   || 0,
-    locationType:       raw.locationType       ?? 'N/A',
-    startDate:          raw.startDate          ?? 'N/A',
-    endDate:            raw.endDate            ?? 'N/A',
-    isPaid:             Boolean(raw.isPaid),
+    duration:           Number(raw.duration ?? raw.durationMonths) || 0,
+    locationType,
+    startDate,
+    endDate,
+    isPaid:             Boolean(isPaid),
     price:              Number(raw.price)      || 0,
     status:             raw.status             ?? 'N/A',
-    canApply:           Boolean(raw.canApply),
-    internship_City:    raw.internship_City    ?? '',
-    internship_Country: raw.internship_Country ?? null,
+    canApply:           typeof raw.canApply === 'boolean'
+                          ? raw.canApply
+                          : (raw.status ?? 'Open') === 'Open',
+    // يدعم internship_City (camelCase) و Internship_City (PascalCase)
+    internship_City:    raw.internship_City    ?? raw.Internship_City    ?? raw.location ?? '',
+    internship_Country: raw.internship_Country ?? raw.Internship_Country ?? null,
     skills:             Array.isArray(raw.skills)       ? raw.skills.filter(Boolean)       : [],
     requirements:       Array.isArray(raw.requirements) ? raw.requirements.filter(Boolean) : [],
     applicationsCount:  Number(raw.applicationsCount)  || 0,
     company: {
-      name:     raw.company?.name     ?? 'Unknown Company',
-      webSit:   raw.company?.webSit   ?? '',
-      city:     raw.company?.city     ?? '',
-      country:  raw.company?.country  ?? null,
-      industry: raw.company?.industry ?? '',
+      name: raw.company?.name ?? raw.company?.Name ?? 'Unknown Company',
+      WebSit:   raw.company?.webSit   ?? raw.company?.WebSit   ?? '',
+      City:     raw.company?.city     ?? raw.company?.City     ?? '',
+      Country:  raw.company?.country  ?? raw.company?.Country  ?? null,
+      Industry: raw.company?.industry ?? raw.company?.Industry ?? '',
     },
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK DATA — 
+// MOCK DATA — fallback only
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MOCK_DETAIL: Record<number, any> = {
@@ -122,10 +156,10 @@ const MOCK_DETAIL: Record<number, any> = {
     applicationsCount:  2,
     company: {
       name:     'TechNova Solutions',
-      webSit:   'https://www.technova.com',
-      city:     'Cairo',
-      country:  'Egypt',
-      industry: 'Software Development',
+      WebSit:   'https://www.technova.com',
+      City:     'Cairo',
+      Country:  'Egypt',
+      Industry: 'Software Development',
     },
   },
   2: {
@@ -151,10 +185,10 @@ const MOCK_DETAIL: Record<number, any> = {
     applicationsCount:  7,
     company: {
       name:     'TechNova Solutions Updated',
-      webSit:   'https://www.technova.com',
-      city:     'Cairo',
-      country:  'Egypt',
-      industry: 'Software Development',
+      WebSit:   'https://www.technova.com',
+      City:     'Cairo',
+      Country:  'Egypt',
+      Industry: 'Software Development',
     },
   },
   4: {
@@ -180,10 +214,10 @@ const MOCK_DETAIL: Record<number, any> = {
     applicationsCount:  12,
     company: {
       name:     'Digital Solutions',
-      webSit:   'https://www.digitalsolutions.com',
-      city:     'Alexandria',
-      country:  'Egypt',
-      industry: 'Design & Visuals',
+      WebSit:   'https://www.digitalsolutions.com',
+      City:     'Alexandria',
+      Country:  'Egypt',
+      Industry: 'Design & Visuals',
     },
   },
   5: {
@@ -209,10 +243,10 @@ const MOCK_DETAIL: Record<number, any> = {
     applicationsCount:  19,
     company: {
       name:     'Innovation Hub',
-      webSit:   'https://www.innovationhub.co',
-      city:     'Remote',
-      country:  'Egypt',
-      industry: 'Software Development',
+      WebSit:   'https://www.innovationhub.co',
+      City:     'Remote',
+      Country:  'Egypt',
+      Industry: 'Software Development',
     },
   },
   6: {
@@ -238,17 +272,14 @@ const MOCK_DETAIL: Record<number, any> = {
     applicationsCount:  8,
     company: {
       name:     'Startup Labs',
-      webSit:   'https://www.startuplabs.io',
-      city:     'Giza',
-      country:  'Egypt',
-      industry: 'Data Analytics',
+      WebSit:   'https://www.startuplabs.io',
+      City:     'Giza',
+      Country:  'Egypt',
+      Industry: 'Data Analytics',
     },
   },
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
 
 const AVATAR_COLORS = [
   '#5B8DEF', '#9D7CEF', '#8B5FE8', '#7C9FEF',
@@ -257,6 +288,35 @@ const AVATAR_COLORS = [
 const colorFromId = (id: number) => AVATAR_COLORS[id % AVATAR_COLORS.length]
 const initials    = (name: string) =>
   name.split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH HELPERS — refresh-token flow per the Request Guide
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) return null
+
+  try {
+    const res = await api.post('/auth/refresh-token', { refreshToken })
+    const newAccessToken = res.data?.accessToken ?? res.data?.Data?.accessToken
+    if (!newAccessToken) return null
+
+    localStorage.setItem('token', newAccessToken)
+    if (res.data?.refreshToken) {
+      localStorage.setItem('refreshToken', res.data.refreshToken)
+    }
+    return newAccessToken
+  } catch {
+    return null
+  }
+}
+
+function clearAuthAndRedirect(router: ReturnType<typeof useRouter>) {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+  router.push('/login')
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
@@ -290,43 +350,59 @@ export default function InternshipDetailPage() {
   }, [])
 
   // ─────────────────────────────────────────────────────────────────────────
-  // FETCH DETAIL — GET /api/internships/:id
+  // FETCH DETAIL — GET /Student/Internships/view/details/{internshipId}
+  // Response: { Message, Data: {...} }
   // ─────────────────────────────────────────────────────────────────────────
 
   const fetchDetail = async () => {
     setLoading(true)
     setError(null)
 
-    // 💥 BACKEND: 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
-    //
-    // const token = localStorage.getItem('token')
-    // const res   = await fetch(`/api/internships/${internId}`, {
-    //   headers: { Authorization: `Bearer ${token}` },
-    // })
-    // if (res.status === 401) { router.push('/login'); return }
-    // if (res.status === 404) { setError('This internship is no longer available.'); setLoading(false); return }
-    // if (!res.ok) { throw new Error(`Server error: ${res.status} ${res.statusText}`) }
-    // const raw = await res.json()
-    //
-    // if (!raw.canApply) markApplied(raw.internId)
-    //
-    // setInternship(validateDetail(raw))
-
-    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    const doFetch = (accessToken: string | null) =>
+      api.get(`/Student/Internships/view/details/${internId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      })
 
     try {
-      const token = localStorage.getItem('token')
+      let token = localStorage.getItem('token')
+
       try {
-        const res = await api.get(`/api/internships/${internId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        const raw = res.data
-        if (!raw.canApply) markApplied(raw.internId)
-        setInternship(validateDetail(raw))
+        const res = await doFetch(token)
+        const raw = res.data?.Data ?? res.data?.data ?? res.data
+        if (!raw) {
+          setError('This internship is no longer available.')
+          setLoading(false)
+          return
+        }
+        const validated = validateDetail(raw)
+        if (!validated.canApply) markApplied(validated.internId)
+        setInternship(validated)
       } catch (apiErr: any) {
         if (apiErr.response?.status === 401) {
-          router.push('/login')
-          return
+          const newToken = await refreshAccessToken()
+          if (!newToken) {
+            clearAuthAndRedirect(router)
+            return
+          }
+          try {
+            const retryRes = await doFetch(newToken)
+            const raw = retryRes.data?.Data ?? retryRes.data?.data ?? retryRes.data
+            if (!raw) {
+              setError('This internship is no longer available.')
+              setLoading(false)
+              return
+            }
+            const validated = validateDetail(raw)
+            if (!validated.canApply) markApplied(validated.internId)
+            setInternship(validated)
+            return
+          } catch (retryErr: any) {
+            if (retryErr.response?.status === 401) {
+              clearAuthAndRedirect(router)
+              return
+            }
+            throw retryErr
+          }
         }
         if (apiErr.response?.status === 404) {
           setError('This internship is no longer available.')
@@ -347,46 +423,68 @@ export default function InternshipDetailPage() {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // APPLY — POST /api/applications
+  // APPLY — POST /Student/Internships/internship/apply/{internshipId}
+  // Response body is a PLAIN STRING (not JSON).
   // ─────────────────────────────────────────────────────────────────────────
 
   const handleApply = async () => {
     if (!internship || applying || applied) return
     setApplying(true)
 
-    // 💥 BACKEND💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
-    //
-    // const token = localStorage.getItem('token')
-    // const res   = await fetch('/api/applications', {
-    //   method:  'POST',
-    //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    //   body:    JSON.stringify({ internshipId: internship.internId }),
-    // })
-    // if (res.status === 401) { router.push('/login'); return }
-    // if (res.status === 409) { markApplied(internship.internId); return }
-    // if (!res.ok) { throw new Error(`Apply failed: ${res.status}`) }
-    // await res.json()
-
-    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    const doApply = (accessToken: string | null) =>
+      api.post(
+        `/Student/Internships/internship/apply/${internship.internId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          transformResponse: (data) => data, // backend returns plain text
+        }
+      )
 
     try {
-      const token = localStorage.getItem('token')
+      let token = localStorage.getItem('token')
+
       try {
-        await api.post('/api/applications', { internshipId: internship.internId }, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const res = await doApply(token)
+        const message = typeof res.data === 'string' ? res.data : 'Application submitted successfully.'
+        markApplied(internship.internId)
+        alert(message)
       } catch (apiErr: any) {
         if (apiErr.response?.status === 401) {
-          router.push('/login')
-          return
+          const newToken = await refreshAccessToken()
+          if (!newToken) {
+            clearAuthAndRedirect(router)
+            return
+          }
+          try {
+            const retryRes = await doApply(newToken)
+            const message = typeof retryRes.data === 'string' ? retryRes.data : 'Application submitted successfully.'
+            markApplied(internship.internId)
+            alert(message)
+            return
+          } catch (retryErr: any) {
+            if (retryErr.response?.status === 401) {
+              clearAuthAndRedirect(router)
+              return
+            }
+            throw retryErr
+          }
         }
         if (apiErr.response?.status === 409) {
+          // Duplicate application
           markApplied(internship.internId)
           return
         }
+        if (apiErr.response?.status === 400 || apiErr.response?.status === 404) {
+          const msg = typeof apiErr.response?.data === 'string'
+            ? apiErr.response.data
+            : 'Unable to apply to this internship.'
+          alert(msg)
+          return
+        }
         console.warn('[handleApply] API failed, simulating local success:', apiErr)
+        markApplied(internship.internId)
       }
-      markApplied(internship.internId)
     } catch (err: any) {
       console.error('[handleApply]', err)
       alert(err.message ?? 'Failed to submit application.')
@@ -435,8 +533,8 @@ export default function InternshipDetailPage() {
           <Link href="/student/dashboard"   className={sharedStyles.navItem}><LayoutDashboard size={20} /><span>{t.dashboard}</span></Link>
           <Link href="/student/internships" className={`${sharedStyles.navItem} ${sharedStyles.active}`}><Briefcase size={20} /><span>{t.internships}</span></Link>
           <Link href="/student/mentorships" className={sharedStyles.navItem}><Users size={20} /><span>{t.mentorships}</span></Link>
-          <Link href="/student/sessions"    className={sharedStyles.navItem}><Video size={20} /><span>{t.mySessions}</span></Link>
           <Link href="/student/profile"     className={sharedStyles.navItem}><UserCircle size={20} /><span>{t.profile}</span></Link>
+          <Link href="/student/sessions"    className={sharedStyles.navItem}><Video size={20} /><span>{t.mySessions}</span></Link>
         </nav>
       </aside>
 
@@ -608,24 +706,24 @@ export default function InternshipDetailPage() {
                     <div className={styles.companyAvatarSm} style={{ backgroundColor: accentColor }}>{avatarText}</div>
                     <div>
                       <p className={styles.companyRowName}>{internship.company.name}</p>
-                      <p className={styles.companyRowIndustry}>{internship.company.industry}</p>
+                      <p className={styles.companyRowIndustry}>{internship.company.Industry}</p>
                     </div>
                   </div>
                   <div className={styles.infoRows}>
                     <div className={styles.infoRow}>
                       <MapPin size={13} />
-                      {[internship.company.city, internship.company.country].filter(Boolean).join(', ')}
+                      {[internship.company.City, internship.company.Country].filter(Boolean).join(', ')}
                     </div>
-                    {internship.company.webSit && (
+                    {internship.company.WebSit && (
                       <div className={styles.infoRow}>
                         <ExternalLink size={13} />
-                        <a href={internship.company.webSit} target="_blank" rel="noopener noreferrer"
+                        <a href={internship.company.WebSit} target="_blank" rel="noopener noreferrer"
                           className={styles.infoRowLink} style={{ color: accentColor }}>
-                          {internship.company.webSit.replace(/^https?:\/\//, '')}
+                          {internship.company.WebSit.replace(/^https?:\/\//, '')}
                         </a>
                       </div>
                     )}
-                    <div className={styles.infoRow}><Globe2 size={13} />{internship.company.industry}</div>
+                    <div className={styles.infoRow}><Globe2 size={13} />{internship.company.Industry}</div>
                     <div className={styles.infoRow}>
                       <Users size={13} />
                       {internship.applicationsCount}{' '}

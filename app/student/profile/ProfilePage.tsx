@@ -1,6 +1,5 @@
 'use client'
-
-import { useEffect,  useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -30,56 +29,234 @@ import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './ProfileStyle.module.css'
 import api from '../../lib/api'
 
+interface RawProfile {
+    fullName:   string | null
+    email:      string
+    phone:      string | null
+    university: string | null
+    college:    string | null
+    major:      string | null
+    location:   string | null
+    gradYear:   string | null
+    skills:     string[] | null
+}
+
+// UI-facing shape (used by the JSX — field names match the component)
+interface ProfileData {
+    name:           string
+    email:          string
+    phoneNumber:    string
+    location:       string
+    university:     string
+    college:        string
+    major:          string
+    graduationYear: string
+    skills:         string[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NORMALISER — convert backend shape -> UI shape
+// ─────────────────────────────────────────────────────────────────────────────
+
+function normaliseProfile(raw: RawProfile): ProfileData {
+    return {
+        name:           raw.fullName   ?? '',
+        email:          raw.email      ?? '',
+        phoneNumber:    raw.phone      ?? '',
+        location:       raw.location   ?? '',
+        university:     raw.university ?? '',
+        college:        raw.college    ?? '',
+        major:          raw.major      ?? '',
+        graduationYear: raw.gradYear   ?? '',
+        skills:         Array.isArray(raw.skills) ? raw.skills.filter(Boolean) : [],
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH HELPERS — refresh-token flow per the Request Guide
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function refreshAccessToken(): Promise<string | null> {
+    const refreshToken = localStorage.getItem('refreshToken')
+    if (!refreshToken) return null
+
+    try {
+        const res = await api.post('/auth/refresh-token', { refreshToken })
+        const newAccessToken = res.data?.accessToken ?? res.data?.Data?.accessToken
+        if (!newAccessToken) return null
+
+        localStorage.setItem('token', newAccessToken)
+        if (res.data?.refreshToken) {
+            localStorage.setItem('refreshToken', res.data.refreshToken)
+        }
+        return newAccessToken
+    } catch {
+        return null
+    }
+}
+
+function clearAuthAndRedirect(router: ReturnType<typeof useRouter>) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    router.push('/login')
+}
+
 function ProfilePage() {
     const { theme, toggleTheme, language, setLanguage, t } = useApp()
     const router = useRouter()
-    const [sidebarOpen, setSidebarOpen] = useState(false)
     const [loading, setLoading] = useState(true)
 
-    const defaultProfile = {
-        name: "Ahmed Mohamed",
-        email: "ahmed@example.com",
-        phoneNumber: "+20 123 456 7890",
-        location: "Cairo, Egypt",
-        university: "Cairo University",
-        college: "Faculty of Engineering",
-        major: "Computer Science",
-        graduationYear: "2025",
-        skills: ["React", "TypeScript", "Node.js", "Python"],
+    const defaultProfile: ProfileData = {
+        name:           '',
+        email:          '',
+        phoneNumber:    '',
+        location:       '',
+        university:     '',
+        college:        '',
+        major:          '',
+        graduationYear: '',
+        skills:         [],
     }
 
-    const [profileData, setProfileData] = useState(defaultProfile)
-    const [editData, setEditData] = useState(defaultProfile)
-    const [isEditing, setIsEditing] = useState(false)
-    const [newSkill, setNewSkill] = useState("")
-    const [cvFile, setCvFile] = useState<File | null>(null)
+    const [profileData, setProfileData]   = useState<ProfileData>(defaultProfile)
+    const [editData, setEditData]         = useState<ProfileData>(defaultProfile)
+    const [isEditing, setIsEditing]       = useState(false)
+    const [cvFile, setCvFile]             = useState<File | null>(null)
+    const [sidebarOpen, setSidebarOpen]   = useState(false)
 
     useEffect(() => {
         fetchProfile()
     }, [])
 
     const fetchProfile = async () => {
-        try {
-            setLoading(true)
-            const token = localStorage.getItem('token')
-            const res = await api.get('/api/student/profile', {
-                headers: { Authorization: `Bearer ${token}` }
+        setLoading(true)
+
+        const doFetch = (accessToken: string | null) =>
+            api.get('/Student/Profile', {
+                headers: { Authorization: `Bearer ${accessToken}` },
             })
-            const data = res.data?.data || res.data
-            setProfileData(data)
-            setEditData(data)
-        } catch (err: any) {
-            if (err.response?.status === 401) {
-                router.push('/login')
-                return
+
+        try {
+            const token = localStorage.getItem('token')
+
+            try {
+                const res = await doFetch(token)
+                const raw: RawProfile | null = res.data?.Data ?? res.data?.data ?? null
+                if (raw) {
+                    const normalised = normaliseProfile(raw)
+                    setProfileData(normalised)
+                    setEditData(normalised)
+                }
+            } catch (apiErr: any) {
+                if (apiErr.response?.status === 401) {
+                    const newToken = await refreshAccessToken()
+                    if (!newToken) {
+                        clearAuthAndRedirect(router)
+                        return
+                    }
+                    try {
+                        const retryRes = await doFetch(newToken)
+                        const raw: RawProfile | null = retryRes.data?.Data ?? retryRes.data?.data ?? null
+                        if (raw) {
+                            const normalised = normaliseProfile(raw)
+                            setProfileData(normalised)
+                            setEditData(normalised)
+                        }
+                    } catch (retryErr: any) {
+                        if (retryErr.response?.status === 401) {
+                            clearAuthAndRedirect(router)
+                            return
+                        }
+                        throw retryErr
+                    }
+                } else {
+                    throw apiErr
+                }
             }
-            console.warn('[fetchProfile] API failed, falling back to localStorage/mock:', err)
-            const saved = localStorage.getItem('studentProfile')
-            const profile = saved ? JSON.parse(saved) : defaultProfile
-            setProfileData(profile)
-            setEditData(profile)
+        } catch (err: any) {
+            console.warn('[fetchProfile] API failed, using default empty profile:', err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleSaveProfile = async () => {
+        const doSave = (accessToken: string | null) => {
+            const formData = new FormData()
+            formData.append('fullName',   editData.name)
+            formData.append('email',      editData.email)
+            formData.append('phone',      editData.phoneNumber)
+            formData.append('university', editData.university)
+            formData.append('college',    editData.college)
+            formData.append('major',      editData.major)
+            formData.append('gradYear',   editData.graduationYear)
+            if (cvFile) formData.append('CvFile', cvFile)
+
+            return api.put('/Student/Profile/SaveChange', formData, {
+                headers: {
+                    Authorization:  `Bearer ${accessToken}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            })
+        }
+
+        try {
+            const token = localStorage.getItem('token')
+
+            try {
+                const res = await doSave(token)
+                const info = res.data?.Info ?? res.data?.info
+                if (info?.cvChange) {
+                    alert('Profile updated!')
+                }
+                // Update local state with what we sent (backend echoes Data back)
+                const updatedRaw: RawProfile | null = res.data?.Data ?? res.data?.data ?? null
+                if (updatedRaw) {
+                    const normalised = normaliseProfile(updatedRaw)
+                    setProfileData(normalised)
+                    setEditData(normalised)
+                } else {
+                    setProfileData({ ...editData })
+                }
+                setIsEditing(false)
+                setCvFile(null)
+            } catch (apiErr: any) {
+                if (apiErr.response?.status === 401) {
+                    const newToken = await refreshAccessToken()
+                    if (!newToken) {
+                        clearAuthAndRedirect(router)
+                        return
+                    }
+                    try {
+                        const retryRes = await doSave(newToken)
+                        const updatedRaw: RawProfile | null = retryRes.data?.Data ?? retryRes.data?.data ?? null
+                        if (updatedRaw) {
+                            const normalised = normaliseProfile(updatedRaw)
+                            setProfileData(normalised)
+                            setEditData(normalised)
+                        } else {
+                            setProfileData({ ...editData })
+                        }
+                        setIsEditing(false)
+                        setCvFile(null)
+                    } catch (retryErr: any) {
+                        if (retryErr.response?.status === 401) {
+                            clearAuthAndRedirect(router)
+                            return
+                        }
+                        throw retryErr
+                    }
+                } else if (apiErr.response?.status === 409) {
+                    alert('This email is already in use by another account.')
+                } else if (apiErr.response?.status === 400) {
+                    alert('Please check your inputs and try again.')
+                } else {
+                    throw apiErr
+                }
+            }
+        } catch (err: any) {
+            console.error('[handleSaveProfile]', err)
+            alert(err.message ?? 'Failed to save profile. Please try again.')
         }
     }
 
@@ -90,24 +267,7 @@ function ProfilePage() {
 
     const handleCancel = () => {
         setIsEditing(false)
-    }
-
-    const handleSaveProfile = async () => {
-        try {
-            const token = localStorage.getItem('token')
-            await api.put('/api/student/profile', editData, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-        } catch (err: any) {
-            if (err.response?.status === 401) {
-                router.push('/login')
-                return
-            }
-            console.warn('[handleSaveProfile] API failed, saving locally:', err)
-        }
-        setProfileData({ ...editData })
-        localStorage.setItem('studentProfile', JSON.stringify(editData))
-        setIsEditing(false)
+        setCvFile(null)
     }
 
     const handleFieldChange = (field: keyof Omit<typeof editData, 'skills'>, value: string) => {
@@ -115,20 +275,10 @@ function ProfilePage() {
     }
 
     const displayed = isEditing ? editData : profileData
-
-    const handleSkillAdd = () => {
-        if (newSkill && !editData.skills.includes(newSkill)) {
-            setEditData(prev => ({ ...prev, skills: [...prev.skills, newSkill] }))
-            setNewSkill("")
-        }
-    }
-
+       
+    
     const handleSkillRemove = (skillToRemove: string) => {
         setEditData(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skillToRemove) }))
-    }
-
-    if (loading) {
-        return <LoadingScreen />
     }
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,7 +300,6 @@ function ProfilePage() {
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
         e.stopPropagation()
-
         const file = e.dataTransfer.files?.[0]
         if (file && (file.type === 'application/pdf' ||
             file.type === 'application/msword' ||
@@ -165,6 +314,9 @@ function ProfilePage() {
         document.getElementById('cv-file-input')?.click()
     }
 
+    if (loading) {
+        return <LoadingScreen />
+    }
 
     return (
         <div className={styles.appLayout}>
@@ -172,11 +324,13 @@ function ProfilePage() {
             <div className={styles.glowSecondary} aria-hidden="true" />
             <div className={styles.glowTertiary} aria-hidden="true" />
 
+            {/* Overlay */}
             <div
                 className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
                 onClick={() => setSidebarOpen(false)}
             />
 
+            {/* Sidebar */}
             <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoSection}>
                     <div className={styles.backButton} onClick={() => router.push('/student/dashboard')} role="button" title="Back to Dashboard">
@@ -201,13 +355,13 @@ function ProfilePage() {
                         <Users size={20} />
                         <span>{t.mentorships}</span>
                     </Link>
-                    <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
-                        <Video size={20} />
-                        <span>{t.mySessions}</span>
-                    </Link>
                     <Link href="/student/profile" className={`${styles.navItem} ${styles.active}`} onClick={() => setSidebarOpen(false)}>
                         <UserCircle size={20} />
                         <span>{t.profile}</span>
+                    </Link>
+                    <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
+                        <Video size={20} />
+                        <span>{t.mySessions}</span>
                     </Link>
                 </nav>
             </aside>
@@ -365,17 +519,8 @@ function ProfilePage() {
                                 ))}
                             </div>
 
-                            {isEditing && (
-                                <div className={styles.addSkillContainer}>
-                                    <input type="text" className={styles.input} placeholder={t.addSkillPlaceholder}
-                                        value={newSkill} onChange={(e) => setNewSkill(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleSkillAdd()} />
-                                    <button className={styles.addButton} onClick={handleSkillAdd}>{t.addButton}</button>
-                                </div>
-                            )}
+                          
                         </div>
-
-                        {/* No bottom save button - handled by editBarTop */}
                     </div>
                 </div>
             </main>

@@ -1559,4 +1559,20 @@
 :global(body.light-mode) .hamburgerBtn:hover {
   background: #f1f5f9;
   color: #1e293b;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.errorMessage {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+:global(body.light-mode) .errorMessage {
+  color: #dc2626;
 }

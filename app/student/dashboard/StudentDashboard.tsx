@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -27,22 +26,183 @@ import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './DashboardStyle.module.css'
 import api from '../../lib/api'
 
+
+// Raw shape from GET /Student/Dashboard -> Data
+interface RawDashboardStats {
+  numApplyedInternships: number
+  numBookingSession: number
+  upcomingSessionDate: string | null
+}
+
+// Raw shape from GET /Student/Dashboard/get/recommendedinternships -> Data[]
+interface RawRecommendedInternship {
+  internshipId: number
+  title: string
+  companyName: string | null
+  city: string | null
+  locationType: string // 'Remote' | 'OnSite' | 'Hybrid'
+  matchScore: number    // 0.0 - 1.0
+}
+
+// Raw shape from GET /Student/Dashboard/get/recommendedmentorships -> Data[]
+interface RawRecommendedMentor {
+  mentorId: number
+  mentorName: string
+  jobTitle: string | null
+  yearsExperience: number 
+  avgRating: number
+  countReviewers: number
+  description: string | null
+  isAvailable: boolean
+  upcomingAvailability: string | null
+  skills: string[] | null
+}
+
+interface InternshipCard {
+  id: number
+  title: string
+  company: string
+  location: string
+  match: number // 0-100
+}
+
+interface MentorCard {
+  id: number
+  name: string
+  field: string
+  rating: number
+  experience: string
+  available: boolean
+}
+
+interface DashboardStats {
+  appliedInternships: number
+  sessionsBooked: number
+  upcomingSession: string
+}
+
+
+function normaliseStats(raw: RawDashboardStats): DashboardStats {
+  return {
+    appliedInternships: raw.numApplyedInternships ?? 0,
+    sessionsBooked: raw.numBookingSession ?? 0,
+    upcomingSession: raw.upcomingSessionDate ?? 'No sessions',
+  }
+}
+
+function normaliseInternship(raw: RawRecommendedInternship): InternshipCard {
+  return {
+    id: raw.internshipId,
+    title: raw.title ?? 'Untitled Position',
+    company: raw.companyName ?? 'Unknown Company',
+    location: raw.city ?? 'Remote',
+    match: Math.round((raw.matchScore ?? 0) * 100),
+  }
+}
+
+function normaliseMentor(raw: RawRecommendedMentor): MentorCard {
+  return {
+    id: raw.mentorId,
+    name: raw.mentorName ?? 'Unknown Mentor',
+    field: raw.jobTitle ?? '',
+    rating: raw.avgRating ?? 0,
+    experience: `${raw.yearsExperience ?? 0} years`,
+    available: Boolean(raw.isAvailable),
+  }
+}
+
+const MOCK_INTERNSHIPS: InternshipCard[] = [
+  { id: 1, title: 'Frontend Developer', company: 'Tech Corp', location: 'Cairo', match: 95 },
+  { id: 2, title: 'UI/UX Designer', company: 'Digital Solutions', location: 'Alexandria', match: 88 },
+  { id: 3, title: 'Full Stack Developer', company: 'Innovation Hub', location: 'Remote', match: 82 },
+]
+
+const MOCK_MENTORS: MentorCard[] = [
+  { id: 1, name: 'Dr. Ahmed Hassan', field: 'Software Engineering', rating: 4.9, experience: '15 years', available: true },
+  { id: 2, name: 'Eng. Sara Mohamed', field: 'Data Science', rating: 4.8, experience: '10 years', available: true },
+  { id: 3, name: 'Prof. Karim Ali', field: 'AI & Machine Learning', rating: 4.7, experience: '12 years', available: false },
+]
+
+const MOCK_STATS: DashboardStats = {
+  appliedInternships: 12,
+  sessionsBooked: 8,
+  upcomingSession: 'Tomorrow 3PM',
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) return null
+
+  try {
+    const res = await api.post('/auth/refresh-token', { refreshToken })
+    const newAccessToken = res.data?.accessToken ?? res.data?.Data?.accessToken
+    if (!newAccessToken) return null
+
+    localStorage.setItem('token', newAccessToken)
+    if (res.data?.refreshToken) {
+      localStorage.setItem('refreshToken', res.data.refreshToken)
+    }
+    return newAccessToken
+  } catch {
+    return null
+  }
+}
+
+function clearAuthAndRedirect(router: ReturnType<typeof useRouter>) {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+  router.push('/login')
+}
+
+// Wraps a request: on 401, tries refresh-token once, retries, else logs out.
+async function authedGet(
+  url: string,
+  router: ReturnType<typeof useRouter>
+): Promise<any | null> {
+  const token = localStorage.getItem('token')
+  try {
+    return await api.get(url, { headers: { Authorization: `Bearer ${token}` } })
+  } catch (err: any) {
+    if (err.response?.status === 401) {
+      const newToken = await refreshAccessToken()
+      if (!newToken) {
+        clearAuthAndRedirect(router)
+        return null
+      }
+      try {
+        return await api.get(url, { headers: { Authorization: `Bearer ${newToken}` } })
+      } catch (retryErr: any) {
+        if (retryErr.response?.status === 401) {
+          clearAuthAndRedirect(router)
+          return null
+        }
+        throw retryErr
+      }
+    }
+    throw err
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+
 function StudentDashboard() {
   const { theme, toggleTheme, language, setLanguage, t } = useApp()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
 
   const router = useRouter()
 
-  const [internships, setInternships] = useState<any[]>([])
-  const [mentors, setMentors] = useState<any[]>([])
-  const [stats, setStats] = useState({
+  const [internships, setInternships] = useState<InternshipCard[]>([])
+  const [mentors, setMentors] = useState<MentorCard[]>([])
+  const [stats, setStats] = useState<DashboardStats>({
     appliedInternships: 0,
     sessionsBooked: 0,
     upcomingSession: 'No sessions'
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [applyingIds, setApplyingIds] = useState<Set<number>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
@@ -52,124 +212,129 @@ function StudentDashboard() {
     try {
       setLoading(true)
       setError(null)
-      const token = localStorage.getItem('token')
-      
-      const res = await api.get('/api/student/dashboard', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      
-      const data = res.data?.data || res.data
-      setInternships(data.internships || [])
-      setMentors(data.mentors || [])
-      setStats(data.stats || {
-        appliedInternships: 0,
-        sessionsBooked: 0,
-        upcomingSession: 'No sessions'
-      })
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.push('/login')
+
+      const results = await Promise.allSettled([
+        authedGet('/Student/Dashboard', router),
+        authedGet('/Student/Dashboard/get/recommendedinternships', router),
+        authedGet('/Student/Dashboard/get/recommendedmentorships', router),
+      ])
+
+      const [statsRes, internshipsRes, mentorsRes] = results
+
+      // If authedGet returned null for any call, it already redirected to /login.
+      if (results.some(r => r.status === 'fulfilled' && r.value === null)) {
         return
       }
-      console.warn('[fetchDashboardData] API failed, falling back to mock:', err)
-      setInternships([
-        {
-          id: 1,
-          title: 'Frontend Developer',
-          company: 'Tech Corp',
-          location: 'Cairo',
-          match: 95
-        },
-        {
-          id: 2,
-          title: 'UI/UX Designer',
-          company: 'Digital Solutions',
-          location: 'Alexandria',
-          match: 88
-        },
-        {
-          id: 3,
-          title: 'Full Stack Developer',
-          company: 'Innovation Hub',
-          location: 'Remote',
-          match: 82
-        }
-      ])
 
-      setMentors([
-        {
-          id: 1,
-          name: 'Dr. Ahmed Hassan',
-          field: 'Software Engineering',
-          rating: 4.9,
-          experience: '15 years',
-          available: true
-        },
-        {
-          id: 2,
-          name: 'Eng. Sara Mohamed',
-          field: 'Data Science',
-          rating: 4.8,
-          experience: '10 years',
-          available: true
-        },
-        {
-          id: 3,
-          name: 'Prof. Karim Ali',
-          field: 'AI & Machine Learning',
-          rating: 4.7,
-          experience: '12 years',
-          available: false
-        }
-      ])
+      // ── Stats ─────────────────────────────────────────────────────────
+      if (statsRes.status === 'fulfilled' && statsRes.value) {
+  const rawStats: RawDashboardStats | null =
+    statsRes.value.data?.data ?? statsRes.value.data?.Data ?? null
+  setStats(rawStats ? normaliseStats(rawStats) : MOCK_STATS)
+}else {
+        console.warn('[fetchDashboardData] stats failed, falling back to mock:',
+          statsRes.status === 'rejected' ? statsRes.reason : 'no data')
+        setStats(MOCK_STATS)
+      }
 
-      setStats({
-        appliedInternships: 12,
-        sessionsBooked: 8,
-        upcomingSession: 'Tomorrow 3PM'
-      })
+      // ── Recommended internships ─────────────────────────────────────────
+      if (internshipsRes.status === 'fulfilled' && internshipsRes.value) {
+        const rawList: RawRecommendedInternship[] | null =
+          internshipsRes.value.data?.Data ?? internshipsRes.value.data?.data ?? null
+          setInternships(rawList ? rawList.map(normaliseInternship) : [])
+      } else {
+        console.warn('[fetchDashboardData] internships failed, falling back to mock:',
+          internshipsRes.status === 'rejected' ? internshipsRes.reason : 'no data')
+        setInternships(MOCK_INTERNSHIPS)
+      }
+
+      // ── Recommended mentors ──────────────────────────────────────────────
+      if (mentorsRes.status === 'fulfilled' && mentorsRes.value) {
+    const rawList: RawRecommendedMentor[] | null =
+      mentorsRes.value.data?.data ?? mentorsRes.value.data?.Data ?? null
+        setMentors(rawList ? rawList.map(normaliseMentor) : [])
+      } else {
+        console.warn('[fetchDashboardData] mentors failed, falling back to mock:',
+          mentorsRes.status === 'rejected' ? mentorsRes.reason : 'no data')
+        setMentors(MOCK_MENTORS)
+      }
+    } catch (err: any) {
+      console.warn('[fetchDashboardData] Unexpected failure, falling back to full mock:', err)
+      setInternships(MOCK_INTERNSHIPS)
+      setMentors(MOCK_MENTORS)
+      setStats(MOCK_STATS)
     } finally {
       setLoading(false)
     }
   }
 
   const handleApplyInternship = async (internshipId: number) => {
+    if (applyingIds.has(internshipId)) return
+    setApplyingIds(prev => new Set(prev).add(internshipId))
+
     try {
-      const token = localStorage.getItem('token')
-      await api.post(`/api/internships/${internshipId}/apply`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      alert('Application submitted successfully!')
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.push('/login')
-        return
+      let token = localStorage.getItem('token')
+
+      const doApply = (accessToken: string | null) =>
+        api.post(
+          `/Student/Internships/internship/apply/${internshipId}`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            // backend returns plain text, not JSON
+            transformResponse: (data) => data,
+          }
+        )
+
+      try {
+        const res = await doApply(token)
+        const message = typeof res.data === 'string' ? res.data : 'Application submitted successfully.'
+        alert(message)
+      } catch (apiErr: any) {
+        if (apiErr.response?.status === 401) {
+          const newToken = await refreshAccessToken()
+          if (!newToken) {
+            clearAuthAndRedirect(router)
+            return
+          }
+          try {
+            const retryRes = await doApply(newToken)
+            const message = typeof retryRes.data === 'string' ? retryRes.data : 'Application submitted successfully.'
+            alert(message)
+          } catch (retryErr: any) {
+            if (retryErr.response?.status === 401) {
+              clearAuthAndRedirect(router)
+              return
+            }
+            throw retryErr
+          }
+        } else if (apiErr.response?.status === 409) {
+          alert('Already applied to this internship.')
+        } else if (apiErr.response?.status === 400 || apiErr.response?.status === 404) {
+          const msg = typeof apiErr.response?.data === 'string'
+            ? apiErr.response.data
+            : 'Unable to apply to this internship.'
+          alert(msg)
+        } else {
+          console.warn('[handleApplyInternship] API failed, simulating local success:', apiErr)
+          alert('Application submitted successfully!')
+        }
       }
-      console.warn('[handleApplyInternship] API failed, simulating local success:', err)
-      alert('Application submitted successfully!')
+    } finally {
+      setApplyingIds(prev => {
+        const next = new Set(prev)
+        next.delete(internshipId)
+        return next
+      })
     }
+
     fetchDashboardData()
   }
 
-  const handleBookSession = async (mentorId: number) => {
-    try {
-      const token = localStorage.getItem('token')
-      await api.post(`/api/sessions/book`, { mentorId }, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      alert('Session booked successfully!')
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.push('/login')
-        return
-      }
-      console.warn('[handleBookSession] API failed, simulating local success:', err)
-      alert('Session booked successfully!')
-    }
-    fetchDashboardData()
+  
+  const handleBookSession = (mentorId: number) => {
+    router.push(`/student/mentorships?mentorId=${mentorId}`)
   }
-
-
 
   if (loading) {
     return <LoadingScreen />
@@ -192,6 +357,7 @@ function StudentDashboard() {
       <div className={styles.glowSecondary} aria-hidden="true" />
       <div className={styles.glowTertiary} aria-hidden="true" />
 
+      {/* Overlay */}
       <div
         className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
         onClick={() => setSidebarOpen(false)}
@@ -224,13 +390,13 @@ function StudentDashboard() {
             <Users size={20} />
             <span>{t.mentorships}</span>
           </Link>
-          <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
-            <Video size={20} />
-            <span>{t.mySessions}</span>
-          </Link>
           <Link href="/student/profile" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
             <UserCircle size={20} />
             <span>{t.profile}</span>
+          </Link>
+          <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
+            <Video size={20} />
+            <span>{t.mySessions}</span>
           </Link>
         </nav>
       </aside>
@@ -302,8 +468,9 @@ function StudentDashboard() {
                   <button
                     className={styles.primaryButton}
                     onClick={() => handleApplyInternship(internship.id)}
+                    disabled={applyingIds.has(internship.id)}
                   >
-                    {t.applyNow}
+                    {applyingIds.has(internship.id) ? '...' : t.applyNow}
                   </button>
                 </div>
               ))
@@ -351,3 +518,17 @@ function StudentDashboard() {
 }
 
 export default StudentDashboard
+
+
+
+
+
+
+
+
+
+
+
+
+
+

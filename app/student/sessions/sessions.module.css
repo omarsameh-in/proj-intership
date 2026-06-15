@@ -964,3 +964,294 @@
   background: #f1f5f9;
   color: #1e293b;
 }
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Modal classes */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.modalContent {
+    background: #1a1f2e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+:global(body.light-mode) .modalContent {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modalTitle {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+:global(body.light-mode) .modalTitle {
+    color: #000000;
+}
+
+.modalDescription {
+    margin-bottom: 1rem;
+    color: #9ca3af;
+    font-size: 0.9rem;
+    white-space: pre-line;
+    line-height: 1.5;
+}
+
+:global(body.light-mode) .modalDescription {
+    color: #475569;
+}
+
+.modalPenaltyText {
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    color: #f87171;
+}
+
+:global(body.light-mode) .modalPenaltyText {
+    color: #ef4444;
+}
+
+.modalButtonGroup {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* Form inputs and labels */
+.formGroup {
+    margin-bottom: 1rem;
+}
+
+.formLabel {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+:global(body.light-mode) .formLabel {
+    color: #475569;
+}
+
+.formSelect {
+    width: 100%;
+    background: rgba(30, 30, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.6rem;
+    color: white;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.formSelect:focus {
+    border-color: #3b82f6;
+}
+
+:global(body.light-mode) .formSelect {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+:global(body.light-mode) .formSelect:focus {
+    border-color: #3b82f6;
+}
+
+.formSelect option {
+    background: #1a1f2e;
+    color: white;
+}
+
+:global(body.light-mode) .formSelect option {
+    background: #ffffff;
+    color: #1e293b;
+}
+
+.formTextarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.6rem;
+    color: white;
+    font-size: 0.9rem;
+    resize: vertical;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.formTextarea:focus {
+    border-color: #3b82f6;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(body.light-mode) .formTextarea {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+:global(body.light-mode) .formTextarea:focus {
+    background: #f8fafc;
+    border-color: #3b82f6;
+}
+
+.starRatingGroup {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.starButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 0;
+    transition: transform 0.1s ease;
+}
+
+.starButton:hover {
+    transform: scale(1.1);
+}
+
+.starActive {
+    color: #fbbf24;
+}
+
+.starInactive {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+:global(body.light-mode) .starInactive {
+    color: rgba(0, 0, 0, 0.2);
+}
+
+.errorMessage {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+:global(body.light-mode) .errorMessage {
+    color: #ef4444;
+}
+
+.warningMessage {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+}
+
+:global(body.light-mode) .warningMessage {
+    color: #d97706;
+}
+
+.loadingText {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+}
+
+:global(body.light-mode) .loadingText {
+    color: #64748b;
+}
+
+/* Status Badge dynamic classes */
+.badgePending {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+:global(body.light-mode) .badgePending {
+    background: rgba(251, 191, 36, 0.1);
+    color: #d97706;
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.badgeConfirmed {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+:global(body.light-mode) .badgeConfirmed {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.badgeInProgress {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+:global(body.light-mode) .badgeInProgress {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+.badgeCompleted {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+:global(body.light-mode) .badgeCompleted {
+    background: rgba(168, 85, 247, 0.1);
+    color: #9333ea;
+    border-color: rgba(168, 85, 247, 0.4);
+}
+
+.badgeCancelled {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+:global(body.light-mode) .badgeCancelled {
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.badgeExpired {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+:global(body.light-mode) .badgeExpired {
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.4);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.badgeDefault {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}

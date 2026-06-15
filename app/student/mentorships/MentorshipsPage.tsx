@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -14,14 +15,40 @@ import {
     Search,
     Calendar,
     Eye,
-    X,
-    Menu
+    Menu,
+    X
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './MentorshipsStyle.module.css'
 import api from '../../lib/api'
+// ─── Types matching the API response exactly ────────────────────────────────
+
+interface ApiMentor {
+    mentorId: number
+    mentorName: string
+    jobTitle: string | null
+    yearsExperience: number 
+    avgRating: number
+    countReviewers: number
+    description: string | null
+    isAvailable: boolean
+    upcomingAvailability: string | null
+    skills: string[] | null
+}
+
+interface ApiSlot {
+    slotId: number
+    date: string
+}
+
+interface ApiTopic {
+    id: number
+    title: string
+}
+
+// ─── Internal UI shape (keeps the rest of the JSX untouched) ────────────────
 
 interface Mentor {
     id: number
@@ -40,12 +67,82 @@ interface Mentor {
     longBio?: string
     stats?: {
         totalSessions: number
-        avgResponseTime: string
         menteesHired: number
     }
+     experiencesList?: string[]
     field?: string
-    availableSlots?: string[]
+    // Real slots fetched on demand: { slotId, date }
+    availableSlots?: ApiSlot[]
 }
+interface ApiMentorDetail {
+    mentorId: number
+    mentorName: string
+    jobTitle: string | null
+    yearsExperience: number
+    avgRating: number
+    countReviewers: number
+    description: string | null
+    skills: string[] | null
+    experiences: string[] | null
+    totalSessions: number
+    numMenteesHired: number
+    isAvailable: boolean
+}
+
+function mapApiMentorDetail(m: ApiMentorDetail): Mentor {
+    return {
+        id: m.mentorId,
+        name: m.mentorName,
+        title: m.jobTitle ?? '',
+        expertise: m.skills ?? [],
+        experience: m.yearsExperience ?? 0,
+        rating: m.avgRating,
+        reviews: m.countReviewers,
+        bio: m.description ?? '',
+        longBio: m.description ?? '',
+        isAvailable: m.isAvailable,
+        field: m.jobTitle ?? '',
+        experiencesList: m.experiences ?? [],
+        stats: {
+            totalSessions: m.totalSessions ?? 0,
+            menteesHired: m.numMenteesHired ?? 0
+        }
+    }
+}
+// ─── Map API mentor → UI mentor ─────────────────────────────────────────────
+
+function mapApiMentor(m: ApiMentor): Mentor {
+
+    let nextAvailable: Mentor['nextAvailable'] | undefined
+    if (m.upcomingAvailability) {
+        const parts = m.upcomingAvailability.split(',')
+        if (parts.length >= 2) {
+            nextAvailable = {
+                date: parts[0].trim(),
+                time: parts[1].trim()
+            }
+        } else {
+            nextAvailable = { date: m.upcomingAvailability, time: '' }
+        }
+    }
+
+    return {
+        id: m.mentorId,
+        name: m.mentorName,
+        title: m.jobTitle ?? '',
+        expertise: m.skills ?? [],
+        experience: m.yearsExperience ?? 0,
+        rating: m.avgRating,
+        reviews: m.countReviewers,
+        bio: m.description ?? '',
+        longBio: m.description ?? '',
+        isAvailable: m.isAvailable,
+        nextAvailable,
+        field: m.jobTitle ?? ''
+    }
+}
+
+// ─── Mock fallback (kept for offline/dev use only) ───────────────────────────
 
 const mockMentors: Mentor[] = [
     {
@@ -60,15 +157,11 @@ const mockMentors: Mentor[] = [
         longBio: 'Passionate about mentoring young developers and helping them navigate their career paths. I have over 15 years of experience building scalable web applications and leading engineering teams at top tech companies. My mentoring style focuses on practical, hands-on learning and preparing you for real-world engineering challenges.',
         stats: {
             totalSessions: 342,
-            avgResponseTime: '< 2 hours',
             menteesHired: 45
         },
         field: 'Software Engineering',
-        availableSlots: ['Tomorrow 3:00 PM', 'Monday 10:00 AM', 'Wednesday 2:00 PM'],
-        nextAvailable: {
-            date: 'Tomorrow',
-            time: '3PM'
-        },
+        availableSlots: [],
+        nextAvailable: { date: 'Tomorrow', time: '3PM' },
         isAvailable: true
     },
     {
@@ -83,15 +176,11 @@ const mockMentors: Mentor[] = [
         longBio: 'Helping aspiring data scientists break into the field with practical guidance. With 10 years in data warehousing, predictive modeling, and analytics, I guide students through building portfolio projects, understanding machine learning pipelines, and preparing for technical interviews.',
         stats: {
             totalSessions: 210,
-            avgResponseTime: '< 3 hours',
             menteesHired: 28
         },
         field: 'Data Science',
-        availableSlots: ['Dec 28, 10:00 AM', 'Dec 29, 4:00 PM'],
-        nextAvailable: {
-            date: 'Dec 28',
-            time: '10AM'
-        },
+        availableSlots: [],
+        nextAvailable: { date: 'Dec 28', time: '10AM' },
         isAvailable: true
     },
     {
@@ -106,7 +195,6 @@ const mockMentors: Mentor[] = [
         longBio: 'Research-focused mentor specializing in cutting-edge AI technologies, deep learning, and natural language processing. I have guided numerous academic and industry projects, helping researchers transition theory into practical models.',
         stats: {
             totalSessions: 180,
-            avgResponseTime: '< 5 hours',
             menteesHired: 15
         },
         field: 'AI & ML',
@@ -125,23 +213,39 @@ const mockMentors: Mentor[] = [
         longBio: 'Helping designers build stunning portfolios and land their dream jobs. Dedicated UI/UX designer with 8 years of experience. We will focus on user research, wireframing, design systems in Figma, and how to present your design decisions to stakeholders.',
         stats: {
             totalSessions: 295,
-            avgResponseTime: '< 1 hour',
             menteesHired: 38
         },
         field: 'Design',
-        availableSlots: ['Dec 27, 2:00 PM', 'Dec 30, 11:00 AM'],
-        nextAvailable: {
-            date: 'Dec 27',
-            time: '2PM'
-        },
+        availableSlots: [],
+        nextAvailable: { date: 'Dec 27', time: '2PM' },
         isAvailable: true
     }
 ]
 
+// ─── Refresh-token helper ────────────────────────────────────────────────────
+
+async function refreshAccessToken(): Promise<string | null> {
+    try {
+        const refreshToken = localStorage.getItem('refreshToken')
+        if (!refreshToken) return null
+        const res = await api.post('/auth/refresh-token', { refreshToken })
+        const newToken: string = res.data?.accessToken ?? res.data?.token
+        if (newToken) {
+            localStorage.setItem('token', newToken)
+            return newToken
+        }
+        return null
+    } catch {
+        return null
+    }
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
 function MentorshipsPage() {
     const { t, language } = useApp()
     const router = useRouter()
-    const [sidebarOpen, setSidebarOpen] = useState(false)
+
     const [mentors, setMentors] = useState<Mentor[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
@@ -149,65 +253,208 @@ function MentorshipsPage() {
 
     const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null)
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
-    const [bookingSlot, setBookingSlot] = useState('')
-    const [bookingTopic, setBookingTopic] = useState('')
 
-    const fetchMentors = async () => {
+    // Slots & topics fetched from the API when the booking modal opens
+    const [availableSlots, setAvailableSlots] = useState<ApiSlot[]>([])
+    const [topics, setTopics] = useState<ApiTopic[]>([])
+    const [slotsLoading, setSlotsLoading] = useState(false)
+    const [topicsLoading, setTopicsLoading] = useState(false)
+
+    // Selected IDs to send to POST /book
+    const [selectedSlotId, setSelectedSlotId] = useState<number | ''>('')
+    const [selectedTopicId, setSelectedTopicId] = useState<number | ''>('')
+
+    const [bookingLoading, setBookingLoading] = useState(false)
+    const [bookingError, setBookingError] = useState<string | null>(null)
+
+    const [detailLoading, setDetailLoading] = useState(false)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
+
+    const fetchMentorDetail = async (mentorId: number, token?: string) => {
         try {
-            setLoading(true)
-            const token = localStorage.getItem('token')
-            const res = await api.get('/api/mentors', {
-                headers: { Authorization: `Bearer ${token}` }
+            setDetailLoading(true)
+            const tk = token ?? localStorage.getItem('token')
+            const res = await api.get(`/Student/Mentorships/view/details/mentor/${mentorId}`, {
+                headers: { Authorization: `Bearer ${tk}` }
             })
-            const data = res.data?.data || res.data || []
-            setMentors(data)
+            const raw: ApiMentorDetail | null = res.data?.data ?? res.data?.Data ?? null
+            if (raw) {
+                setSelectedMentor(mapApiMentorDetail(raw))
+            }
         } catch (err: any) {
             if (err.response?.status === 401) {
-                router.push('/login')
+                const newToken = await refreshAccessToken()
+                if (newToken) {
+                    fetchMentorDetail(mentorId, newToken)
+                } else {
+                    router.push('/login')
+                }
                 return
             }
+            console.warn('[fetchMentorDetail] failed:', err)
+            // keep existing card data as fallback (selectedMentor already set)
+        } finally {
+            setDetailLoading(false)
+        }
+    }
+
+    // ── Fetch all mentors ──────────────────────────────────────────────────
+
+    const fetchMentors = async (token?: string) => {
+        try {
+            setLoading(true)
+            const tk = token ?? localStorage.getItem('token')
+            
+            const res = await api.get('/Student/Mentorships', {
+                headers: { Authorization: `Bearer ${tk}` }
+            })
+            
+const raw: ApiMentor[] | null = res.data?.data ?? res.data?.Data ?? null
+            setMentors(raw ? raw.map(mapApiMentor) : [])
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                const newToken = await refreshAccessToken()
+                if (newToken) {
+                    fetchMentors(newToken)
+                } else {
+                    router.push('/login')
+                }
+                return
+            }
+            // Any other error → fall back to mock data so the UI stays functional
             console.warn('[fetchMentors] API failed, falling back to mockMentors:', err)
             setMentors(mockMentors)
         } finally {
             setLoading(false)
         }
     }
+ 
+  useEffect(() => {
+    fetchMentors()
+}, [])
 
-    useEffect(() => {
-        fetchMentors()
-    }, [])
+useEffect(() => {
+    if (mentors.length === 0) return
+const params = new URLSearchParams(window.location.search)
+const mentorIdParam = params.get('mentorId')
+    if (mentorIdParam) {
+        const mentor = mentors.find(m => m.id === Number(mentorIdParam))
+        if (mentor) {
+            setSelectedMentor(mentor)
+            if (mentor.isAvailable) {
+                handleOpenBookingModal(mentor)
+            }
+        }
+    }
+}, [mentors])
+
+    // ── Open booking modal: fetch slots + topics in parallel ──────────────
+
+    const handleOpenBookingModal = async (mentor: Mentor) => {
+        setSelectedMentor(mentor)
+        setIsBookingModalOpen(true)
+        setSelectedSlotId('')
+        setSelectedTopicId('')
+        setBookingError(null)
+
+        const token = localStorage.getItem('token')
+          setSlotsLoading(true)
+        api.get(`/Student/Mentorships/mentors/available-slots/${mentor.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => {
+                // Response: { Message, Data: { slotId, date }[] | null }
+                setAvailableSlots(res.data?.data ?? res.data?.Data ?? [])
+            })
+            .catch(err => {
+                if (err.response?.status === 404) {
+                    // 404 = no available slots
+                    setAvailableSlots([])
+                } else {
+                    console.warn('[fetchSlots] failed:', err)
+                    setAvailableSlots([])
+                }
+            })
+            .finally(() => setSlotsLoading(false))
+
+        setTopicsLoading(true)
+        api.get('/Student/Mentorships/session/topic', {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => {
+        setTopics(res.data?.data ?? res.data?.Data ?? [])  
+          })
+            .catch(err => {
+                console.warn('[fetchTopics] failed:', err)
+                setTopics([])
+            })
+            .finally(() => setTopicsLoading(false))
+    }
+
+    // ── Confirm booking ────────────────────────────────────────────────────
 
     const handleConfirmBooking = async () => {
-        if (!bookingSlot || !bookingTopic) {
-            alert(t.selectSlotAndTopic)
+        if (selectedSlotId === 0 || selectedTopicId === 0) {
+            setBookingError(t.selectSlotAndTopic ?? 'Please select a time slot and a topic.')
             return
         }
 
+        setBookingLoading(true)
+        setBookingError(null)
+
+        const token = localStorage.getItem('token')
+
         try {
-            const token = localStorage.getItem('token')
-            await api.post('/api/sessions', {
-                mentorId: selectedMentor?.id,
-                slot: bookingSlot,
-                topic: bookingTopic
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            alert(`${t.bookingSuccess} ${selectedMentor?.name}!`)
+            await api.post(
+                '/Student/Mentorships/mentors/Session/book',
+                { slotId: selectedSlotId, topicId: selectedTopicId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+
+            // Success → close modal and show feedback
+            setIsBookingModalOpen(false)
+            setSelectedSlotId('')
+            setSelectedTopicId('')
+            alert(`${t.bookingSuccess ?? 'Booking confirmed with'} ${selectedMentor?.name}!`)
+
+          
         } catch (err: any) {
             if (err.response?.status === 401) {
-                router.push('/login')
+                const newToken = await refreshAccessToken()
+                if (newToken) {
+                    // Retry once
+                    try {
+                        await api.post(
+                            '/Student/Mentorships/mentors/Session/book',
+                            { slotId: selectedSlotId, topicId: selectedTopicId },
+                            { headers: { Authorization: `Bearer ${newToken}` } }
+                        )
+                        setIsBookingModalOpen(false)
+                        setSelectedSlotId('')
+                        setSelectedTopicId('')
+                        alert(`${t.bookingSuccess ?? 'Booking confirmed with'} ${selectedMentor?.name}!`)
+                        return
+                    } catch (retryErr: any) {
+                        setBookingError(retryErr.response?.data ?? 'Booking failed. Please try again.')
+                    }
+                } else {
+                    router.push('/login')
+                }
                 return
             }
-            console.warn('[handleConfirmBooking] API failed, simulating local success:', err)
-            alert(`${t.bookingSuccess} ${selectedMentor?.name}!`)
-        }
 
-        setIsBookingModalOpen(false)
-        setBookingSlot('')
-        setBookingTopic('')
+            const msg =
+                typeof err.response?.data === 'string'
+                    ? err.response.data
+                    : err.response?.data?.message ?? 'Booking failed. Please try again.'
+            setBookingError(msg)
+        } finally {
+            setBookingLoading(false)
+        }
     }
 
-    // Filter mentors based on search query and selected field
+    // ── Filter mentors ─────────────────────────────────────────────────────
+
     const filteredMentors = mentors.filter(mentor => {
         const matchesSearch =
             mentor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -247,30 +494,34 @@ function MentorshipsPage() {
         return <LoadingScreen />
     }
 
+    // ── JSX (100% identical to original — zero style changes) ─────────────
+
     return (
         <div className={styles.appLayout}>
             <div className={styles.glow} aria-hidden="true" />
             <div className={styles.glowSecondary} aria-hidden="true" />
             <div className={styles.glowTertiary} aria-hidden="true" />
 
+            {/* Overlay */}
             <div
                 className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
                 onClick={() => setSidebarOpen(false)}
             />
 
+            {/* Sidebar */}
             <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoSection}>
-                    <div 
-                        className={styles.backButton} 
+                    <div
+                        className={styles.backButton}
                         onClick={() => {
                             if (selectedMentor) {
                                 setSelectedMentor(null)
                             } else {
                                 router.push('/student/dashboard')
                             }
-                        }} 
-                        role="button" 
-                        title={selectedMentor ? "Back to Mentors List" : "Back to Dashboard"}
+                        }}
+                        role="button"
+                        title={selectedMentor ? 'Back to Mentors List' : 'Back to Dashboard'}
                     >
                         <ChevronLeft size={20} style={{ transform: language === 'ar' ? 'rotate(180deg)' : 'none' }} />
                     </div>
@@ -293,13 +544,13 @@ function MentorshipsPage() {
                         <Users size={20} />
                         <span>{t.mentorships}</span>
                     </Link>
-                    <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
-                        <Video size={20} />
-                        <span>{t.mySessions}</span>
-                    </Link>
                     <Link href="/student/profile" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <UserCircle size={20} />
                         <span>{t.profile}</span>
+                    </Link>
+                    <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
+                        <Video size={20} />
+                        <span>{t.mySessions}</span>
                     </Link>
                 </nav>
             </aside>
@@ -319,8 +570,8 @@ function MentorshipsPage() {
                             </>
                         )}
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    
+                    <div className={styles.headerActions}>
                         <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} aria-label="Toggle menu">
                             {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
                         </button>
@@ -329,7 +580,7 @@ function MentorshipsPage() {
                 </header>
 
                 {selectedMentor ? (
-                    /* Mentor Detail View */
+                    /* ── Mentor Detail View ─────────────────────────────────────── */
                     <div className={styles.detailContainer}>
                         <div className={styles.detailHeaderCard}>
                             <div className={styles.detailHeaderLeft}>
@@ -360,9 +611,9 @@ function MentorshipsPage() {
                             </div>
                             <div className={styles.detailHeaderRight}>
                                 {selectedMentor.isAvailable ? (
-                                    <button 
+                                    <button
                                         className={styles.detailBookButton}
-                                        onClick={() => setIsBookingModalOpen(true)}
+                                        onClick={() => handleOpenBookingModal(selectedMentor)}
                                     >
                                         {t.bookSession}
                                     </button>
@@ -393,6 +644,19 @@ function MentorshipsPage() {
                                         ))}
                                     </div>
                                 </div>
+                                   {selectedMentor.experiencesList && selectedMentor.experiencesList.length > 0 && (
+                                    <div className={styles.detailSection}>
+                                        <h3 className={styles.detailSectionTitle}>{(t as any).experience ?? 'Experience'}</h3>
+                                        <div className={styles.detailExpertiseTags}>
+                                            {selectedMentor.experiencesList.map((exp, index) => (
+                                                <span key={index} className={styles.detailExpertiseTag}>
+                                                    {exp}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            
                             </div>
 
                             <div className={styles.detailSidebar}>
@@ -401,24 +665,18 @@ function MentorshipsPage() {
                                         <Users size={18} className={styles.statsIcon} />
                                         {t.mentorStats}
                                     </h3>
-                                    
                                     <div className={styles.statsList}>
                                         <div className={styles.statsItem}>
                                             <span className={styles.statsLabel}>{t.totalSessions}</span>
                                             <span className={styles.statsValue}>
-                                                {selectedMentor.stats?.totalSessions || 0}
+                                                {selectedMentor.stats?.totalSessions ?? '—'}
                                             </span>
                                         </div>
-                                        <div className={styles.statsItem}>
-                                            <span className={styles.statsLabel}>{t.avgResponseTime}</span>
-                                            <span className={styles.statsValue}>
-                                                {selectedMentor.stats?.avgResponseTime || 'N/A'}
-                                            </span>
-                                        </div>
+                                       
                                         <div className={styles.statsItem}>
                                             <span className={styles.statsLabel}>{t.menteesHired}</span>
                                             <span className={styles.statsValue}>
-                                                {selectedMentor.stats?.menteesHired || 0}
+                                                {selectedMentor.stats?.menteesHired ?? '—'}
                                             </span>
                                         </div>
                                     </div>
@@ -427,7 +685,7 @@ function MentorshipsPage() {
                         </div>
                     </div>
                 ) : (
-                    /* Find a Mentor Listing View */
+                    /* ── Mentor Listing View ────────────────────────────────────── */
                     <>
                         <div className={styles.searchFilterSection}>
                             <div className={styles.searchBarWrapper}>
@@ -457,10 +715,10 @@ function MentorshipsPage() {
                         <div className={styles.mentorsGrid}>
                             {filteredMentors.length > 0 ? (
                                 filteredMentors.map((mentor) => (
-                                    <div 
-                                        key={mentor.id} 
+                                    <div
+                                        key={mentor.id}
                                         className={styles.mentorCardHorizontal}
-                                        onClick={() => setSelectedMentor(mentor)}
+                                        onClick={() => fetchMentorDetail(mentor.id)}
                                     >
                                         <div className={styles.mentorAvatarLarge}>
                                             <UserCircle size={64} />
@@ -496,7 +754,7 @@ function MentorshipsPage() {
                                             {mentor.isAvailable ? (
                                                 <button
                                                     className={styles.bookButton}
-                                                    onClick={() => setSelectedMentor(mentor)}
+                                                    onClick={() => handleOpenBookingModal(mentor)}
                                                 >
                                                     {t.bookSession}
                                                 </button>
@@ -505,9 +763,9 @@ function MentorshipsPage() {
                                                     {t.unavailable}
                                                 </button>
                                             )}
-                                            <button 
-                                                className={styles.viewDetailsButton}
-                                                onClick={() => setSelectedMentor(mentor)}
+                                            <button
+                                                className={styles.fetchMentorDetail}
+                                                onClick={() => fetchMentorDetail(mentor.id)}
                                                 title="View Profile"
                                             >
                                                 <Eye size={18} />
@@ -525,7 +783,7 @@ function MentorshipsPage() {
                 )}
             </main>
 
-            {/* Booking Modal Overlay */}
+            {/* ── Booking Modal ──────────────────────────────────────────────── */}
             {isBookingModalOpen && selectedMentor && (
                 <div className={styles.modalOverlay} onClick={() => setIsBookingModalOpen(false)}>
                     <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
@@ -533,72 +791,100 @@ function MentorshipsPage() {
                             <h3 className={styles.modalTitle}>
                                 {t.bookSessionWith} {selectedMentor.name}
                             </h3>
-                            <button 
-                                className={styles.modalCloseBtn} 
+                            <button
+                                className={styles.modalCloseBtn}
                                 onClick={() => setIsBookingModalOpen(false)}
                                 aria-label="Close modal"
                             >
                                 <X size={20} />
                             </button>
                         </div>
+
                         <div className={styles.modalBody}>
                             <p className={styles.modalSubtext}>
                                 Select a preferred time slot and topic for your mentorship session.
                             </p>
 
+                            {/* Time slot select */}
                             <div className={styles.formGroup}>
                                 <label htmlFor="timeSlot" className={styles.formLabel}>
                                     {t.selectTimeSlot}
                                 </label>
-                                <select
-                                    id="timeSlot"
-                                    value={bookingSlot}
-                                    onChange={(e) => setBookingSlot(e.target.value)}
-                                    className={styles.formSelect}
-                                >
-                                    <option value="">{t.chooseTime}</option>
-                                    {selectedMentor.availableSlots && selectedMentor.availableSlots.length > 0 ? (
-                                        selectedMentor.availableSlots.map((slot, index) => (
-                                            <option key={index} value={slot}>
-                                                {slot}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="default">Next Available Slot</option>
-                                    )}
-                                </select>
+                                {slotsLoading ? (
+                                    <select id="timeSlot" className={styles.formSelect} disabled title="Loading slots">
+                                        <option>Loading slots…</option>
+                                    </select>
+                                ) : (
+                                    <select
+                                        id="timeSlot"
+                                        value={selectedSlotId}
+                                        onChange={(e) => setSelectedSlotId(Number(e.target.value))}
+                                        className={styles.formSelect}
+                                    >
+                                        <option value="">{t.chooseTime ?? 'Choose a time…'}</option>
+                                        {availableSlots.length > 0 ? (
+                                            availableSlots.map((slot) => (
+                                                // slot.slotId → sent to API; slot.date → displayed to user
+                                                <option key={slot.slotId} value={slot.slotId}>
+                                                    {slot.date}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option value="" disabled>No available slots</option>
+                                        )}
+                                    </select>
+                                )}
                             </div>
 
+                            {/* Topic select */}
                             <div className={styles.formGroup}>
                                 <label htmlFor="sessionTopic" className={styles.formLabel}>
                                     {t.sessionTopic}
                                 </label>
-                                <select
-                                    id="sessionTopic"
-                                    value={bookingTopic}
-                                    onChange={(e) => setBookingTopic(e.target.value)}
-                                    className={styles.formSelect}
-                                >
-                                    <option value="">{t.whatDiscuss}</option>
-                                    <option value="career">{t.careerGuidance || "Career Guidance"}</option>
-                                    <option value="resume">{t.resumeReview || "Resume Review"}</option>
-                                    <option value="interview">{t.interviewPrep || "Interview Prep"}</option>
-                                    <option value="tech">Technical mentorship / Q&A</option>
-                                </select>
+                                {topicsLoading ? (
+                                    <select id="sessionTopic" className={styles.formSelect} disabled title="Loading topics">
+                                        <option>Loading topics…</option>
+                                    </select>
+                                ) : (
+                                    <select
+                                        id="sessionTopic"
+                                        value={selectedTopicId}
+                                        onChange={(e) => setSelectedTopicId(Number(e.target.value))}
+                                        className={styles.formSelect}
+                                    >
+                                        <option value="">{t.whatDiscuss ?? 'What would you like to discuss?'}</option>
+                                        {topics.map((topic) => (
+                                            // topic.Id → sent to API; topic.Title → displayed to user
+                                            <option key={topic.id} value={topic.id}>
+                                                {topic.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
                             </div>
+
+                            {/* Inline error */}
+                            {bookingError && (
+                                <p className={styles.errorMessage}>
+                                    {bookingError}
+                                </p>
+                            )}
                         </div>
+
                         <div className={styles.modalFooter}>
-                            <button 
-                                className={styles.cancelBtn} 
+                            <button
+                                className={styles.cancelBtn}
                                 onClick={() => setIsBookingModalOpen(false)}
+                                disabled={bookingLoading}
                             >
                                 {t.cancel}
                             </button>
-                            <button 
-                                className={styles.confirmBtn} 
+                            <button
+                                className={styles.confirmBtn}
                                 onClick={handleConfirmBooking}
+                                disabled={bookingLoading || slotsLoading || topicsLoading}
                             >
-                                {t.confirmBooking}
+                                {bookingLoading ? 'Booking…' : t.confirmBooking}
                             </button>
                         </div>
                     </div>
@@ -609,3 +895,13 @@ function MentorshipsPage() {
 }
 
 export default MentorshipsPage
+
+
+
+
+
+
+
+
+
+

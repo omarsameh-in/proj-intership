@@ -8,7 +8,6 @@ import {
     Users,
     UserCircle,
     Video,
-    Calendar,
     ChevronLeft,
     Menu,
     X
@@ -25,7 +24,6 @@ export default function MentorLayout({ children }: { children: React.ReactNode }
         { href: '/mentor/dashboard', label: t.dashboard, icon: LayoutDashboard },
         { href: '/mentor/sessions', label: t.mySessions, icon: Video },
         { href: '/mentor/mentees', label: t.myMentees, icon: Users },
-        { href: '/mentor/schedule', label: t.mySchedule, icon: Calendar },
         { href: '/mentor/profile', label: t.profile, icon: UserCircle },
     ]
 
@@ -40,8 +38,6 @@ export default function MentorLayout({ children }: { children: React.ReactNode }
                 className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
                 onClick={() => setSidebarOpen(false)}
             />
-
-
 
             {/* Sidebar */}
             <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>

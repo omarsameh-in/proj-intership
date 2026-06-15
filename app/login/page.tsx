@@ -23,7 +23,7 @@ type Role = 'student' | 'mentor' | 'company' | null
 
 export default function LoginPage() {
   const { theme, toggleTheme, language, setLanguage, t } = useApp()
-  const [selectedRole, setSelectedRole] = useState<Role>('company')
+  const [selectedRole, setSelectedRole] = useState<Role>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)

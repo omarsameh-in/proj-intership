@@ -129,9 +129,9 @@ export default function CompanySignupPage() {
                     industry: formData.industry,
                     location: formData.location,
                     description: formData.description,
-                    website: formData.website,
+                    webSite: formData.website,
                     address: formData.address,
-                    phoneNumber: formData.phoneNumber
+                    phone: formData.phoneNumber
                 }
 
                 await api.post('/Account/signUp/company', payload)

@@ -138,8 +138,27 @@ function Company() {
             const res = await api.get(`/api/company/Dashboard/view/details/${internId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-            const data = res.data?.data || res.data?.Data || res.data
-            setSelectedIntern(data)
+            const raw = res.data?.data || res.data?.Data || res.data
+            const mapped: InternDetails = {
+                internId:           raw.internId ?? 0,
+                title:              raw.title ?? 'Untitled Position',
+                description:        raw.description ?? '',
+                duration:           Number(raw.duration) || 0,
+                locationType:       raw.locationType ?? 'N/A',
+                CreatedAt:          raw.createdAt ?? raw.CreatedAt ?? raw.created ?? raw.Created ?? new Date().toISOString(),
+                DeadlineDate:       raw.deadline ?? raw.deadlineDate ?? raw.DeadlineDate ?? new Date().toISOString(),
+                updateAt:           raw.updateAt ?? raw.UpdateAt,
+                IsPaid:             raw.isPaid ?? raw.IsPaid ?? false,
+                price:              raw.price ?? raw.Price ?? 0,
+                status:             raw.status ?? raw.Status ?? 'N/A',
+                IsOpen:             raw.isOpen ?? raw.IsOpen ?? false,
+                Internship_City:    raw.internship_City ?? raw.Internship_City ?? '',
+                Internship_Country: raw.internship_Country ?? raw.Internship_Country ?? '',
+                skills:             Array.isArray(raw.skills) ? raw.skills : [],
+                requirements:       Array.isArray(raw.requirements) ? raw.requirements : [],
+                applicationsCount:  raw.applicationsCount ?? raw.ApplicationsCount ?? 0,
+            }
+            setSelectedIntern(mapped)
         } catch (err: any) {
             if (err.response?.status === 401) {
                 router.push('/login')
@@ -438,22 +457,22 @@ function Company() {
                                         </div>
                                     </div>
 
-                                    {selectedIntern.skills.length > 0 && (
+                                    {selectedIntern.skills?.length > 0 && (
                                         <div className={styles.modalSection}>
                                             <h4 className={styles.sectionLabel}>Skills</h4>
                                             <div className={styles.tagsList}>
-                                                {selectedIntern.skills.map((skill, i) => (
+                                                {selectedIntern.skills?.map((skill, i) => (
                                                     <span key={i} className={styles.tag}>{skill}</span>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
 
-                                    {selectedIntern.requirements.length > 0 && (
+                                    {selectedIntern.requirements?.length > 0 && (
                                         <div className={styles.modalSection}>
                                             <h4 className={styles.sectionLabel}>Requirements</h4>
                                             <div className={styles.tagsList}>
-                                                {selectedIntern.requirements.map((req, i) => (
+                                                {selectedIntern.requirements?.map((req, i) => (
                                                     <span key={i} className={styles.tag}>{req}</span>
                                                 ))}
                                             </div>

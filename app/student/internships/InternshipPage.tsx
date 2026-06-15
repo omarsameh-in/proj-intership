@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -27,20 +26,27 @@ import { useAppliedInternships } from '../../hooks/useAppliedInternships'
 import api from '../../lib/api'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TYPES
+// TYPES — matching backend response shapes
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Raw shape of one item from GET /Student/Internships -> data[]
+// (lowercase "data" per the Response Guide)
 interface RawInternshipListItem {
-  internshipId:   number
-  title:          string
-  companyName:    string
-  durationMonths: number
-  locationType:   string
-  city:           string
-  deadline:       string
-  requiredSkills: string[]
-  paidStatus:     string
-  price:          number
+  internshipId:    number
+  title:           string
+  companyName:     string
+  durationMonths:  number
+  locationType:    string            // 'Remote' | 'OnSite' | 'Hybrid'
+  city?:           string | null
+  deadline:        string            // ISO date string
+  requiredSkills:  string[]
+  paidStatus:      string            // e.g. 'Paid' | 'Unpaid'
+  price?:          number | null
+}
+// Raw shape of one item from GET /Student/Internships/get/matchscore -> data[]
+interface RawMatchScoreItem {
+  internshipId: number
+  score:        number // 0.0 - 1.0
 }
 
 interface Internship {
@@ -82,127 +88,232 @@ function initials(name: string): string {
     .join('')
 }
 
-const ARABIC_MONTHS: Record<string, number> = {
-  'يناير': 0, 'فبراير': 1, 'مارس': 2,  'أبريل': 3,
-  'مايو':  4, 'يونيو':  5, 'يوليو': 6, 'أغسطس': 7,
-  'سبتمبر': 8, 'أكتوبر': 9, 'نوفمبر': 10, 'ديسمبر': 11,
+// Format an ISO date string into a readable label, e.g. "May 30, 2026"
+function formatDeadline(iso: string): { label: string; date: Date | null } {
+  if (!iso) return { label: 'N/A', date: null }
+  const date = new Date(iso)
+  if (isNaN(date.getTime())) return { label: 'N/A', date: null }
+  const label = date.toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  })
+  return { label, date }
 }
 
-function parseArabicDeadline(raw: string): Date | null {
-  try {
-    const clean = raw.trim()
-    const match = clean.match(/^(\S+)\s+(\d+),?\s+(\d{4})$/)
-    if (!match) return null
-    const [, monthAr, day, year] = match
-    const monthIdx = ARABIC_MONTHS[monthAr]
-    if (monthIdx === undefined) return null
-    return new Date(Number(year), monthIdx, Number(day), 23, 59, 59)
-  } catch {
-    return null
-  }
+// Map backend location_type values ('OnSite') to the values used by the
+// type filter dropdown ('on-site') so filtering keeps working correctly.
+function normaliseWorkType(raw: string | null | undefined): string {
+  if (!raw) return 'N/A'
+  const lower = raw.toLowerCase()
+  if (lower === 'onsite' || lower === 'on-site' || lower === 'on site') return 'On-site'
+  if (lower === 'remote') return 'Remote'
+  if (lower === 'hybrid') return 'Hybrid'
+  return raw
 }
-
 function normaliseListItem(raw: RawInternshipListItem): Internship {
   if (!raw || typeof raw.internshipId !== 'number') {
     throw new Error(`Invalid list item: ${JSON.stringify(raw)}`)
   }
 
-  const isPaid       = raw.paidStatus?.toLowerCase() !== 'unpaid'
-  const deadlineRaw  = raw.deadline?.trim() ?? ''
-  const deadlineDate = parseArabicDeadline(deadlineRaw)
+  const companyName = raw.companyName ?? 'Unknown Company'
+
+  const { label: deadlineLabel, date: deadlineDate } = formatDeadline(raw.deadline)
+
+  const isPaid = (raw.paidStatus ?? '').toLowerCase() !== 'unpaid' && !!raw.price
+  const salary = isPaid && raw.price
+    ? `${raw.price.toLocaleString()} EGP/month`
+    : 'Unpaid'
 
   return {
     id:           raw.internshipId,
-    title:        raw.title        ?? 'Untitled Position',
-    company:      raw.companyName  ?? 'Unknown Company',
-    avatar:       initials(raw.companyName ?? 'XX'),
+    title:        raw.title ?? 'Untitled Position',
+    company:      companyName,
+    avatar:       initials(companyName),
     avatarColor:  colorFromId(raw.internshipId),
-    location:     raw.city         ?? 'N/A',
-    workType:     raw.locationType ?? 'N/A',
-    duration:     raw.durationMonths
-                    ? `${raw.durationMonths} month${raw.durationMonths !== 1 ? 's' : ''}`
-                    : 'N/A',
-    salary:       isPaid ? `${(raw.price ?? 0).toLocaleString()} EGP/month` : 'Unpaid',
+    location:     raw.city ?? 'N/A',
+    workType:     normaliseWorkType(raw.locationType),
+    duration:     raw.durationMonths ? `${raw.durationMonths} month${raw.durationMonths !== 1 ? 's' : ''}` : 'N/A',
+    salary,
     salaryColor:  isPaid ? '#10B981' : '#EF5B5B',
-    deadline:     deadlineRaw || 'N/A',
+    deadline:     deadlineLabel,
     deadlineDate,
     skills:       Array.isArray(raw.requiredSkills) ? raw.requiredSkills.filter(Boolean) : [],
     isPaid,
     matchScore:   null,
   }
 }
-
 function isDeadlinePassed(date: Date | null): boolean {
   if (!date) return false
   return date < new Date()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK DATA 
+// MOCK DATA — kept as fallback, now produced directly as `Internship[]`
+// so the UI keeps working even before backend integration / on failure.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MOCK_RAW_LIST: RawInternshipListItem[] = [
+const MOCK_INTERNSHIPS: Internship[] = [
   {
-    internshipId:   2,
-    title:          'Backend .NET Intern',
-    companyName:    'TechNova Solutions Updated',
-    durationMonths: 3,
-    locationType:   'Remote',
-    city:           'Cairo',
-    deadline:       'مايو 30, 2026',
-    requiredSkills: ['c#', 'asp.net core', 'sql'],
-    paidStatus:     'Paid',
-    price:          2000,
+    id: 2,
+    title: 'Backend .NET Intern',
+    company: 'TechNova Solutions Updated',
+    avatar: initials('TechNova Solutions Updated'),
+    avatarColor: colorFromId(2),
+    location: 'Cairo',
+    workType: 'Remote',
+    duration: '3 months',
+    salary: '2,000 EGP/month',
+    salaryColor: '#10B981',
+    deadline: 'May 30, 2026',
+    deadlineDate: new Date(2026, 4, 30, 23, 59, 59),
+    skills: ['c#', 'asp.net core', 'sql'],
+    isPaid: true,
+    matchScore: 88,
   },
   {
-    internshipId:   3,
-    title:          'Front End',
-    companyName:    'TechNova Solutions',
-    durationMonths: 5,
-    locationType:   'Remote',
-    city:           'Cairo',
-    deadline:       'مايو 30, 2026',
-    requiredSkills: ['c#', 'asp.net core', 'sql'],
-    paidStatus:     'Unpaid',
-    price:          0,
+    id: 8,
+    title: 'Backend Node js  Intern',
+    company: 'TechNova Solutions Updated',
+    avatar: initials('TechNova Solutions Updated'),
+    avatarColor: colorFromId(2),
+    location: 'Cairo',
+    workType: 'Remote',
+    duration: '3 months',
+    salary: '2,000 EGP/month',
+    salaryColor: '#10B981',
+    deadline: 'May 30, 2026',
+    deadlineDate: new Date(2026, 4, 30, 23, 59, 59),
+    skills: ['c#', 'js', 'sql'],
+    isPaid: true,
+    matchScore: 88,
   },
   {
-    internshipId:   4,
-    title:          'UI/UX Designer Intern',
-    companyName:    'Digital Solutions',
-    durationMonths: 4,
-    locationType:   'Hybrid',
-    city:           'Alexandria',
-    deadline:       'Jan 15, 2025',
-    requiredSkills: ['Figma', 'Adobe XD', 'Prototyping'],
-    paidStatus:     'Paid',
-    price:          4500,
+    id: 3,
+    title: 'Front End',
+    company: 'TechNova Solutions',
+    avatar: initials('TechNova Solutions'),
+    avatarColor: colorFromId(3),
+    location: 'Cairo',
+    workType: 'Remote',
+    duration: '5 months',
+    salary: 'Unpaid',
+    salaryColor: '#EF5B5B',
+    deadline: 'May 30, 2026',
+    deadlineDate: new Date(2026, 4, 30, 23, 59, 59),
+    skills: ['c#', 'asp.net core', 'sql'],
+    isPaid: false,
+    matchScore: 76,
   },
   {
-    internshipId:   5,
-    title:          'Full Stack Developer',
-    companyName:    'Innovation Hub',
-    durationMonths: 6,
-    locationType:   'Remote',
-    city:           'Remote',
-    deadline:       'Jan 20, 2025',
-    requiredSkills: ['Node.js', 'MongoDB', 'React'],
-    paidStatus:     'Unpaid',
-    price:          0,
+    id: 4,
+    title: 'UI/UX Designer Intern',
+    company: 'Digital Solutions',
+    avatar: initials('Digital Solutions'),
+    avatarColor: colorFromId(4),
+    location: 'Alexandria',
+    workType: 'Hybrid',
+    duration: '4 months',
+    salary: '4,500 EGP/month',
+    salaryColor: '#10B981',
+    deadline: 'Jan 15, 2025',
+    deadlineDate: new Date(2025, 0, 15, 23, 59, 59),
+    skills: ['Figma', 'Adobe XD', 'Prototyping'],
+    isPaid: true,
+    matchScore: 88,
   },
   {
-    internshipId:   6,
-    title:          'Data Analyst Intern',
-    companyName:    'Startup Labs',
-    durationMonths: 3,
-    locationType:   'On-site',
-    city:           'Giza',
-    deadline:       'Dec 25, 2024',
-    requiredSkills: ['Python', 'SQL', 'Excel'],
-    paidStatus:     'Paid',
-    price:          6000,
+    id: 5,
+    title: 'Full Stack Developer',
+    company: 'Innovation Hub',
+    avatar: initials('Innovation Hub'),
+    avatarColor: colorFromId(5),
+    location: 'Remote',
+    workType: 'Remote',
+    duration: '6 months',
+    salary: 'Unpaid',
+    salaryColor: '#EF5B5B',
+    deadline: 'Jan 20, 2025',
+    deadlineDate: new Date(2025, 0, 20, 23, 59, 59),
+    skills: ['Node.js', 'MongoDB', 'React'],
+    isPaid: false,
+    matchScore: 82,
+  },
+  {
+    id: 6,
+    title: 'Data Analyst Intern',
+    company: 'Startup Labs',
+    avatar: initials('Startup Labs'),
+    avatarColor: colorFromId(6),
+    location: 'Giza',
+    workType: 'On-site',
+    duration: '3 months',
+    salary: '6,000 EGP/month',
+    salaryColor: '#10B981',
+    deadline: 'Dec 25, 2024',
+    deadlineDate: new Date(2024, 11, 25, 23, 59, 59),
+    skills: ['Python', 'SQL', 'Excel'],
+    isPaid: true,
+    matchScore: 75,
   },
 ]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH HELPERS — refresh-token flow per the Request Guide
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) return null
+
+  try {
+    const res = await api.post('/auth/refresh-token', { refreshToken })
+    const newAccessToken = res.data?.accessToken ?? res.data?.Data?.accessToken
+    if (!newAccessToken) return null
+
+    localStorage.setItem('token', newAccessToken)
+    if (res.data?.refreshToken) {
+      localStorage.setItem('refreshToken', res.data.refreshToken)
+    }
+    return newAccessToken
+  } catch {
+    return null
+  }
+}
+
+function clearAuthAndRedirect(router: ReturnType<typeof useRouter>) {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+  router.push('/login')
+}
+
+// Wraps a GET request: on 401, tries refresh-token once, retries, else logs out.
+async function authedGet(
+  url: string,
+  router: ReturnType<typeof useRouter>,
+  extraConfig: Record<string, any> = {}
+): Promise<any | null> {
+  const token = localStorage.getItem('token')
+  try {
+    return await api.get(url, { headers: { Authorization: `Bearer ${token}` }, ...extraConfig })
+  } catch (err: any) {
+    if (err.response?.status === 401) {
+      const newToken = await refreshAccessToken()
+      if (!newToken) {
+        clearAuthAndRedirect(router)
+        return null
+      }
+      try {
+        return await api.get(url, { headers: { Authorization: `Bearer ${newToken}` }, ...extraConfig })
+      } catch (retryErr: any) {
+        if (retryErr.response?.status === 401) {
+          clearAuthAndRedirect(router)
+          return null
+        }
+        throw retryErr
+      }
+    }
+    throw err
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
@@ -227,157 +338,139 @@ function InternshipPage() {
 
   useEffect(() => { fetchInternships() }, [])
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // MATCH SCORES — GET /Student/Internships/get/matchscore
+  // Single bulk call, response: { message, data: [{ InternshipId, Score }] }
+  // Score is 0.0-1.0 -> convert to 0-100 for display.
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!internships.length) return
-
-    // 💥 BACKEND 💥💥💥💥💥💥💥💥💥
-    //
-    // const token = localStorage.getItem('token')
-    // internships.forEach(async ({ id }) => {
-    //   try {
-    //     const res = await fetch(`/api/internships/${id}/match-score`, {
-    //       headers: { Authorization: `Bearer ${token}` },
-    //     })
-    //     if (!res.ok) return
-    //     const { matchScore } = await res.json()
-    //     setInternships(prev =>
-    //       prev.map(i => i.id === id ? { ...i, matchScore } : i)
-    //     )
-    //   } catch { }
-    // })
-
-    // 💥 MOCK match scores 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    if (internships.every(i => i.matchScore !== null)) return
 
     const fetchMatchScores = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const updated = await Promise.all(
-          internships.map(async (i) => {
-            if (i.matchScore !== null) return i
-            try {
-              const res = await api.get(`/api/internships/${i.id}/match-score`, {
-                headers: { Authorization: `Bearer ${token}` }
-              })
-              return { ...i, matchScore: res.data?.matchScore ?? null }
-            } catch {
-              const mockScores: Record<number, number> = { 2: 88, 3: 76, 4: 88, 5: 82, 6: 75 }
-              return { ...i, matchScore: mockScores[i.id] ?? null }
-            }
-          })
-        )
-        setInternships(updated)
-      } catch {
-        const mockScores: Record<number, number> = { 2: 88, 3: 76, 4: 88, 5: 82, 6: 75 }
+        const res = await authedGet('/Student/Internships/get/matchscore', router)
+        if (!res) return // already redirected to /login
+
+        const rawList: RawMatchScoreItem[] | null = res.data?.data ?? null
+        if (!rawList) {
+          // Data null = no open internships to score against -> leave as is
+          return
+        }
+
+        const scoreMap = new Map<number, number>()
+        rawList.forEach(item => {
+          scoreMap.set(item.internshipId, Math.round((item.score ?? 0) * 100))
+        })
+
         setInternships(prev =>
-          prev.map(i => ({ ...i, matchScore: mockScores[i.id] ?? null }))
+          prev.map(i => ({
+            ...i,
+            matchScore: scoreMap.has(i.id) ? scoreMap.get(i.id)! : i.matchScore,
+          }))
         )
+      } catch (err) {
+        console.warn('[fetchMatchScores] Failed, keeping existing/mock scores:', err)
       }
     }
+
     fetchMatchScores()
   }, [internships.length])
 
   // ─────────────────────────────────────────────────────────────────────────
-  // FETCH — GET /api/internships
+  // FETCH — GET /Student/Internships
+  // Response: { Message, data: [...] } (lowercase "data")
   // ─────────────────────────────────────────────────────────────────────────
 
   const fetchInternships = async () => {
     setLoading(true)
     setError(null)
 
-    // 💥 BACKEND 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
-    //
-    // const token = localStorage.getItem('token')
-    // const res = await fetch('/api/internships', {
-    //   headers: { Authorization: `Bearer ${token}` },
-    // })
-    // if (res.status === 401) { router.push('/login'); return }
-    // if (res.status === 403) { setError('Not authorised.'); setLoading(false); return }
-    // if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`)
-    //
-    // const json = await res.json()
-    // const rawList: RawInternshipListItem[] = json.data ?? []
-    // const validated = rawList
-    //   .map((item, idx) => {
-    //     try   { return normaliseListItem(item) }
-    //     catch (e) { console.warn(`[internships] Skipping item[${idx}]:`, e); return null }
-    //   })
-    //   .filter(Boolean) as Internship[]
-    //
-    // 💥 لما نرجع hasApplied، seed الـ sessionStorage 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
-    // validated.forEach(i => { if ((i as any).hasApplied) markApplied(i.id) })
-    //
-    // setInternships(validated)
-
-    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
-
     try {
-      const token = localStorage.getItem('token')
-      const res = await api.get('/api/internships', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const rawList: RawInternshipListItem[] = res.data?.data || res.data || []
+      const res = await authedGet('/Student/Internships', router)
+      if (!res) return // already redirected to /login
+
+      const rawList: RawInternshipListItem[] | null = res.data?.data ?? res.data?.Data ?? null
+
+      // Data null -> backend has no open internships -> empty state
+      if (rawList === null) {
+        setInternships([])
+        return
+      }
+
       const validated = rawList
         .map((item, idx) => {
           try { return normaliseListItem(item) }
           catch (e) { console.warn(`[internships] Skipping item[${idx}]:`, e); return null }
         })
         .filter(Boolean) as Internship[]
-      
-      validated.forEach(i => { if ((i as any).hasApplied) markApplied(i.id) })
+
       setInternships(validated)
     } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.push('/login')
-        return
-      }
       console.warn('[fetchInternships] Failed, falling back to mock data:', err)
       await new Promise(r => setTimeout(r, 200))
-      setInternships(MOCK_RAW_LIST.map(normaliseListItem))
+      setInternships(MOCK_INTERNSHIPS)
     } finally {
       setLoading(false)
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // APPLY — POST /api/internships/:id/apply
-  // ─────────────────────────────────────────────────────────────────────────
-
   const handleApply = async (internshipId: number) => {
     if (applyingIds.has(internshipId)) return
     setApplyingIds(prev => new Set(prev).add(internshipId))
 
-    // 💥 BACKEND 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
-    //
-    // const token = localStorage.getItem('token')
-    // const res = await fetch(`/api/internships/${internshipId}/apply`, {
-    //   method:  'POST',
-    //   headers: {
-    //     Authorization:  `Bearer ${token}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    // })
-    // if (res.status === 401) { router.push('/login'); return }
-    // if (!res.ok) {
-    //   const body = await res.json().catch(() => ({}))
-    //   throw new Error(body.message ?? `Error ${res.status}`)
-    // }
-
-    // 💥 MOCK 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
+    const doApply = (accessToken: string | null) =>
+      api.post(
+        `/Student/Internships/internship/apply/${internshipId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          transformResponse: (data) => data, // backend returns plain text
+        }
+      )
 
     try {
-      const token = localStorage.getItem('token')
+      let token = localStorage.getItem('token')
+
       try {
-        await api.post(`/api/internships/${internshipId}/apply`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const res = await doApply(token)
+        const message = typeof res.data === 'string' ? res.data : 'Application submitted successfully.'
+        markApplied(internshipId)
+        alert(message)
       } catch (apiErr: any) {
         if (apiErr.response?.status === 401) {
-          router.push('/login')
-          return
+          const newToken = await refreshAccessToken()
+          if (!newToken) {
+            clearAuthAndRedirect(router)
+            return
+          }
+          try {
+            const retryRes = await doApply(newToken)
+            const message = typeof retryRes.data === 'string' ? retryRes.data : 'Application submitted successfully.'
+            markApplied(internshipId)
+            alert(message)
+          } catch (retryErr: any) {
+            if (retryErr.response?.status === 401) {
+              clearAuthAndRedirect(router)
+              return
+            }
+            throw retryErr
+          }
+        } else if (apiErr.response?.status === 409) {
+          // Duplicate application — backend says already applied
+          markApplied(internshipId)
+          alert('Already applied to this internship.')
+        } else if (apiErr.response?.status === 400 || apiErr.response?.status === 404) {
+          const msg = typeof apiErr.response?.data === 'string'
+            ? apiErr.response.data
+            : 'Unable to apply to this internship.'
+          alert(msg)
+        } else {
+          console.warn(`[handleApply] API failed, simulating local success:`, apiErr)
+          markApplied(internshipId)
         }
-        console.warn(`[handleApply] API failed, simulating local success:`, apiErr)
       }
-      markApplied(internshipId)
     } catch (err: any) {
       console.error('[handleApply]', err)
       alert(err.message ?? 'Failed to submit application. Please try again.')
@@ -451,8 +544,8 @@ function InternshipPage() {
           <Link href="/student/dashboard"   className={styles.navItem}><LayoutDashboard size={20} /><span>{t.dashboard}</span></Link>
           <Link href="/student/internships" className={`${styles.navItem} ${styles.active}`}><Briefcase size={20} /><span>{t.internships}</span></Link>
           <Link href="/student/mentorships" className={styles.navItem}><Users size={20} /><span>{t.mentorships}</span></Link>
-          <Link href="/student/sessions"    className={styles.navItem}><Video size={20} /><span>{t.mySessions}</span></Link>
           <Link href="/student/profile"     className={styles.navItem}><UserCircle size={20} /><span>{t.profile}</span></Link>
+          <Link href="/student/sessions"    className={styles.navItem}><Video size={20} /><span>{t.mySessions}</span></Link>
         </nav>
       </aside>
 
