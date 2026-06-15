@@ -233,6 +233,8 @@ export const translations = {
         myMentees: "My Mentees",
         menteeProfile: "Mentee Profile",
         mentoringSince: "Mentoring Since",
+        averageRating: "Average Rating",
+        start: "Start",
 
         // Company Dashboard
         companyWelcome: "Welcome back, Company!",
@@ -396,6 +398,8 @@ export const translations = {
         myMentees: "طلابي",
         menteeProfile: "ملف الطالب",
         mentoringSince: "تاريخ البدء",
+        averageRating: "متوسط التقييم",
+        start: "بدء",
 
         // Company Dashboard
         companyWelcome: "مرحباً بعودتك، شركة!",

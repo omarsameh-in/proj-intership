@@ -7,7 +7,9 @@ import {
     Clock,
     Calendar,
     Menu,
-    X
+    X,
+    Star,
+    Video
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
@@ -29,7 +31,8 @@ function MentorDashboard() {
     const [stats, setStats] = useState({
         totalSessions: 0,
         activeMentees: 0,
-        hoursThisMonth: 0
+        hoursThisMonth: 0,
+        averageRating: 4.9
     })
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -53,7 +56,8 @@ function MentorDashboard() {
             setStats({
                 totalSessions: data.totalSessions || 0,
                 activeMentees: data.activeMentees || 0,
-                hoursThisMonth: data.hoursThisMonth || 0
+                hoursThisMonth: data.hoursThisMonth || 0,
+                averageRating: data.averageRating || 4.9
             })
         } catch (err: any) {
             if (err.response?.status === 401) {
@@ -118,14 +122,31 @@ function MentorDashboard() {
             setStats({
                 totalSessions: 47,
                 activeMentees: 12,
-                hoursThisMonth: 24
+                hoursThisMonth: 24,
+                averageRating: 4.9
             })
         } finally {
             setLoading(false)
         }
     }
 
-
+    const handleStartMeeting = async (sessionId: number) => {
+        try {
+            const token = localStorage.getItem('token')
+            const res = await api.get(`/Mentor/MySessions/joinMeeting/${sessionId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const link = res.data?.link || res.data
+            if (link) {
+                window.open(link, '_blank', 'noopener,noreferrer')
+            } else {
+                alert('No meeting link available.')
+            }
+        } catch (err) {
+            console.error('Failed to join meeting:', err)
+            alert('Failed to get meeting link.')
+        }
+    }
 
     if (loading) {
         return <LoadingScreen />
@@ -188,6 +209,16 @@ function MentorDashboard() {
                         <div className={styles.statValue}>{stats.hoursThisMonth}</div>
                     </div>
                 </div>
+
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIcon} ${styles.yellowIcon}`}>
+                        <Star size={24} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statLabel}>{t.averageRating}</div>
+                        <div className={styles.statValue}>{stats.averageRating}</div>
+                    </div>
+                </div>
             </div>
 
             {/* Upcoming Sessions */}
@@ -214,6 +245,21 @@ function MentorDashboard() {
                                             {session.formattedDate || `${session.date || ''}${session.date && session.time ? ', ' : ''}${session.time || ''}`}
                                         </div>
                                         <div className={styles.sessionDuration}>{session.duration}</div>
+                                        <div className={styles.sessionActions}>
+                                            <button
+                                                onClick={() => router.push(`/mentor/sessions?reschedule=${key}`)}
+                                                className={styles.rescheduleButton}
+                                            >
+                                                {t.reschedule}
+                                            </button>
+                                            <button
+                                                onClick={() => handleStartMeeting(key)}
+                                                className={styles.startButton}
+                                            >
+                                                <Video size={14} />
+                                                {t.start}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )

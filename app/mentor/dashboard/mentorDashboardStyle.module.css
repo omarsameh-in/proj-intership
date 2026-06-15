@@ -279,6 +279,11 @@
     color: #f97316;
 }
 
+.yellowIcon {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+}
+
 /* ... sectionBox is already defined above ... */
 
 
@@ -907,4 +912,60 @@
 :global(body.light-mode) .hamburgerBtn:hover {
     background: #f1f5f9;
     color: #1e293b;
+}
+
+/* Reschedule & Start Buttons styling */
+.sessionActions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.rescheduleButton {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    padding: 0.375rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rescheduleButton:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.startButton {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border: none;
+    color: white;
+    padding: 0.375rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+.startButton:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Light mode overrides for reschedule & start buttons */
+:global(body.light-mode) .rescheduleButton {
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+:global(body.light-mode) .rescheduleButton:hover {
+    background: #f1f5f9;
+    color: #0f172a;
 }
