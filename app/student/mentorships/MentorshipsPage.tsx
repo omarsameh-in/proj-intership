@@ -764,7 +764,7 @@ const mentorIdParam = params.get('mentorId')
                                                 </button>
                                             )}
                                             <button
-                                                className={styles.fetchMentorDetail}
+                                                className={styles.viewDetailsButton}
                                                 onClick={() => fetchMentorDetail(mentor.id)}
                                                 title="View Profile"
                                             >
