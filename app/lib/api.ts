@@ -2,11 +2,26 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: '/api',
+    withCredentials: true, // Crucial for cookie-based refresh tokens & logout
     headers: {
         'Content-Type': 'application/json',
         'X-Tunnel-Skip-AntiSpam-Page': 'true',
     },
 });
+
+let isRefreshing = false;
+let failedRequestsQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    failedRequestsQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedRequestsQueue = [];
+};
 
 // Add a request interceptor to include auth token if available
 api.interceptors.request.use(
@@ -18,13 +33,90 @@ api.interceptors.request.use(
             config.url = config.url.substring(3);
         }
 
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        // Support both localStorage and sessionStorage
+        const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+// Add a response interceptor for global response handling & auto refresh token
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        // Auto Refresh Token on 401 Unauthorized
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._skipRefresh) {
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedRequestsQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                        return api(originalRequest);
+                    })
+                    .catch((err) => Promise.reject(err));
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                // Call GET /Account/refreshtoken to request a new access token
+                // We pass _skipRefresh: true to avoid infinite interceptor loops
+                const res = await api.get('/Account/refreshtoken', { _skipRefresh: true } as any);
+                
+                const data = res.data?.data || res.data;
+                const newToken = data?.token || data; // handle direct or wrapped string token
+
+                if (newToken) {
+                    const rememberMe = typeof window !== 'undefined' && localStorage.getItem('rememberMe') === 'true';
+                    if (rememberMe) {
+                        localStorage.setItem('token', newToken);
+                    } else {
+                        sessionStorage.setItem('token', newToken);
+                    }
+                    
+                    api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                    originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                    
+                    processQueue(null, newToken);
+                    return api(originalRequest);
+                } else {
+                    throw new Error('No new token returned');
+                }
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                
+                // If refresh token fails (e.g. 401), execute logout call to clear DB tokens
+                try {
+                    await api.delete('/Account/logout', { _skipRefresh: true } as any);
+                } catch (logoutError) {
+                    console.warn('Backend logout call failed during refresh failure:', logoutError);
+                }
+
+                // Clear tokens and redirect to login
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('refreshToken');
+                sessionStorage.removeItem('user');
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/login';
+                }
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        return Promise.reject(error);
+    }
 );
 
 export default api;

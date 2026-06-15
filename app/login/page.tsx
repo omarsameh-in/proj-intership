@@ -28,7 +28,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
-    useEffect(() => {
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const rememberedEmail = localStorage.getItem('rememberedEmail')
+      const rememberedRole = localStorage.getItem('rememberedRole') as Role
+      const rememberMeFlag = localStorage.getItem('rememberMe') === 'true'
+      if (rememberMeFlag && rememberedEmail) {
+        setEmail(rememberedEmail)
+        if (rememberedRole) {
+          setSelectedRole(rememberedRole)
+        }
+        setRememberMe(true)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             const isLanguageButton = target.closest('button') && 
@@ -68,13 +84,38 @@ export default function LoginPage() {
 
       const { token, refreshToken, user } = response.data
 
-      // Store auth data
-      localStorage.setItem('token', token)
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken)
-      }
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user))
+      // Store auth data based on rememberMe checkbox
+      if (rememberMe) {
+        localStorage.setItem('token', token)
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken)
+        }
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user))
+        }
+        localStorage.setItem('rememberedEmail', email)
+        if (selectedRole) {
+          localStorage.setItem('rememberedRole', selectedRole)
+        }
+        localStorage.setItem('rememberMe', 'true')
+      } else {
+        sessionStorage.setItem('token', token)
+        if (refreshToken) {
+          sessionStorage.setItem('refreshToken', refreshToken)
+        }
+        if (user) {
+          sessionStorage.setItem('user', JSON.stringify(user))
+        }
+        
+        // Remove remembered flags
+        localStorage.removeItem('rememberedEmail')
+        localStorage.removeItem('rememberedRole')
+        localStorage.removeItem('rememberMe')
+        
+        // Clean up stale localStorage credentials
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
       }
 
       // Redirect based on selected role

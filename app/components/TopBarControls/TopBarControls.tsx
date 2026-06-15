@@ -8,7 +8,7 @@ import Notification from '../Notification/Notification'
 import styles from './TopBarControls.module.css'
 
 export default function TopBarControls() {
-    const { theme, toggleTheme, language, setLanguage, t } = useApp()
+    const { theme, toggleTheme, language, setLanguage, t, logout } = useApp()
     const [showLanguageMenu, setShowLanguageMenu] = useState(false)
     const router = useRouter()
 
@@ -67,7 +67,7 @@ export default function TopBarControls() {
                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <Notification />
-            <button className={styles.iconButton} onClick={() => router.push('/')} title={t.logout}>
+            <button className={styles.iconButton} onClick={logout} title={t.logout}>
                 <LogOut size={20} />
             </button>
         </div>

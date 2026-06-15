@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { translations, Language } from '../locales/translations'
 import { notificationService, NotificationItem } from '../services/notificationService'
+import api from '../lib/api'
 
 type Theme = 'light' | 'dark'
 
@@ -30,6 +31,7 @@ interface AppContextType {
     fetchNotifications: () => Promise<void>
     markAsRead: (id: number) => Promise<void>
     markAllAsRead: () => Promise<void>
+    logout: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -44,10 +46,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [notifications, setNotifications] = useState<NotificationItem[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
 
-    // Sync token on pathname changes
+    // Sync token on pathname changes (supporting both localStorage and sessionStorage)
     useEffect(() => {
         if (!mounted) return
-        const currentToken = localStorage.getItem('token')
+        const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token')
         if (currentToken !== token) {
             setToken(currentToken)
         }
@@ -55,7 +57,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // Load initial notifications and count
     const fetchNotifications = async () => {
-        if (typeof window === 'undefined' || !localStorage.getItem('token')) return
+        if (typeof window === 'undefined' || !(localStorage.getItem('token') || sessionStorage.getItem('token'))) return
         try {
             const data = await notificationService.getAll()
             setNotifications(data)
@@ -67,7 +69,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     const fetchInitialData = async () => {
-        if (typeof window === 'undefined' || !localStorage.getItem('token')) return
+        if (typeof window === 'undefined' || !(localStorage.getItem('token') || sessionStorage.getItem('token'))) return
         try {
             const count = await notificationService.getUnreadCount()
             setUnreadCount(count)
@@ -95,7 +97,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 
                 connection = new signalR.HubConnectionBuilder()
                     .withUrl(hubUrl, {
-                        accessTokenFactory: () => localStorage.getItem('token') || ''
+                        accessTokenFactory: () => localStorage.getItem('token') || sessionStorage.getItem('token') || ''
                     })
                     .withAutomaticReconnect()
                     .build()
@@ -157,6 +159,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             fetchNotifications()
         }
     }
+    const logout = async () => {
+        try {
+            const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token')
+            if (currentToken) {
+                // Call DELETE /Account/logout to let backend revoke refresh tokens and clear cookies
+                await api.delete('/Account/logout')
+            }
+        } catch (err) {
+            console.error('Logout API request failed:', err)
+        } finally {
+            // Local cleanup
+            localStorage.removeItem('token')
+            localStorage.removeItem('refreshToken')
+            localStorage.removeItem('user')
+            sessionStorage.removeItem('token')
+            sessionStorage.removeItem('refreshToken')
+            sessionStorage.removeItem('user')
+            setToken(null)
+            setNotifications([])
+            setUnreadCount(0)
+        }
+    }
+
     const [slots, setSlots] = useState<Slot[]>([
         { id: 1, day: 'Monday, Jan 22', time: '10:00 AM - 11:30 AM' },
         { id: 2, day: 'Wednesday, Jan 24', time: '2:00 PM - 4:00 PM' },
@@ -174,6 +199,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
             if (savedTheme) setTheme(savedTheme)
             if (savedLanguage) setLanguage(savedLanguage)
+
+            // Handle "Remember Me" session checks
+            const rememberMe = localStorage.getItem('rememberMe') === 'true'
+            const sessionActive = sessionStorage.getItem('sessionActive') === 'true'
+            if (!rememberMe && !sessionActive) {
+                // Not remembered and new tab/session, clear auth info
+                localStorage.removeItem('token')
+                localStorage.removeItem('refreshToken')
+                localStorage.removeItem('user')
+            }
+            // Mark session as active so it doesn't clear during tab navigation
+            sessionStorage.setItem('sessionActive', 'true')
         }
         setMounted(true)
     }, [])
@@ -220,7 +257,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         unreadCount,
         fetchNotifications,
         markAsRead,
-        markAllAsRead
+        markAllAsRead,
+        logout
     }
 
     // Prevent hydration mismatch by rendering nothing until mounted
