@@ -47,6 +47,28 @@ interface PostFormData {
   salary: number            // always a number; 0 when unpaid
 }
 
+const formatDateForInput = (dateStr: string): string => {
+  if (!dateStr) return ''
+ 
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) return dateStr.split('T')[0]
+   const parts = dateStr.split('/')
+  if (parts.length === 3) {
+    const [day, month, year] = parts
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  }
+ 
+  return ''
+}
+ const formatDateForApi = (dateStr: string): string => {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length === 3) {
+    const [year, month, day] = parts
+    return `${day}/${month}/${year}`
+  }
+  return dateStr
+}
+
 function PostInternshipContent() {
   const { language, t } = useApp()
   const router       = useRouter()
@@ -62,7 +84,8 @@ function PostInternshipContent() {
   const today = new Date().toISOString().split('T')[0]
 
   const [form, setForm] = useState<PostFormData>({
-    title: '', description: '',
+    title: '',
+     description: '',
     duration: 0,
     workType: 'Remote',
     governorate: '',
@@ -80,9 +103,10 @@ function PostInternshipContent() {
       try {
         setFetching(true)
         const token = localStorage.getItem('token')
-        const res   = await api.get(`/api/company/internships/${editId}`, {
+        const res   = await api.get(`/company/MyInternships/get/${editId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
+
         const data = res.data?.data || res.data
 
         setForm({
@@ -90,9 +114,10 @@ function PostInternshipContent() {
           description: data.description || '',
           duration:    typeof data.duration === 'number' ? data.duration : 0,
           workType:    data.workType    || 'Remote',
-          governorate: data.governorate || '',
-          deadline:    data.deadline ? data.deadline.split('T')[0] : '',
-          isPaid:      data.isPaid ? 'paid' : 'unpaid',
+          governorate: data.governorate ,
+          deadline:    formatDateForInput(data.deadline),
+          // isPaid:      data.isPaid ? 'paid' : 'unpaid',
+          isPaid: data.isPaid === true ? 'paid' : 'unpaid',
           salary:      typeof data.salary === 'number' ? data.salary : 0,
         })
         setRequirements(data.requirements?.length ? data.requirements : [''])
@@ -179,24 +204,25 @@ function PostInternshipContent() {
       const token = localStorage.getItem('token')
   
       const payload = {
-        internId:     isEditMode ? Number(editId) : undefined,
+        internId:     isEditMode ? Number(editId) : undefined, ///================>>>
         title:        form.title.trim(),
         description:  form.description.trim(),
         duration:     form.duration,
         workType:     form.workType,
         governorate:  `${form.governorate}, Egypt`,
+        // governorate:  form.governorate,
         deadline:     form.deadline,
-        isPaid:       form.isPaid === 'paid',
+        isPaid:       form.isPaid === 'paid' ? 'Paid' : 'Unpaid',
         salary:       form.isPaid === 'paid' ? form.salary : 0,
         requirements: requirements.filter(r => r.trim()),
         skills:       skills.filter(s => s.trim()),
-      }
+        }
       if (isEditMode) {
-        await api.put(`/api/company/internships/${editId}`, payload, {
+        await api.put(`company/MyInternships/internship/edite/savechange`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         })
       } else {
-        await api.post('/api/company/internships', payload, {
+        await api.post('/company/MyInternships/internship/post', payload, {
           headers: { Authorization: `Bearer ${token}` },
         })
       }
@@ -211,6 +237,10 @@ function PostInternshipContent() {
       setLoading(false)
     }
   }
+
+
+  // ─── Render ───────────────────────────────────────────────────────────────
+  if (fetching) return <LoadingScreen />
 
   return (
     <div className={styles.appLayout} dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -259,8 +289,8 @@ function PostInternshipContent() {
               {isEditMode ? t.updateInternshipDetails : t.createNewInternshipOpportunity}
             </p>
           </div>
-          <div className={styles.topBarActions}>
-            <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)} title="Toggle Sidebar" aria-label="Toggle Sidebar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button className={styles.hamburgerBtn} onClick={() => setSidebarOpen(p => !p)}>
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
             <TopBarControls />
@@ -273,9 +303,8 @@ function PostInternshipContent() {
             {/* Row 1 — Title + Work Type */}
             <div className={styles.formRow}>
               <div className={`${styles.formGroup} ${errors.title ? styles.hasError : ''}`}>
-                <label htmlFor="title-input">{t.internshipTitle}</label>
+                <label>{t.internshipTitle}</label>
                 <input
-                  id="title-input"
                   name="title"
                   value={form.title}
                   onChange={handleChange}
@@ -284,8 +313,8 @@ function PostInternshipContent() {
                 {errors.title && <span className={styles.fieldError}>{errors.title}</span>}
               </div>
               <div className={`${styles.formGroup} ${errors.workType ? styles.hasError : ''}`}>
-                <label htmlFor="workType-select">{t.workTypeLabel}</label>
-                <select id="workType-select" name="workType" value={form.workType} onChange={handleChange} title={t.workTypeLabel}>
+                <label>{t.workTypeLabel}</label>
+                <select name="workType" value={form.workType} onChange={handleChange}>
                   <option value="Remote">{t.remote}</option>
                   <option value="Hybrid">{t.hybrid}</option>
                   <option value="Onsite">{t.onSite}</option>
@@ -296,9 +325,8 @@ function PostInternshipContent() {
 
             {/* Description */}
             <div className={`${styles.formGroup} ${errors.description ? styles.hasError : ''}`}>
-              <label htmlFor="description-textarea">{t.descriptionLabel}</label>
+              <label>{t.descriptionLabel}</label>
               <textarea
-                id="description-textarea"
                 name="description"
                 value={form.description}
                 onChange={handleChange}
@@ -313,8 +341,8 @@ function PostInternshipContent() {
 
               {/* Location → governorate dropdown for ALL work types */}
               <div className={`${styles.formGroup} ${errors.governorate ? styles.hasError : ''}`}>
-                <label htmlFor="governorate-select">{t.locationLabel}</label>
-                <select id="governorate-select" name="governorate" value={form.governorate} onChange={handleChange} title={t.locationLabel}>
+                <label>{t.locationLabel}</label>
+                <select name="governorate" value={form.governorate} onChange={handleChange}>
                   <option value="">{t.selectGovernorate}</option>
                   {EGYPT_GOVERNORATES.map(g => (
                     <option key={g} value={g}>{g}</option>
@@ -325,13 +353,11 @@ function PostInternshipContent() {
 
               {/* Duration → stored as number (months) */}
               <div className={`${styles.formGroup} ${errors.duration ? styles.hasError : ''}`}>
-                <label htmlFor="duration-select">{t.duration}</label>
+                <label>{t.duration}</label>
                 <select
-                  id="duration-select"
                   name="duration"
                   value={form.duration === 0 ? '' : String(form.duration)}
                   onChange={handleDurationChange}
-                  title={t.duration}
                 >
                   <option value="">{t.selectDuration}</option>
                   {DURATION_OPTIONS.map(opt => (
@@ -344,9 +370,8 @@ function PostInternshipContent() {
               {/* Salary → only shown when isPaid === 'paid' */}
               {form.isPaid === 'paid' && (
                 <div className={styles.formGroup}>
-                  <label htmlFor="salary-input">{t.stipendOptional}</label>
+                  <label>{t.stipendOptional}</label>
                   <input
-                    id="salary-input"
                     type="number"
                     name="salary"
                     min={0}
@@ -361,21 +386,19 @@ function PostInternshipContent() {
             {/* Row 3 — Deadline + Compensation */}
             <div className={styles.formRow}>
               <div className={`${styles.formGroup} ${errors.deadline ? styles.hasError : ''}`}>
-                <label htmlFor="deadline-input">{t.applicationDeadline}</label>
+                <label>{t.applicationDeadline}</label>
                 <input
-                  id="deadline-input"
                   type="date"
                   name="deadline"
                   value={form.deadline}
                   min={today}
                   onChange={handleChange}
-                  title={t.applicationDeadline}
                 />
                 {errors.deadline && <span className={styles.fieldError}>{errors.deadline}</span>}
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="isPaid-select">{t.compensation}</label>
-                <select id="isPaid-select" name="isPaid" value={form.isPaid} onChange={handleChange} title={t.compensation}>
+                <label>{t.compensation}</label>
+                <select name="isPaid" value={form.isPaid} onChange={handleChange}>
                   <option value="unpaid">{t.unpaid}</option>
                   <option value="paid">{t.paid}</option>
                 </select>
@@ -471,3 +494,7 @@ export default function PostInternshipPage() {
     </Suspense>
   )
 }
+
+
+
+

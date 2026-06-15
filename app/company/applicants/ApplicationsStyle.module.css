@@ -1,4 +1,20 @@
+.status_Pending {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
 
+.status_Accepted {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status_Rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
 .appLayout {
   display: flex;
   min-height: 100vh;
@@ -11,7 +27,11 @@
   position: absolute;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.15) 0%,
+    rgba(59, 130, 246, 0) 70%
+  );
   border-radius: 50%;
   top: -150px;
   right: -100px;
@@ -24,7 +44,11 @@
   position: absolute;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(168, 85, 247, 0.1) 0%,
+    rgba(168, 85, 247, 0) 70%
+  );
   border-radius: 50%;
   bottom: 5%;
   left: 10%;
@@ -37,7 +61,11 @@
   position: absolute;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.08) 0%,
+    rgba(59, 130, 246, 0) 70%
+  );
   border-radius: 50%;
   top: 30%;
   left: -100px;
@@ -144,7 +172,6 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 2rem;
-  
 }
 
 .pageHeader {
@@ -176,7 +203,6 @@
   font-size: 2rem;
   font-weight: 700;
   color: white;
-
 }
 
 .pageSubtitle {
@@ -260,7 +286,7 @@
 [dir="rtl"] .notifDropdown {
   /* right: 0;
   left: auto; */
-   right: auto;
+  right: auto;
   left: 8px;
   position: fixed;
   top: 60px;
@@ -605,7 +631,7 @@
 
 .status_accepted {
   background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
+  color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -737,7 +763,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .errorText {
@@ -762,59 +790,164 @@
 }
 
 /* ─── Light Mode ──────────────────────────────────────────────────────────── */
-:global(body.light-mode) .appLayout { background-color: transparent; }
-:global(body.light-mode) .sidebar { background-color: #ffffff; border-right-color: #e2e8f0; }
-:global(body.light-mode) .logoSection { border-bottom-color: #e2e8f0; }
-:global(body.light-mode) .logoText { color: #000000; }
-:global(body.light-mode) .navItem { color: #0a0a0a; }
-:global(body.light-mode) .navItem:hover { background-color: #f1f5f9; color: #000000; }
-:global(body.light-mode) .navItem.active { background-color: #dbeafe; color: #3b82f6; }
-:global(body.light-mode) .mainContent { background-color: transparent; }
-:global(body.light-mode) .pageTitle { color: #000000; }
-:global(body.light-mode) .pageSubtitle { color: #64748b; }
-:global(body.light-mode) .iconButton { color: #64748b; }
-:global(body.light-mode) .iconButton:hover { background: #f1f5f9; color: #1e293b; }
+:global(body.light-mode) .appLayout {
+  background-color: transparent;
+}
+:global(body.light-mode) .sidebar {
+  background-color: #ffffff;
+  border-right-color: #e2e8f0;
+}
+:global(body.light-mode) .logoSection {
+  border-bottom-color: #e2e8f0;
+}
+:global(body.light-mode) .logoText {
+  color: #000000;
+}
+:global(body.light-mode) .navItem {
+  color: #0a0a0a;
+}
+:global(body.light-mode) .navItem:hover {
+  background-color: #f1f5f9;
+  color: #000000;
+}
+:global(body.light-mode) .navItem.active {
+  background-color: #dbeafe;
+  color: #3b82f6;
+}
+:global(body.light-mode) .mainContent {
+  background-color: transparent;
+}
+:global(body.light-mode) .pageTitle {
+  color: #000000;
+}
+:global(body.light-mode) .pageSubtitle {
+  color: #64748b;
+}
+:global(body.light-mode) .iconButton {
+  color: #64748b;
+}
+:global(body.light-mode) .iconButton:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
 /* light mode removed */
-:global(body.light-mode) .searchBar { background: #ffffff; border-color: #e2e8f0; }
-:global(body.light-mode) .searchBar:focus-within { border-color: #3b82f6; }
-:global(body.light-mode) .searchInput { color: #0f172a; }
-:global(body.light-mode) .searchInput::placeholder { color: #94a3b8; }
-:global(body.light-mode) .searchIcon { color: #94a3b8; }
-:global(body.light-mode) .filterSelect { background: #ffffff; border-color: #e2e8f0; color: #0f172a; }
-:global(body.light-mode) .filterSelect option { background: #ffffff; color: #0f172a; }
-:global(body.light-mode) .applicantCard { background: #ffffff; border-color: #e2e8f0; }
-:global(body.light-mode) .applicantCard:hover { border-color: #bfdbfe; border-left-color: #3b82f6; background: #ffffff; }
-:global(body.light-mode) .applicantName { color: #0f172a; }
-:global(body.light-mode) .applicantMeta { color: #64748b; }
-:global(body.light-mode) .contactItem { color: #64748b; }
-:global(body.light-mode) .matchBadge { background: rgba(59,130,246,0.08); color: #2563eb; border-color: rgba(59,130,246,0.2); }
-:global(body.light-mode) .downloadBtn { border-color: #e2e8f0; color: #64748b; }
-:global(body.light-mode) .downloadBtn:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
-:global(body.light-mode) .emptyMessage { color: #94a3b8; }
+:global(body.light-mode) .searchBar {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:global(body.light-mode) .searchBar:focus-within {
+  border-color: #3b82f6;
+}
+:global(body.light-mode) .searchInput {
+  color: #0f172a;
+}
+:global(body.light-mode) .searchInput::placeholder {
+  color: #94a3b8;
+}
+:global(body.light-mode) .searchIcon {
+  color: #94a3b8;
+}
+:global(body.light-mode) .filterSelect {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+:global(body.light-mode) .filterSelect option {
+  background: #ffffff;
+  color: #0f172a;
+}
+:global(body.light-mode) .applicantCard {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+:global(body.light-mode) .applicantCard:hover {
+  border-color: #bfdbfe;
+  border-left-color: #3b82f6;
+  background: #ffffff;
+}
+:global(body.light-mode) .applicantName {
+  color: #0f172a;
+}
+:global(body.light-mode) .applicantMeta {
+  color: #64748b;
+}
+:global(body.light-mode) .contactItem {
+  color: #64748b;
+}
+:global(body.light-mode) .matchBadge {
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+:global(body.light-mode) .downloadBtn {
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+:global(body.light-mode) .downloadBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+:global(body.light-mode) .emptyMessage {
+  color: #94a3b8;
+}
 
 /* ─── RTL ─────────────────────────────────────────────────────────────────── */
-[dir="rtl"] .sidebar { right: 0; left: auto; border-right: none; border-left: 1px solid rgba(255,255,255,0.05); }
-[dir="rtl"] .mainContent { margin-left: 0; margin-right: 260px; }
+[dir="rtl"] .sidebar {
+  right: 0;
+  left: auto;
+  border-right: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+[dir="rtl"] .mainContent {
+  margin-left: 0;
+  margin-right: 260px;
+}
 /* rtl handled by global */
 
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .sidebar { width: 220px; }
-  .mainContent { margin-left: 220px; }
-  [dir="rtl"] .mainContent { margin-left: 0; margin-right: 220px; }
+  .sidebar {
+    width: 220px;
+  }
+  .mainContent {
+    margin-left: 220px;
+  }
+  [dir="rtl"] .mainContent {
+    margin-left: 0;
+    margin-right: 220px;
+  }
 }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
-  .mainContent { margin-left: 0; padding: 1rem; }
-  [dir="rtl"] .mainContent { margin-right: 0; }
-  .applicantCard { flex-direction: column; }
-  .cardTopRow { flex-direction: column; }
-  .topBar { flex-direction: column; gap: 1rem; }
-  .topBarControls { width: 100%; justify-content: flex-end; }
-  .pageTitle { font-size: 1.5rem; }
+  .sidebar {
+    display: none;
+  }
+  .mainContent {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  [dir="rtl"] .mainContent {
+    margin-right: 0;
+  }
+  .applicantCard {
+    flex-direction: column;
+  }
+  .cardTopRow {
+    flex-direction: column;
+  }
+  .topBar {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .topBarControls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .pageTitle {
+    font-size: 1.5rem;
+  }
 }
-
 
 /* ─── Hamburger ─────────────── */
 .hamburgerBtn {
@@ -887,6 +1020,10 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

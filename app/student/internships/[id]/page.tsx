@@ -533,8 +533,8 @@ export default function InternshipDetailPage() {
           <Link href="/student/dashboard"   className={sharedStyles.navItem}><LayoutDashboard size={20} /><span>{t.dashboard}</span></Link>
           <Link href="/student/internships" className={`${sharedStyles.navItem} ${sharedStyles.active}`}><Briefcase size={20} /><span>{t.internships}</span></Link>
           <Link href="/student/mentorships" className={sharedStyles.navItem}><Users size={20} /><span>{t.mentorships}</span></Link>
-          <Link href="/student/profile"     className={sharedStyles.navItem}><UserCircle size={20} /><span>{t.profile}</span></Link>
           <Link href="/student/sessions"    className={sharedStyles.navItem}><Video size={20} /><span>{t.mySessions}</span></Link>
+          <Link href="/student/profile"     className={sharedStyles.navItem}><UserCircle size={20} /><span>{t.profile}</span></Link>
         </nav>
       </aside>
 

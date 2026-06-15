@@ -922,126 +922,337 @@
   color: #1e293b;
 }
 
-/* ─── Reopen Modal & Top Bar Actions ─── */
-.topBarActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modalOverlay {
+/* ─── Applicants Modal ────────────────────────────────────────────────────── */
+.applicantsBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
-.modalContent {
-  background: #1e293b;
+.applicantsModal {
+  background: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 1.5rem;
-  width: 90%;
-  max-width: 380px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 700px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.modalTitle {
+.applicantsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.125rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.applicantsTitle {
   margin: 0;
-  margin-bottom: 1rem;
   font-size: 1.1rem;
   font-weight: 600;
-  color: white;
-}
-
-.modalLabel {
-  display: block;
-  margin-bottom: 0.4rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #94a3b8;
-}
-
-.modalInput {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 23, 42, 0.4);
-  margin-bottom: 1.25rem;
-  font-size: 0.95rem;
-  box-sizing: border-box;
-  color: white;
-}
-
-.modalBtnGroup {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.cancelBtn {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: transparent;
-  color: #94a3b8;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.cancelBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-}
-
-.confirmBtn {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: none;
-  background: #16a34a;
   color: #fff;
-  cursor: pointer;
-  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.applicantsBody {
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.applicantCard {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.applicantCard:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.cardLeft {
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
   font-weight: 600;
-  transition: background 0.2s;
 }
 
-.confirmBtn:hover {
-  background: #15803d;
+.cardBody {
+  flex: 1;
+  min-width: 0;
 }
 
-/* Light Mode Overrides */
-:global(body.light-mode) .modalContent {
+.cardTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 4px;
+}
+
+.applicantName {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.applicantMeta {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.badges {
+  flex-shrink: 0;
+}
+
+.status_accepted {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status_rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.status_pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.contactRow {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.contactItem {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.cardBottomRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.appliedAt {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.acceptBtn {
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.acceptBtn:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.rejectBtn {
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.rejectBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.applicantsFooter {
+  padding: 0.875rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.applicantsCount {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.applicantsCount strong {
+  color: #fff;
+}
+
+.applicantsCloseBtn {
+  font-size: 13px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.applicantsCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.applicantCard .statusBadge {
+  position: static;
+  display: inline-block;
+}
+.appStatusBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.downloadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-color, #d1d5db);
+  background: var(--card-bg, #ffffff);
+  color: var(--text-primary, #374151);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+:global(.dark) .downloadBtn,
+[data-theme="dark"] .downloadBtn {
+  background: #1f2937;
+  border-color: #374151;
+  color: #e5e7eb;
+}
+.downloadBtn:hover {
+  background: var(--hover-bg, #f3f4f6);
+  border-color: var(--accent-color, #6366f1);
+  color: var(--accent-color, #6366f1);
+}
+:global(.dark) .downloadBtn:hover,
+[data-theme="dark"] .downloadBtn:hover {
+  background: #2d3748;
+  border-color: #818cf8;
+  color: #818cf8;
+}
+/* ─── Light Mode — Applicants Modal ──────────────────────────────────────── */
+:global(body.light-mode) .applicantsModal {
   background: #ffffff;
   border-color: #e2e8f0;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
 }
 
-:global(body.light-mode) .modalTitle {
+:global(body.light-mode) .applicantsHeader {
+  border-bottom-color: #e2e8f0;
+}
+
+:global(body.light-mode) .applicantsTitle {
   color: #0f172a;
 }
 
-:global(body.light-mode) .modalLabel {
-  color: #4b5563;
+:global(body.light-mode) .applicantCard {
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 
-:global(body.light-mode) .modalInput {
-  border-color: #cbd5e1;
-  background: #ffffff;
+:global(body.light-mode) .applicantCard:hover {
+  border-color: #3b82f6;
+}
+
+:global(body.light-mode) .avatar {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+:global(body.light-mode) .applicantName {
   color: #0f172a;
 }
 
-:global(body.light-mode) .cancelBtn {
-  border-color: #d1d5db;
-  color: #4b5563;
+:global(body.light-mode) .applicantMeta {
+  color: #64748b;
 }
 
-:global(body.light-mode) .cancelBtn:hover {
-  background: #f9fafb;
+:global(body.light-mode) .contactItem {
+  color: #64748b;
+}
+
+:global(body.light-mode) .appliedAt {
+  color: #94a3b8;
+}
+
+:global(body.light-mode) .applicantsFooter {
+  border-top-color: #e2e8f0;
+}
+
+:global(body.light-mode) .applicantsCount {
+  color: #64748b;
+}
+
+:global(body.light-mode) .applicantsCount strong {
   color: #0f172a;
 }
+
+:global(body.light-mode) .applicantsCloseBtn {
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+:global(body.light-mode) .applicantsCloseBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+

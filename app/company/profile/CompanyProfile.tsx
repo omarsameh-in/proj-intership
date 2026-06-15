@@ -121,40 +121,40 @@ function CompanyProfile() {
   const [editData, setEditData] = useState<CompanyData>(defaultData)
 
   const fetchProfile = async () => {
-    try {
-      setLoading(true)
-      const token = localStorage.getItem('token')
-      const res = await api.get('/company/Profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const d = res.data
-      const mapped: CompanyData = {
-        name: d.companyName ?? '',
-        industry: d.industry ?? '',
-        foundedYear: d.foundedYear ?? 0,
-        website: d.website ?? '',
-        description: d.description ?? '',
-        email: d.email ?? '',
-        phone: d.phoneNumber ?? '',
-        address: d.officeAddress ?? '',
-        city: d.city ?? '',
-        country: d.country ?? '',
-        linkedin: d.linkedin ?? '',
-        twitter: d.twitter ?? '',
-        facebook: d.facebook ?? '',
-        instagram: d.instagram ?? '',
-      }
-      setData(mapped)
-      setEditData(mapped)
-    } catch {
-      const saved = localStorage.getItem('companyProfile')
-      const profile = saved ? JSON.parse(saved) : defaultData
-      setData(profile)
-      setEditData(profile)
-    } finally {
-      setLoading(false)
+  try {
+    setLoading(true)
+    const token = localStorage.getItem('token')
+    const res = await api.get('/company/Profile', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+const d = res.data?.data || res.data
+    const mapped: CompanyData = {
+      name: d.companyName ?? '',
+      industry: d.industry ?? '',
+      foundedYear: d.foundedYear ?? 0,
+      website: d.website ?? '',
+      description: d.description ?? '',
+      email: d.email ?? '',
+      phone: d.phoneNumber ?? '',
+      address: d.officeAddress ?? '',
+      city: d.city ?? '',
+      country: d.country ?? '',
+      linkedin: d.linkedIn ?? d.linkedin ?? '',
+      twitter: d.twitter ?? '',
+      facebook: d.facebook ?? '',
+      instagram: d.instagram ?? '',
     }
+    setData(mapped)
+    setEditData(mapped)
+  } catch {
+    const saved = localStorage.getItem('companyProfile')
+    const profile = saved ? JSON.parse(saved) : defaultData
+    setData(profile)
+    setEditData(profile)
+  } finally {
+    setLoading(false)
   }
+}
 
   useEffect(() => {
     fetchProfile()
@@ -171,50 +171,67 @@ function CompanyProfile() {
     setIsEditing(false)
   }
 
-  const handleChange = (field: keyof CompanyData, value: string) => {
-    setEditData(prev => ({
-      ...prev,
-      [field]: field === 'foundedYear' ? Number(value) : value,
-    }))
-  }
+ const handleChange = (field: keyof CompanyData, value: string) => {
+  setEditData(prev => ({
+    ...prev,
+    [field]: field === 'foundedYear' ? Number(value) : value,
+  }))
+} 
+const handleSave = async () => {
+  try {
+    setSaving(true)
+    const token = localStorage.getItem('token')
+    const res = await api.put('/company/Profile/SaveChange', {
+      companyName: editData.name,
+      industry: editData.industry,
+      foundedYear: editData.foundedYear,
+      description: editData.description,
+      officeAddress: editData.address,
+      city: editData.city,
+      country: editData.country,
+      phoneNumber: editData.phone,
+      email: editData.email,
+      website: editData.website,
+      linkedIn: editData.linkedin,
+      facebook: editData.facebook,
+      twitter: editData.twitter,
+      instagram: editData.instagram,
+    }, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
 
-  const handleSave = async () => {
-    try {
-      setSaving(true)
-      const token = localStorage.getItem('token')
-      await api.put('/company/Profile/SaveChange', {
-        companyName: editData.name,
-        industry: editData.industry,
-        foundedYear: editData.foundedYear,
-        description: editData.description,
-        officeAddress: editData.address,
-        city: editData.city,
-        country: editData.country,
-        phoneNumber: editData.phone,
-        email: editData.email,
-        website: editData.website,
-        linkedin: editData.linkedin,
-        facebook: editData.facebook,
-        twitter: editData.twitter,
-        instagram: editData.instagram,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      setData({ ...editData })
-      localStorage.setItem('companyProfile', JSON.stringify(editData))
-      setIsEditing(false)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
-    } catch {
-      localStorage.setItem('companyProfile', JSON.stringify(editData))
-      setData({ ...editData })
-      setIsEditing(false)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
-    } finally {
-      setSaving(false)
+    const d = res.data?.data || res.data
+    const mapped: CompanyData = {
+      name: d.companyName ?? '',
+      industry: d.industry ?? '',
+      foundedYear: d.foundedYear ?? 0,
+      website: d.website ?? '',
+      description: d.description ?? '',
+      email: d.email ?? '',
+      phone: d.phoneNumber ?? '',
+      address: d.officeAddress ?? '',
+      city: d.city ?? '',
+      country: d.country ?? '',
+      linkedin: d.linkedIn ?? d.linkedin ?? '',
+      twitter: d.twitter ?? '',
+      facebook: d.facebook ?? '',
+      instagram: d.instagram ?? '',
     }
+
+    setData(mapped)
+    setEditData(mapped)
+    localStorage.setItem('companyProfile', JSON.stringify(mapped))
+    setIsEditing(false)
+    setSuccess(true)
+    setTimeout(() => setSuccess(false), 3000)
+  } catch (err: any) {
+    console.error('SaveChange error:', err.response?.status, err.response?.data)
+    alert(err.response?.data?.message || err.response?.data?.errorMessage || err.message || 'Failed to save changes')
+  } finally {
+    setSaving(false)
   }
+}
+
 
   if (loading) {
     return <LoadingScreen />

@@ -544,13 +544,13 @@ const mentorIdParam = params.get('mentorId')
                         <Users size={20} />
                         <span>{t.mentorships}</span>
                     </Link>
-                    <Link href="/student/profile" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
-                        <UserCircle size={20} />
-                        <span>{t.profile}</span>
-                    </Link>
                     <Link href="/student/sessions" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
                         <Video size={20} />
                         <span>{t.mySessions}</span>
+                    </Link>
+                    <Link href="/student/profile" className={styles.navItem} onClick={() => setSidebarOpen(false)}>
+                        <UserCircle size={20} />
+                        <span>{t.profile}</span>
                     </Link>
                 </nav>
             </aside>
