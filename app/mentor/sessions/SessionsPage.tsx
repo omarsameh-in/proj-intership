@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import {
     Calendar, Clock, Video, Check, X,
     Loader2, CheckCircle, RefreshCw,
-    ChevronRight, ExternalLink, BookOpen, Menu
+    ChevronRight, ChevronDown, ExternalLink, BookOpen, Menu
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
@@ -154,6 +154,12 @@ function ViewDetailsModal({ session, onClose }: {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
+    // Student profile toggle and data states
+    const [isProfileVisible, setIsProfileVisible] = useState(false)
+    const [profileData, setProfileData] = useState<any>(null)
+    const [loadingProfile, setLoadingProfile] = useState(false)
+    const [profileError, setProfileError] = useState<string | null>(null)
+
     useEffect(() => {
         const fetchDetails = async () => {
             try {
@@ -162,6 +168,7 @@ function ViewDetailsModal({ session, onClose }: {
                 const res = await api.get(`/Mentor/MySessions/viewdetails/${session.id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
+                setDetails(res.data?.data || res.data)
             } catch (err) {
                 console.warn('Failed to fetch session details, using mock details from parent:', err)
                 setDetails({
@@ -181,6 +188,32 @@ function ViewDetailsModal({ session, onClose }: {
         fetchDetails()
     }, [session.id])
 
+    const handleToggleProfile = async () => {
+        if (isProfileVisible) {
+            setIsProfileVisible(false)
+            return
+        }
+
+        setIsProfileVisible(true)
+
+        if (!profileData && session.studentProfileId) {
+            try {
+                setLoadingProfile(true)
+                setProfileError(null)
+                const token = localStorage.getItem('token')
+                const res = await api.get(`/Mentor/MyMentees/viewprofile/${session.studentProfileId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                setProfileData(res.data?.data || res.data)
+            } catch (err: any) {
+                console.error('Failed to fetch student profile:', err)
+                setProfileError(getErrorMessage(err, 'Failed to load student profile.'))
+            } finally {
+                setLoadingProfile(false)
+            }
+        }
+    }
+
     const isConfirmed = session.status === 'Confirmed'
     const studentName = details?.student?.name || session.student
     const university = details?.student?.university || session.studentUniversity || ''
@@ -188,6 +221,19 @@ function ViewDetailsModal({ session, onClose }: {
     const topic = details?.topic || session.title
     const notes = details?.notes || session.notes
     const meetingLink = details?.platformLink || session.meetingLink
+
+    // Normalize profile data safely
+    const normalizedProfile = profileData ? {
+        name: profileData.fullName || profileData.name || '',
+        email: profileData.email || '',
+        phone: profileData.phone || profileData.phoneNumber || '',
+        location: profileData.location || '',
+        university: profileData.university || '',
+        college: profileData.college || '',
+        major: profileData.major || '',
+        gradYear: profileData.gradYear || profileData.graduationYear || '',
+        skills: Array.isArray(profileData.skills) ? profileData.skills.filter(Boolean) : []
+    } : null
 
     return (
         <div
@@ -212,7 +258,7 @@ function ViewDetailsModal({ session, onClose }: {
                     <div className={styles.errorState} style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{error}</div>
                 ) : (
                     <div className={styles.modalBody}>
-                        {/* Student Info */}
+                        {/* Student Info Card */}
                         <div className={styles.studentInfoCard}>
                             <div className={styles.studentInfoLeft}>
                                 <div className={styles.studentAvatar}>{studentName.charAt(0)}</div>
@@ -227,10 +273,71 @@ function ViewDetailsModal({ session, onClose }: {
                                 </div>
                             </div>
                             {session.studentProfileId && (
-                                <button className={styles.viewProfileBtn}>
-                                    View Profile <ChevronRight size={13} />
+                                <button onClick={handleToggleProfile} className={styles.viewProfileBtn}>
+                                    {isProfileVisible ? 'Hide Profile' : 'View Profile'}
+                                    {isProfileVisible ? <ChevronDown size={13} style={{ marginLeft: 2 }} /> : <ChevronRight size={13} style={{ marginLeft: 2 }} />}
                                 </button>
                             )}
+                        </div>
+
+                        {/* Collapsible Student Profile Details */}
+                        <div className={`${styles.profileAccordion} ${isProfileVisible ? styles.profileAccordionExpanded : ''}`}>
+                            <div className={styles.profileAccordionInner}>
+                                {loadingProfile ? (
+                                    <div className={styles.profileLoadingState}>
+                                        <Loader2 size={20} className="animate-spin" />
+                                        <span>Loading student profile...</span>
+                                    </div>
+                                ) : profileError ? (
+                                    <div className={styles.profileErrorState}>{profileError}</div>
+                                ) : normalizedProfile ? (
+                                    <div className={styles.profileDetailsContent}>
+                                        <p className={styles.infoSectionLabel}>Student Profile</p>
+                                        <div className={styles.profileGrid}>
+                                            {normalizedProfile.email && (
+                                                <div className={styles.profileCell}>
+                                                    <p className={styles.infoCellLabel}>Email</p>
+                                                    <p className={styles.infoCellValue}>{normalizedProfile.email}</p>
+                                                </div>
+                                            )}
+                                            {normalizedProfile.phone && (
+                                                <div className={styles.profileCell}>
+                                                    <p className={styles.infoCellLabel}>Phone</p>
+                                                    <p className={styles.infoCellValue}>{normalizedProfile.phone}</p>
+                                                </div>
+                                            )}
+                                            {normalizedProfile.location && (
+                                                <div className={styles.profileCell}>
+                                                    <p className={styles.infoCellLabel}>Location</p>
+                                                    <p className={styles.infoCellValue}>{normalizedProfile.location}</p>
+                                                </div>
+                                            )}
+                                            {normalizedProfile.college && (
+                                                <div className={styles.profileCell}>
+                                                    <p className={styles.infoCellLabel}>College</p>
+                                                    <p className={styles.infoCellValue}>{normalizedProfile.college}</p>
+                                                </div>
+                                            )}
+                                            {normalizedProfile.gradYear && (
+                                                <div className={styles.profileCell}>
+                                                    <p className={styles.infoCellLabel}>Graduation Year</p>
+                                                    <p className={styles.infoCellValue}>{normalizedProfile.gradYear}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {normalizedProfile.skills && normalizedProfile.skills.length > 0 && (
+                                            <div className={styles.skillsSection}>
+                                                <p className={styles.infoCellLabel} style={{ marginBottom: '8px' }}>Skills</p>
+                                                <div className={styles.skillsContainer}>
+                                                    {normalizedProfile.skills.map((skill: string) => (
+                                                        <span key={skill} className={styles.skillBadge}>{skill}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : null}
+                            </div>
                         </div>
 
                         {/* Session Info Grid */}

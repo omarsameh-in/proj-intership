@@ -1219,3 +1219,112 @@
     background: #f1f5f9;
     color: #1e293b;
 }
+
+/* ============================================================
+   STUDENT PROFILE ACCORDION STYLES
+   ============================================================ */
+
+.profileAccordion {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.35s ease;
+    margin-bottom: 0;
+}
+
+.profileAccordionExpanded {
+    max-height: 600px;
+    margin-bottom: 16px;
+}
+
+.profileAccordionInner {
+    background: #252b3d;
+    border: 1px solid #3b4f7c;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.profileLoadingState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #94a3b8;
+    font-size: 13px;
+    padding: 24px 0;
+}
+
+.profileErrorState {
+    text-align: center;
+    color: #ef4444;
+    font-size: 13px;
+    padding: 12px;
+}
+
+.profileDetailsContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.profileGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 480px) {
+    .profileGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.profileCell {
+    padding: 12px;
+    background: #334155;
+    border: 1px solid #475569;
+    border-radius: 12px;
+}
+
+.skillsSection {
+    border-top: 1px solid #3b4f7c;
+    padding-top: 12px;
+}
+
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skillBadge {
+    padding: 6px 12px;
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Light Mode Overrides for Profile Accordion */
+:global(body.light-mode) .profileAccordionInner {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+:global(body.light-mode) .profileLoadingState {
+    color: #64748b;
+}
+
+:global(body.light-mode) .profileCell {
+    background: white;
+    border-color: #e2e8f0;
+}
+
+:global(body.light-mode) .skillsSection {
+    border-color: #e2e8f0;
+}
+
+:global(body.light-mode) .skillBadge {
+    background: #eff6ff;
+    color: #2563eb;
+}
