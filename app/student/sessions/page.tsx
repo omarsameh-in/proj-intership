@@ -21,7 +21,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './sessions.module.css'
-import api from '../../lib/api'
+import api, { getErrorMessage } from '../../lib/api'
 
 interface ApiSession {
     session_id: number
@@ -371,10 +371,7 @@ export default function SessionsPage() {
                 router.push('/login')
                 return
             }
-            const msg =
-                typeof err.response?.data === 'string'
-                    ? err.response.data
-                    : err.response?.data?.Message ?? 'Cannot join session right now.'
+            const msg = getErrorMessage(err, 'Cannot join session right now.')
             alert(msg)
         }
     }
@@ -407,10 +404,7 @@ export default function SessionsPage() {
                 router.push('/login')
                 return
             }
-            const msg =
-                typeof err.response?.data === 'string'
-                    ? err.response.data
-                    : err.response?.data?.Message ?? 'Cancellation failed.'
+            const msg = getErrorMessage(err, 'Cancellation failed.')
             alert(msg)
         }
     }
@@ -436,10 +430,7 @@ export default function SessionsPage() {
                 router.push('/login')
                 return
             }
-            const msg =
-                typeof err.response?.data === 'string'
-                    ? err.response.data
-                    : err.response?.data?.Message ?? 'Payment failed. Please try again.'
+            const msg = getErrorMessage(err, 'Payment failed. Please try again.')
             alert(msg)
         }
     }
@@ -463,10 +454,7 @@ export default function SessionsPage() {
                 router.push('/login')
                 return
             }
-            const msg =
-                typeof err.response?.data === 'string'
-                    ? err.response.data
-                    : err.response?.data?.Message ?? 'Could not apply penalty.'
+            const msg = getErrorMessage(err, 'Could not apply penalty.')
             alert(msg)
         } finally {
             setPenaltyLoading(false)
@@ -560,10 +548,7 @@ export default function SessionsPage() {
                 router.push('/login')
                 return
             }
-            const msg =
-                typeof err.response?.data === 'string'
-                    ? err.response.data
-                    : err.response?.data?.Message ?? 'Reschedule failed. Please try again.'
+            const msg = getErrorMessage(err, 'Reschedule failed. Please try again.')
             setRescheduleError(msg)
         } finally {
             setRescheduleLoading(false)
@@ -598,10 +583,7 @@ export default function SessionsPage() {
                 router.push('/login')
                 return
             }
-            const msg =
-                typeof err.response?.data === 'string'
-                    ? err.response.data
-                    : err.response?.data?.message ?? 'Failed to submit review.'
+            const msg = getErrorMessage(err, 'Failed to submit review.')
             setReviewError(msg)
         } finally {
             setReviewLoading(false)

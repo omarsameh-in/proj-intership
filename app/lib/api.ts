@@ -35,7 +35,21 @@ api.interceptors.request.use(
 
         // Support both localStorage and sessionStorage
         const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null;
-        if (token) {
+        
+        // Exclude anonymous Account endpoints from receiving the Authorization header
+        const urlLower = config.url ? config.url.toLowerCase() : '';
+        const isAnonymous = urlLower.includes('account/login') ||
+            urlLower.includes('account/signup') ||
+            urlLower.includes('account/refreshtoken') ||
+            urlLower.includes('account/logout') ||
+            urlLower.includes('account/forgetpassword') ||
+            urlLower.includes('account/resetpassword');
+
+        if (isAnonymous) {
+            if (config.headers) {
+                delete config.headers.Authorization;
+            }
+        } else if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -120,3 +134,29 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+export function getErrorMessage(error: any, defaultMessage: string = 'An error occurred'): string {
+    if (error?.response?.data) {
+        const data = error.response.data;
+        if (typeof data === 'string') {
+            return data;
+        }
+        if (typeof data === 'object' && data !== null) {
+            const obj = data as Record<string, any>;
+            if (obj.detail) return obj.detail;
+            if (obj.message) return obj.message;
+            if (obj.Message) return obj.Message;
+            if (obj.errorMessage) return obj.errorMessage;
+            if (obj.title) return obj.title;
+            if (obj.errors && typeof obj.errors === 'object' && obj.errors !== null) {
+                const errorsDict = obj.errors as Record<string, any>;
+                const errorDetails = Object.keys(errorsDict)
+                    .map(key => errorsDict[key])
+                    .reduce((acc: any, val: any) => acc.concat(val), [])
+                    .join(', ');
+                if (errorDetails) return errorDetails;
+            }
+        }
+    }
+    return error?.message || defaultMessage;
+}

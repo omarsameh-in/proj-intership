@@ -11,7 +11,7 @@ import { useApp } from '../../context/AppContext'
 import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './SessionsPage.module.css'
-import api from '../../lib/api'
+import api, { getErrorMessage } from '../../lib/api'
 
 // ============================================================
 //  TYPES
@@ -52,28 +52,28 @@ const authHeader = (): Record<string, string> => ({
 // ============================================================
 //  API CALLS
 // ============================================================
-async function updateSessionStatus(id: number, status: string): Promise<void> {
-    try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-        if (status === 'Confirmed') {
-            await api.put(`/Mentor/MySessions/confirmsession/${id}`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-        } else {
-            await api.delete(`/Mentor/MySessions/cancelSession/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-        }
-    } catch (err) {
-        console.warn('[updateSessionStatus] API failed, updating local state only:', err)
+async function updateSessionStatus(id: number, status: string): Promise<any> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    if (status === 'Confirmed') {
+        const res = await api.put(`/Mentor/MySessions/confirmsession/${id}`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return res.data
+    } else {
+        const res = await api.delete(`/Mentor/MySessions/cancelSession/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        return res.data
     }
 }
 
 async function rescheduleSession(sessionId: number, slotId: number): Promise<void> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    await api.put(`/Mentor/MySessions/rescheduleSession/${sessionId}/${slotId}`, {}, {
+    console.log(`[rescheduleSession] Sending PUT request with sessionId: ${sessionId}, slotId: ${slotId}`)
+    const res = await api.put(`/Mentor/MySessions/rescheduleSession/${sessionId}/${slotId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
     })
+    console.log('[rescheduleSession] Success Response:', res.status, res.data)
 }
 
 // ============================================================
@@ -320,8 +320,11 @@ function RescheduleModal({ session, onClose, onSuccess }: {
             try {
                 setLoadingSlots(true)
                 const token = localStorage.getItem('token')
-                const res = await api.get('/Mentor/MySessions/rescheduleSession', {
-                    headers: { Authorization: `Bearer ${token}` }
+                const res = await api.get(`/Mentor/MySessions/rescheduleSession?t=${Date.now()}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
+                    }
                 })
                 const data = res.data?.data || res.data || []
                 const mapped = data.map((s: any) => ({
@@ -363,7 +366,15 @@ function RescheduleModal({ session, onClose, onSuccess }: {
             let errMsg = 'Something went wrong. Please try again.'
             if (err.response?.data) {
                 const data = err.response.data
-                errMsg = data.message || data.errorMessage || (typeof data === 'string' ? data : errMsg)
+                if (typeof data === 'string') {
+                    errMsg = data
+                } else if (typeof data === 'object') {
+                    errMsg = data.detail || data.message || data.Message || data.errorMessage || data.title || errMsg
+                    if (data.errors && typeof data.errors === 'object') {
+                        const errorDetails = Object.values(data.errors).flat().join(', ')
+                        if (errorDetails) errMsg = errorDetails
+                    }
+                }
             }
             setError(errMsg)
             setConfirming(false)
@@ -403,6 +414,26 @@ function RescheduleModal({ session, onClose, onSuccess }: {
                     <hr className={styles.divider} />
                 </div>
 
+                {/* Error Banner */}
+                {error && (
+                    <div style={{
+                        margin: '0 24px 12px',
+                        padding: '12px 16px',
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        borderRadius: '12px',
+                        color: '#ef4444',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px'
+                    }}>
+                        <X size={16} style={{ marginTop: '2px', flexShrink: 0 }} />
+                        <span>{error}</span>
+                    </div>
+                )}
+
                 {/* Slots List */}
                 <div className={styles.slotsScrollArea}>
                     {loadingSlots && (
@@ -411,13 +442,10 @@ function RescheduleModal({ session, onClose, onSuccess }: {
                             <span>Loading available slots...</span>
                         </div>
                     )}
-                    {error && !loadingSlots && (
-                        <div className={styles.errorState}>{error}</div>
-                    )}
-                    {!loadingSlots && !error && slots.length === 0 && (
+                    {!loadingSlots && slots.length === 0 && (
                         <p className={styles.emptyState}>No available slots at the moment.</p>
                     )}
-                    {!loadingSlots && !error && slots.map(slot => {
+                    {!loadingSlots && slots.map(slot => {
                         const isSelected = selectedSlot?.id === slot.id
                         return (
                             <div
@@ -516,9 +544,9 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
             } else {
                 alert('No meeting link available.')
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to join meeting:', err)
-            alert('Failed to get meeting link.')
+            alert(getErrorMessage(err, 'Failed to get meeting link.'))
         }
     }
 
@@ -621,10 +649,20 @@ export default function SessionsPage() {
         try {
             setLoading(true)
             const token = localStorage.getItem('token')
-            const res = await api.get('/Mentor/MySessions', {
-                headers: { Authorization: `Bearer ${token}` }
+            const res = await api.get(`/Mentor/MySessions?t=${Date.now()}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
             })
             const data = res.data?.data || res.data || []
+            console.log('[fetchSessions] Raw sessions data:', data)
+            data.forEach((s: any) => {
+                if (s.sessionId === 1 || s.sessionId === 13 || s.sessionId === 14) {
+                    console.log(`[fetchSessions] Session ${s.sessionId} raw date from backend:`, s.formattedDate)
+                }
+            })
             const mapped = data.map((s: any) => ({
                 id: s.sessionId,
                 title: s.topic || 'Mentorship Session',
@@ -662,10 +700,22 @@ export default function SessionsPage() {
     }
 
     const handleUpdateStatus = async (id: number, status: string) => {
-        await updateSessionStatus(id, status)
-        setSessions(prev =>
-            prev.map(s => s.id === id ? { ...s, status: status as SessionStatus } : s)
-        )
+        try {
+            const data = await updateSessionStatus(id, status)
+            setSessions(prev =>
+                prev.map(s => s.id === id ? { ...s, status: status as SessionStatus } : s)
+            )
+            const successMsg = data?.message || data?.Message || 
+                (language === 'ar'
+                    ? (status === 'Confirmed' ? 'تم تأكيد الجلسة بنجاح.' : 'تم إلغاء الجلسة بنجاح.')
+                    : (status === 'Confirmed' ? 'Session confirmed successfully.' : 'Session declined successfully.')
+                )
+            alert(successMsg)
+        } catch (err: any) {
+            console.error('[handleUpdateStatus] Action failed:', err)
+            const errMsg = getErrorMessage(err, language === 'ar' ? 'فشلت العملية. يرجى المحاولة مرة أخرى.' : `Failed to ${status.toLowerCase()} session.`)
+            alert(errMsg)
+        }
     }
 
     const handleRescheduleSuccess = (sessionId: number, _slotId: number, newSlot: AvailableSlot) => {
