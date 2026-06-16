@@ -160,19 +160,7 @@ function ViewDetailsModal({ session, onClose }: {
     const [loadingProfile, setLoadingProfile] = useState(false)
     const [profileError, setProfileError] = useState<string | null>(null)
 
-    // Debug log to check if CSS Module classes are resolved
-    console.log('[ViewDetailsModal] CSS classes:', {
-        profileAccordion: styles.profileAccordion,
-        profileAccordionExpanded: styles.profileAccordionExpanded,
-        profileAccordionInner: styles.profileAccordionInner
-    })
 
-    console.log('[ViewDetailsModal] Render states:', {
-        isProfileVisible,
-        loadingProfile,
-        hasProfileData: !!profileData,
-        profileError
-    })
 
     useEffect(() => {
         const fetchDetails = async () => {
