@@ -65,18 +65,14 @@ async function fetchAvailableSlots(): Promise<AvailableSlot[]> {
 }
 
 async function createSession(menteeId: number, slotId: number): Promise<void> {
-    try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-        await api.post('/Mentor/MyMentees/scheduleSession', {
-            studentId: menteeId,
-            slotId: slotId,
-            topicId: 1 // Default topicId as required by backend contract
-        }, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-    } catch (err) {
-        console.warn('[createSession] API failed, scheduling locally only:', err)
-    }
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    await api.post('/Mentor/MyMentees/scheduleSession', {
+        studentId: menteeId,
+        slotId: slotId,
+        topicId: 1 // Default topicId as required by backend contract
+    }, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
 }
 
 // ============================================================
@@ -124,13 +120,25 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
             await createSession(mentee.id, selectedSlot.id)
             setDone(true)
             setTimeout(() => { onSuccess(mentee.id); onClose() }, 1200)
-        } catch {
-            setError('Something went wrong. Please try again.')
+        } catch (err: any) {
+            console.error('[handleConfirm] createSession failed:', err)
+            let errMsg = 'Something went wrong. Please try again.'
+            if (err.response?.data) {
+                const data = err.response.data
+                if (typeof data === 'string') {
+                    errMsg = data
+                } else if (typeof data === 'object') {
+                    errMsg = data.detail || data.message || data.Message || data.errorMessage || data.title || errMsg
+                    if (data.errors && typeof data.errors === 'object') {
+                        const errorDetails = Object.values(data.errors).flat().join(', ')
+                        if (errorDetails) errMsg = errorDetails
+                    }
+                }
+            }
+            setError(errMsg)
             setConfirming(false)
         }
     }
-
-
 
     return (
         <div
@@ -167,6 +175,26 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
                     <hr className={styles.divider} />
                 </div>
 
+                {/* Error Banner */}
+                {error && !loadingSlots && (
+                    <div style={{
+                        margin: '12px 24px 0',
+                        padding: '12px 16px',
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        borderRadius: '12px',
+                        color: '#ef4444',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px'
+                    }}>
+                        <X size={16} style={{ marginTop: '2px', flexShrink: 0 }} />
+                        <span>{error}</span>
+                    </div>
+                )}
+
                 {/* Slots List */}
                 <div className={styles.slotList}>
                     {loadingSlots && (
@@ -175,13 +203,10 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
                             <span>Loading available slots...</span>
                         </div>
                     )}
-                    {error && !loadingSlots && (
-                        <div className={styles.errorState}>{error}</div>
-                    )}
-                    {!loadingSlots && !error && slots.length === 0 && (
+                    {!loadingSlots && slots.length === 0 && !error && (
                         <p className={styles.emptyState}>No available slots at the moment.</p>
                     )}
-                    {!loadingSlots && !error && slots.map(slot => {
+                    {!loadingSlots && slots.map(slot => {
                         const isSelected = selectedSlot?.id === slot.id
                         return (
                             <div
