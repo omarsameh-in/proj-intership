@@ -54,6 +54,44 @@
     gap: 16px;
 }
 
+/* Tabs styling */
+.tabContainer {
+    display: flex;
+    gap: 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 24px;
+}
+
+.tabBtn {
+    padding: 12px 8px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.tabBtn:hover {
+    color: white;
+}
+
+.tabBtnActive {
+    color: #3b82f6;
+}
+
+.tabBtnActive::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #3b82f6;
+}
+
 /* Filter Bar */
 .filterBar {
     display: flex;
@@ -279,6 +317,29 @@
 }
 
 .btnDecline:disabled {
+    opacity: 0.6;
+}
+
+.btnCancelConfirmed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ef4444;
+    background: white;
+    border: 1px solid #fecaca;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btnCancelConfirmed:hover:not(:disabled) {
+    background: #fef2f2;
+}
+
+.btnCancelConfirmed:disabled {
     opacity: 0.6;
 }
 
@@ -929,6 +990,22 @@
 }
 :global(body.light-mode) .pageSubtitle {
     color: #64748b;
+}
+
+:global(body.light-mode) .tabContainer {
+    border-bottom-color: #e2e8f0;
+}
+
+:global(body.light-mode) .tabBtn {
+    color: #64748b;
+}
+
+:global(body.light-mode) .tabBtn:hover {
+    color: #1e293b;
+}
+
+:global(body.light-mode) .tabBtnActive {
+    color: #3b82f6;
 }
 
 :global(body.light-mode) .filterPill {
