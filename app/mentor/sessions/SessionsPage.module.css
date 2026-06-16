@@ -817,8 +817,15 @@
     background: #252b3d;
     border-color: #334155;
 }
-.modalTitle, .rescheduleTitle, .studentName, .infoCellValue, .slotDate, .notesText {
+.modalTitle, .rescheduleTitle, .studentName, .infoCellValue, .slotDate, .notesText, .infoCellMeta {
     color: white;
+}
+.studentUniversity, .meetingLinkUrl, .meetingLinkArrow, .slotSelectHint, .slotTimeMeta, .currentSlotLabel, .infoCellLabel, .infoSectionLabel {
+    color: #cbd5e1;
+}
+.confirmBtnDisabled {
+    background: #334155;
+    color: #64748b;
 }
 .studentInfoCard, .infoCell {
     background: #334155;
@@ -936,7 +943,10 @@
 }
 :global(body.light-mode) .infoSectionLabel,
 :global(body.light-mode) .infoCellLabel,
-:global(body.light-mode) .studentUniversity {
+:global(body.light-mode) .studentUniversity,
+:global(body.light-mode) .currentSlotLabel,
+:global(body.light-mode) .slotSelectHint,
+:global(body.light-mode) .slotTimeMeta {
     color: #475569;
 }
 :global(body.light-mode) .currentSlotBox {
