@@ -70,14 +70,10 @@ async function updateSessionStatus(id: number, status: string): Promise<void> {
 }
 
 async function rescheduleSession(sessionId: number, slotId: number): Promise<void> {
-    try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-        await api.put(`/Mentor/MySessions/rescheduleSession/${sessionId}/${slotId}`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-    } catch (err) {
-        console.warn('[rescheduleSession] API failed, updating local state only:', err)
-    }
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    await api.put(`/Mentor/MySessions/rescheduleSession/${sessionId}/${slotId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
 }
 
 // ============================================================
@@ -362,8 +358,14 @@ function RescheduleModal({ session, onClose, onSuccess }: {
             await rescheduleSession(session.id, selectedSlot.id)
             setDone(true)
             setTimeout(() => { onSuccess(session.id, selectedSlot.id, selectedSlot); onClose() }, 1200)
-        } catch {
-            setError('Something went wrong. Please try again.')
+        } catch (err: any) {
+            console.error('[handleConfirm] rescheduleSession failed:', err)
+            let errMsg = 'Something went wrong. Please try again.'
+            if (err.response?.data) {
+                const data = err.response.data
+                errMsg = data.message || data.errorMessage || (typeof data === 'string' ? data : errMsg)
+            }
+            setError(errMsg)
             setConfirming(false)
         }
     }
