@@ -53,23 +53,31 @@ const authHeader = (): Record<string, string> => ({
 //  API CALLS
 // ============================================================
 async function updateSessionStatus(id: number, status: string): Promise<void> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    if (status === 'Confirmed') {
-        await api.put(`/Mentor/MySessions/confirmsession/${id}`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-    } else {
-        await api.delete(`/Mentor/MySessions/cancelSession/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
+    try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        if (status === 'Confirmed') {
+            await api.put(`/Mentor/MySessions/confirmsession/${id}`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+        } else {
+            await api.delete(`/Mentor/MySessions/cancelSession/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+        }
+    } catch (err) {
+        console.warn('[updateSessionStatus] API failed, updating local state only:', err)
     }
 }
 
 async function rescheduleSession(sessionId: number, slotId: number): Promise<void> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    await api.put(`/Mentor/MySessions/rescheduleSession/${sessionId}/${slotId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-    })
+    try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        await api.put(`/Mentor/MySessions/rescheduleSession/${sessionId}/${slotId}`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+    } catch (err) {
+        console.warn('[rescheduleSession] API failed, updating local state only:', err)
+    }
 }
 
 // ============================================================
@@ -152,8 +160,6 @@ function ViewDetailsModal({ session, onClose }: {
                 const res = await api.get(`/Mentor/MySessions/viewdetails/${session.id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
-                const data = res.data?.data || res.data
-                setDetails(data)
             } catch (err) {
                 console.warn('Failed to fetch session details, using mock details from parent:', err)
                 setDetails({
@@ -174,12 +180,12 @@ function ViewDetailsModal({ session, onClose }: {
     }, [session.id])
 
     const isConfirmed = session.status === 'Confirmed'
-    const studentName = details?.studentName || details?.menteeName || details?.student?.name || session.student
-    const university = details?.university || details?.studentUniversity || details?.student?.university || session.studentUniversity || ''
-    const major = details?.major || details?.studentMajor || details?.student?.major || session.studentMajor || ''
-    const topic = details?.topic || details?.title || session.title
+    const studentName = details?.student?.name || session.student
+    const university = details?.student?.university || session.studentUniversity || ''
+    const major = details?.student?.major || session.studentMajor || ''
+    const topic = details?.topic || session.title
     const notes = details?.notes || session.notes
-    const meetingLink = details?.platformLink || details?.meetingLink || session.meetingLink
+    const meetingLink = details?.platformLink || session.meetingLink
 
     return (
         <div
@@ -459,10 +465,10 @@ function RescheduleModal({ session, onClose, onSuccess }: {
                         onClick={handleConfirm}
                         disabled={!selectedSlot || confirming || done}
                         className={`${styles.rescheduleConfirmBtn} ${done
-                                ? styles.confirmBtnDone
-                                : (!selectedSlot || confirming)
-                                    ? styles.confirmBtnDisabled
-                                    : styles.confirmBtnDefault
+                            ? styles.confirmBtnDone
+                            : (!selectedSlot || confirming)
+                                ? styles.confirmBtnDisabled
+                                : styles.confirmBtnDefault
                             }`}
                     >
                         {done
@@ -492,13 +498,8 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
 
     const handleAction = async (status: string) => {
         setLoadingAction(status)
-        try {
-            await onUpdate(session.id, status)
-        } catch (err) {
-            console.error('[handleAction] Action failed:', err)
-        } finally {
-            setLoadingAction(null)
-        }
+        await onUpdate(session.id, status)
+        setLoadingAction(null)
     }
 
     const handleStartMeeting = async () => {
@@ -540,22 +541,10 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
 
             <div className={styles.cardActions}>
                 {isConfirmed && (
-                    <>
-                        <button onClick={handleStartMeeting} className={styles.btnStartMeeting}>
-                            <Video size={14} />
-                            Start Meeting
-                        </button>
-                        <button
-                            onClick={() => handleAction('Declined')}
-                            disabled={!!loadingAction}
-                            className={styles.btnCancelConfirmed}
-                        >
-                            {loadingAction === 'Declined'
-                                ? <Loader2 size={14} className="animate-spin" />
-                                : <X size={14} />}
-                            Cancel Session
-                        </button>
-                    </>
+                    <button onClick={handleStartMeeting} className={styles.btnStartMeeting}>
+                        <Video size={14} />
+                        Start Meeting
+                    </button>
                 )}
                 {isPending && (
                     <>
@@ -602,14 +591,12 @@ export default function SessionsPage() {
     const { language, sidebarOpen, setSidebarOpen } = useApp()
     const searchParams = useSearchParams()
 
-    const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([])
-    const [historySessions, setHistorySessions] = useState<Session[]>([])
+    const [sessions, setSessions] = useState<Session[]>([])
     const [loading, setLoading] = useState(true)
     const [pageError, setPageError] = useState<string | null>(null)
     const [detailsSession, setDetailsSession] = useState<Session | null>(null)
     const [rescheduleSession, setRescheduleSession] = useState<Session | null>(null)
     const [statusFilter, setStatusFilter] = useState<'All' | 'Confirmed' | 'Cancelled' | 'Expired' | 'Pending'>('All')
-    const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
 
     const filterOptions = [
         { key: 'All', labelAr: 'الكل', labelEn: 'All' },
@@ -619,9 +606,7 @@ export default function SessionsPage() {
         { key: 'Expired', labelAr: 'منتهية الصلاحية', labelEn: 'Expired' }
     ] as const
 
-    const activeSessions = activeTab === 'upcoming' ? upcomingSessions : historySessions
-
-    const filteredSessions = activeSessions.filter(session => {
+    const filteredSessions = sessions.filter(session => {
         if (statusFilter === 'All') return true
         if (statusFilter === 'Confirmed') return session.status === 'Confirmed'
         if (statusFilter === 'Cancelled') return session.status === 'Cancelled' || session.status === 'Declined'
@@ -637,11 +622,8 @@ export default function SessionsPage() {
             const res = await api.get('/Mentor/MySessions', {
                 headers: { Authorization: `Bearer ${token}` }
             })
-            const data = res.data?.data || res.data || {}
-            const upcomingData = data.upcomingSessions || data.UpcomingSessions || []
-            const historyData = data.historySessions || data.HistorySessions || []
-
-            const mapSession = (s: any) => ({
+            const data = res.data?.data || res.data || []
+            const mapped = data.map((s: any) => ({
                 id: s.sessionId,
                 title: s.topic || 'Mentorship Session',
                 student: s.menteeName || '',
@@ -651,14 +633,11 @@ export default function SessionsPage() {
                 studentProfileId: s.menteeId,
                 currentDate: s.formattedDate ? s.formattedDate.split(',')[0] : '',
                 currentTime: s.formattedDate ? s.formattedDate.split(',')[1] || '' : '',
-            })
-
-            setUpcomingSessions(upcomingData.map(mapSession))
-            setHistorySessions(historyData.map(mapSession))
+            }))
+            setSessions(mapped)
         } catch (err: any) {
             console.warn('[fetchSessions] API failed, falling back to MOCK_SESSIONS:', err)
-            setUpcomingSessions(MOCK_SESSIONS.filter(s => s.status === 'Confirmed' || s.status === 'Pending'))
-            setHistorySessions(MOCK_SESSIONS.filter(s => s.status === 'Completed' || s.status === 'Cancelled' || s.status === 'Expired'))
+            setSessions(MOCK_SESSIONS)
         } finally {
             setLoading(false)
         }
@@ -676,45 +655,30 @@ export default function SessionsPage() {
         loadData()
     }, [searchParams])
 
+    if (loading) {
+        return <LoadingScreen />
+    }
+
     const handleUpdateStatus = async (id: number, status: string) => {
-        try {
-            await updateSessionStatus(id, status)
-            const updateList = (list: Session[]) =>
-                list.map(s => s.id === id ? { ...s, status: (status === 'Declined' ? 'Declined' : status) as SessionStatus } : s)
-            
-            setUpcomingSessions(prev => updateList(prev))
-            setHistorySessions(prev => updateList(prev))
-            alert(status === 'Confirmed' ? 'Session confirmed successfully!' : 'Session cancelled successfully!')
-        } catch (err: any) {
-            console.error('Failed to update session status:', err)
-            let errMsg = 'Failed to update session status. Please try again.'
-            if (err.response?.data) {
-                const data = err.response.data
-                errMsg = data.message || data.errorMessage || (typeof data === 'string' ? data : errMsg)
-            }
-            alert(errMsg)
-            throw err
-        }
+        await updateSessionStatus(id, status)
+        setSessions(prev =>
+            prev.map(s => s.id === id ? { ...s, status: status as SessionStatus } : s)
+        )
     }
 
     const handleRescheduleSuccess = (sessionId: number, _slotId: number, newSlot: AvailableSlot) => {
-        const updateRescheduled = (list: Session[]) =>
-            list.map(s => s.id === sessionId
+        setSessions(prev =>
+            prev.map(s => s.id === sessionId
                 ? {
                     ...s,
-                    status: 'Confirmed' as SessionStatus,
+                    status: 'Confirmed',
                     date: `${newSlot.displayDate}, ${newSlot.displayTime}`,
                     currentDate: newSlot.displayDate,
                     currentTime: newSlot.displayTime,
                 }
                 : s
             )
-        setUpcomingSessions(prev => updateRescheduled(prev))
-        setHistorySessions(prev => updateRescheduled(prev))
-    }
-
-    if (loading) {
-        return <LoadingScreen />
+        )
     }
 
     return (
@@ -737,29 +701,14 @@ export default function SessionsPage() {
                     </div>
                 </div>
 
+
+
                 {pageError && !loading && (
                     <div className={styles.errorState}>{pageError}</div>
                 )}
 
                 {!loading && !pageError && (
                     <>
-                        {/* Tab Selector */}
-                        <div className={styles.tabContainer}>
-                            <button
-                                className={`${styles.tabBtn} ${activeTab === 'upcoming' ? styles.tabBtnActive : ''}`}
-                                onClick={() => setActiveTab('upcoming')}
-                            >
-                                {language === 'ar' ? 'الجلسات القادمة' : 'Upcoming Sessions'}
-                            </button>
-                            <button
-                                className={`${styles.tabBtn} ${activeTab === 'past' ? styles.tabBtnActive : ''}`}
-                                onClick={() => setActiveTab('past')}
-                            >
-                                {language === 'ar' ? 'الجلسات السابقة' : 'Past Sessions'}
-                            </button>
-                        </div>
-
-                        {/* Status Filter */}
                         <div className={styles.filterBar}>
                             {filterOptions.map(opt => {
                                 const isActive = statusFilter === opt.key
@@ -788,8 +737,8 @@ export default function SessionsPage() {
                             ))}
                             {filteredSessions.length === 0 && (
                                 <p className={styles.emptyState}>
-                                    {language === 'ar' 
-                                        ? 'لا توجد جلسات تطابق هذا التصفية.' 
+                                    {language === 'ar'
+                                        ? 'لا توجد جلسات تطابق هذا التصفية.'
                                         : 'No sessions found matching this filter.'}
                                 </p>
                             )}

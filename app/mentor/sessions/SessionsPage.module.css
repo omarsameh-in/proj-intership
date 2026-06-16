@@ -54,44 +54,6 @@
     gap: 16px;
 }
 
-/* Tabs styling */
-.tabContainer {
-    display: flex;
-    gap: 16px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 24px;
-}
-
-.tabBtn {
-    padding: 12px 8px;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.2s;
-}
-
-.tabBtn:hover {
-    color: white;
-}
-
-.tabBtnActive {
-    color: #3b82f6;
-}
-
-.tabBtnActive::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #3b82f6;
-}
-
 /* Filter Bar */
 .filterBar {
     display: flex;
@@ -145,7 +107,7 @@
 }
 
 .sessionCard:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .sessionCardTop {
@@ -320,29 +282,6 @@
     opacity: 0.6;
 }
 
-.btnCancelConfirmed {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 20px;
-    border-radius: 9999px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #ef4444;
-    background: white;
-    border: 1px solid #fecaca;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.btnCancelConfirmed:hover:not(:disabled) {
-    background: #fef2f2;
-}
-
-.btnCancelConfirmed:disabled {
-    opacity: 0.6;
-}
-
 .btnViewDetails {
     display: flex;
     align-items: center;
@@ -388,7 +327,7 @@
 .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     display: flex;
@@ -404,7 +343,7 @@
     width: 100%;
     max-width: 512px;
     max-height: 90vh;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -664,7 +603,7 @@
     max-width: 448px;
     height: 580px;
     max-height: 88vh;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -904,82 +843,126 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: white;
 }
+
 .sessionCard:hover {
     border-color: rgba(59, 130, 246, 0.4);
     background: rgba(15, 23, 42, 0.6);
 }
+
 .sessionTitle {
     color: white;
 }
-.btnViewDetails, .btnReschedule, .rescheduleCancelBtn {
+
+.btnViewDetails,
+.btnReschedule,
+.rescheduleCancelBtn {
     background: #252b3d;
     border-color: #334155;
     color: #cbd5e1;
 }
-.btnViewDetails:hover, .btnReschedule:hover, .rescheduleCancelBtn:hover {
+
+.btnViewDetails:hover,
+.btnReschedule:hover,
+.rescheduleCancelBtn:hover {
     background: #1e293b;
     color: white;
 }
-.detailsModal, .rescheduleModal {
+
+.detailsModal,
+.rescheduleModal {
     background: #1e293b;
     border: 1px solid #334155;
     color: white;
 }
-.modalHeader, .rescheduleHeader, .detailsModalFooter {
+
+.modalHeader,
+.rescheduleHeader,
+.detailsModalFooter {
     background: #252b3d;
     border-color: #334155;
 }
-.modalTitle, .rescheduleTitle, .studentName, .infoCellValue, .slotDate, .notesText, .infoCellMeta {
+
+.modalTitle,
+.rescheduleTitle,
+.studentName,
+.infoCellValue,
+.slotDate,
+.notesText,
+.infoCellMeta {
     color: white;
 }
-.studentUniversity, .meetingLinkUrl, .meetingLinkArrow, .slotSelectHint, .slotTimeMeta, .currentSlotLabel, .infoCellLabel, .infoSectionLabel {
+
+.studentUniversity,
+.meetingLinkUrl,
+.meetingLinkArrow,
+.slotSelectHint,
+.slotTimeMeta,
+.currentSlotLabel,
+.infoCellLabel,
+.infoSectionLabel {
     color: #cbd5e1;
 }
+
 .confirmBtnDisabled {
     background: #334155;
     color: #64748b;
 }
-.studentInfoCard, .infoCell {
+
+.studentInfoCard,
+.infoCell {
     background: #334155;
     border-color: #475569;
 }
-.notesBox, .meetingLink {
+
+.notesBox,
+.meetingLink {
     background: #252b3d;
     border-color: #3b4f7c;
 }
+
 .meetingLinkTitle {
     color: #60a5fa;
 }
-.meetingLinkUrl, .meetingLinkArrow {
+
+.meetingLinkUrl,
+.meetingLinkArrow {
     color: #94a3b8;
 }
+
 .currentSlotBox {
     background: #334155;
     border-color: #475569;
 }
+
 .currentSlotValue {
     color: white;
 }
+
 .slotItemDefault {
     border-color: #334155;
     background: #252b3d;
 }
+
 .slotIconBoxDefault {
     background: #334155;
     border-color: #475569;
 }
+
 .slotSelectBadgeDefault {
     border-color: #475569;
     color: #94a3b8;
     background: transparent;
 }
+
 .selectedSummary {
     background: #252b3d;
     border-color: #3b4f7c;
 }
+
 .summaryValue {
     color: #60a5fa;
 }
+
 .closeBtn:hover {
     background: #334155;
 }
@@ -988,24 +971,9 @@
 :global(body.light-mode) .pageTitle {
     color: #1e293b;
 }
+
 :global(body.light-mode) .pageSubtitle {
     color: #64748b;
-}
-
-:global(body.light-mode) .tabContainer {
-    border-bottom-color: #e2e8f0;
-}
-
-:global(body.light-mode) .tabBtn {
-    color: #64748b;
-}
-
-:global(body.light-mode) .tabBtn:hover {
-    color: #1e293b;
-}
-
-:global(body.light-mode) .tabBtnActive {
-    color: #3b82f6;
 }
 
 :global(body.light-mode) .filterPill {
@@ -1030,63 +998,75 @@
     border-color: #e2e8f0;
     color: #1e293b;
 }
+
 :global(body.light-mode) .sessionCard:hover {
     background: white;
     border-color: #cbd5e1;
 }
+
 :global(body.light-mode) .sessionTitle {
     color: #1e293b;
 }
-:global(body.light-mode) .btnViewDetails, 
-:global(body.light-mode) .btnReschedule, 
+
+:global(body.light-mode) .btnViewDetails,
+:global(body.light-mode) .btnReschedule,
 :global(body.light-mode) .rescheduleCancelBtn {
     background: white;
     border-color: #e2e8f0;
     color: #475569;
 }
-:global(body.light-mode) .btnViewDetails:hover, 
-:global(body.light-mode) .btnReschedule:hover, 
+
+:global(body.light-mode) .btnViewDetails:hover,
+:global(body.light-mode) .btnReschedule:hover,
 :global(body.light-mode) .rescheduleCancelBtn:hover {
     background: #f8fafc;
     color: #1e293b;
 }
-:global(body.light-mode) .detailsModal, 
+
+:global(body.light-mode) .detailsModal,
 :global(body.light-mode) .rescheduleModal {
     background: white;
     border: none;
     color: #1e293b;
 }
-:global(body.light-mode) .modalHeader, 
-:global(body.light-mode) .rescheduleHeader, 
+
+:global(body.light-mode) .modalHeader,
+:global(body.light-mode) .rescheduleHeader,
 :global(body.light-mode) .detailsModalFooter {
     background: #f8fafc;
     border-color: #f1f5f9;
 }
-:global(body.light-mode) .modalTitle, 
-:global(body.light-mode) .rescheduleTitle, 
-:global(body.light-mode) .studentName, 
-:global(body.light-mode) .infoCellValue, 
-:global(body.light-mode) .slotDate, 
+
+:global(body.light-mode) .modalTitle,
+:global(body.light-mode) .rescheduleTitle,
+:global(body.light-mode) .studentName,
+:global(body.light-mode) .infoCellValue,
+:global(body.light-mode) .slotDate,
 :global(body.light-mode) .notesText {
     color: #1e293b;
 }
-:global(body.light-mode) .studentInfoCard, 
+
+:global(body.light-mode) .studentInfoCard,
 :global(body.light-mode) .infoCell {
     background: #f8fafc;
     border-color: #f1f5f9;
 }
-:global(body.light-mode) .notesBox, 
+
+:global(body.light-mode) .notesBox,
 :global(body.light-mode) .meetingLink {
     background: #eff6ff;
     border-color: #dbeafe;
 }
+
 :global(body.light-mode) .meetingLinkTitle {
     color: #1d4ed8;
 }
-:global(body.light-mode) .meetingLinkUrl, 
+
+:global(body.light-mode) .meetingLinkUrl,
 :global(body.light-mode) .meetingLinkArrow {
     color: #2563eb;
 }
+
 :global(body.light-mode) .infoSectionLabel,
 :global(body.light-mode) .infoCellLabel,
 :global(body.light-mode) .studentUniversity,
@@ -1095,45 +1075,57 @@
 :global(body.light-mode) .slotTimeMeta {
     color: #475569;
 }
+
 :global(body.light-mode) .currentSlotBox {
     background: #f8fafc;
     border-color: #e2e8f0;
 }
+
 :global(body.light-mode) .currentSlotValue {
     color: #475569;
 }
+
 :global(body.light-mode) .slotItemDefault {
     border-color: #f1f5f9;
     background: #fafafa;
 }
+
 :global(body.light-mode) .slotIconBoxDefault {
     background: white;
     border-color: #e2e8f0;
 }
+
 :global(body.light-mode) .slotItemSelected {
     background: #eff6ff;
 }
+
 :global(body.light-mode) .slotIconBoxSelected {
     background: #dbeafe;
 }
+
 :global(body.light-mode) .slotSelectBadgeDefault {
     border-color: #93c5fd;
     color: #3b82f6;
     background: white;
 }
+
 :global(body.light-mode) .selectedSummary {
     background: #eff6ff;
     border-color: #dbeafe;
 }
+
 :global(body.light-mode) .summaryValue {
     color: #1e40af;
 }
+
 :global(body.light-mode) .closeBtn:hover {
     background: #f1f5f9;
 }
+
 :global(body.light-mode) .closeFullBtn {
     background: #1e293b;
 }
+
 :global(body.light-mode) .closeFullBtn:hover {
     background: #0f172a;
 }
@@ -1157,6 +1149,7 @@
     border-top: 1px solid #f1f5f9;
     margin: 0;
 }
+
 :global(body.light-mode) .divider {
     border-top-color: #f1f5f9;
 }
@@ -1172,7 +1165,7 @@
     background: linear-gradient(135deg, #2563eb, #6366f1);
     color: white;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
 
 .confirmBtnDisabled {
@@ -1218,4 +1211,3 @@
     background: #f1f5f9;
     color: #1e293b;
 }
-
