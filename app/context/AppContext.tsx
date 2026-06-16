@@ -160,25 +160,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
     }
     const logout = async () => {
-        try {
-            const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token')
-            if (currentToken) {
-                // Call DELETE /Account/logout to let backend revoke refresh tokens and clear cookies
-                await api.delete('/Account/logout')
-            }
-        } catch (err) {
-            console.error('Logout API request failed:', err)
-        } finally {
-            // Local cleanup
+        const currentToken = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null
+
+        // 1. Instant local cleanup
+        if (typeof window !== 'undefined') {
             localStorage.removeItem('token')
             localStorage.removeItem('refreshToken')
             localStorage.removeItem('user')
             sessionStorage.removeItem('token')
             sessionStorage.removeItem('refreshToken')
             sessionStorage.removeItem('user')
-            setToken(null)
-            setNotifications([])
-            setUnreadCount(0)
+            window.location.href = '/login'
+        }
+        setToken(null)
+        setNotifications([])
+        setUnreadCount(0)
+
+        // 2. Perform API call in background
+        if (currentToken) {
+            try {
+                await api.delete('/Account/logout')
+            } catch (err) {
+                console.error('Logout API request failed:', err)
+            }
         }
     }
 
