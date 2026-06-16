@@ -204,7 +204,9 @@ function ViewDetailsModal({ session, onClose }: {
                 const res = await api.get(`/Mentor/MyMentees/viewprofile/${session.studentProfileId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
-                setProfileData(res.data?.data || res.data)
+                const responseData = res.data?.Data || res.data?.data || res.data
+                console.log('[ViewProfile] Fetched student profile:', responseData)
+                setProfileData(responseData)
             } catch (err: any) {
                 console.error('Failed to fetch student profile:', err)
                 setProfileError(getErrorMessage(err, 'Failed to load student profile.'))
@@ -222,17 +224,17 @@ function ViewDetailsModal({ session, onClose }: {
     const notes = details?.notes || session.notes
     const meetingLink = details?.platformLink || session.meetingLink
 
-    // Normalize profile data safely
+    // Normalize profile data safely supporting both camelCase and PascalCase
     const normalizedProfile = profileData ? {
-        name: profileData.fullName || profileData.name || '',
-        email: profileData.email || '',
-        phone: profileData.phone || profileData.phoneNumber || '',
-        location: profileData.location || '',
-        university: profileData.university || '',
-        college: profileData.college || '',
-        major: profileData.major || '',
-        gradYear: profileData.gradYear || profileData.graduationYear || '',
-        skills: Array.isArray(profileData.skills) ? profileData.skills.filter(Boolean) : []
+        name: profileData.fullName || profileData.FullName || profileData.name || profileData.Name || '',
+        email: profileData.email || profileData.Email || '',
+        phone: profileData.phone || profileData.Phone || profileData.phoneNumber || profileData.PhoneNumber || '',
+        location: profileData.location || profileData.Location || '',
+        university: profileData.university || profileData.University || '',
+        college: profileData.college || profileData.College || '',
+        major: profileData.major || profileData.Major || '',
+        gradYear: profileData.gradYear || profileData.GradYear || profileData.graduationYear || profileData.GraduationYear || '',
+        skills: Array.isArray(profileData.skills) ? profileData.skills : (Array.isArray(profileData.Skills) ? profileData.Skills : [])
     } : null
 
     return (
