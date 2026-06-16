@@ -93,7 +93,7 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
                     try {
                         await api.post('/Mentor/Profile/availabilities', {
                             date: s.date,
-                            startTime: s.startTime,
+                            startTime: s.startTime.split(':').length === 2 ? `${s.startTime}:00` : s.startTime,
                             duration: durStr,
                             sessionType: mappedSessionType,
                             price: decimalPrice,
