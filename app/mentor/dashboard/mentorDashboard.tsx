@@ -57,7 +57,7 @@ function MentorDashboard() {
                 totalSessions: data.totalSessions || 0,
                 activeMentees: data.activeMentees || 0,
                 hoursThisMonth: data.hoursThisMonth || 0,
-                averageRating: data.averageRating || 4.9
+                averageRating: data.averageRating !== undefined && data.averageRating !== null ? data.averageRating : 4.9
             })
         } catch (err: any) {
             if (err.response?.status === 401) {
@@ -73,7 +73,8 @@ function MentorDashboard() {
                     date: t.today,
                     time: `3:00 ${t.pm}`,
                     duration: `1 ${t.hour}`,
-                    avatar: 'AM'
+                    avatar: 'AM',
+                    canStart: true
                 },
                 {
                     id: 2,
@@ -82,7 +83,8 @@ function MentorDashboard() {
                     date: t.tomorrow,
                     time: `10:00 ${t.am}`,
                     duration: `45 ${t.min}`,
-                    avatar: 'SA'
+                    avatar: 'SA',
+                    canStart: true
                 },
                 {
                     id: 3,
@@ -91,7 +93,8 @@ function MentorDashboard() {
                     date: language === 'ar' ? `17 ${t.jan}` : `${t.jan} 17`,
                     time: `2:00 ${t.pm}`,
                     duration: `1 ${t.hour}`,
-                    avatar: 'KH'
+                    avatar: 'KH',
+                    canStart: true
                 }
             ])
 
@@ -254,6 +257,7 @@ function MentorDashboard() {
                                             </button>
                                             <button
                                                 onClick={() => handleStartMeeting(key)}
+                                                disabled={!session.canStart}
                                                 className={styles.startButton}
                                             >
                                                 <Video size={14} />

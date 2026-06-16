@@ -32,6 +32,7 @@ interface Session {
     notes?: string
     currentDate: string
     currentTime: string
+    canStart?: boolean
 }
 
 interface AvailableSlot {
@@ -88,6 +89,7 @@ const MOCK_SESSIONS: Session[] = [
         meetingLink: 'https://zoom.us/j/example',
         notes: 'I need help reviewing my portfolio before applying to jobs.',
         currentDate: 'Jan 17', currentTime: '2:00 PM – 3:00 PM',
+        canStart: true
     },
     {
         id: 2, title: 'Resume Review', student: 'Sara Ali',
@@ -96,6 +98,7 @@ const MOCK_SESSIONS: Session[] = [
         date: 'Tomorrow, 10:00 AM', duration: '45 min',
         notes: 'Please help me improve my resume for software engineering roles.',
         currentDate: 'Tomorrow', currentTime: '10:00 AM – 10:45 AM',
+        canStart: true
     },
     {
         id: 3, title: 'Technical Discussion', student: 'Layla Ibrahim',
@@ -103,6 +106,7 @@ const MOCK_SESSIONS: Session[] = [
         studentProfileId: 3, status: 'Completed',
         date: 'Jan 15, 2024', duration: '1 hour',
         currentDate: 'Jan 15', currentTime: '1:00 PM – 2:00 PM',
+        canStart: true
     },
     {
         id: 4, title: 'Mock Cancelled Session', student: 'Omar Hassan',
@@ -110,6 +114,7 @@ const MOCK_SESSIONS: Session[] = [
         status: 'Cancelled', date: 'Jan 10, 2024', duration: '1 hour',
         notes: 'Session cancelled by user.',
         currentDate: 'Jan 10', currentTime: '2:00 PM – 3:00 PM',
+        canStart: true
     },
     {
         id: 5, title: 'Mock Expired Session', student: 'Mariam Ali',
@@ -117,6 +122,7 @@ const MOCK_SESSIONS: Session[] = [
         status: 'Expired', date: 'Jan 05, 2024', duration: '30 min',
         notes: 'Session expired request.',
         currentDate: 'Jan 05', currentTime: '10:00 AM – 10:30 AM',
+        canStart: true
     },
 ]
 
@@ -571,7 +577,11 @@ function SessionCard({ session, onViewDetails, onReschedule, onUpdate }: {
 
             <div className={styles.cardActions}>
                 {isConfirmed && (
-                    <button onClick={handleStartMeeting} className={styles.btnStartMeeting}>
+                    <button
+                        onClick={handleStartMeeting}
+                        disabled={!session.canStart}
+                        className={styles.btnStartMeeting}
+                    >
                         <Video size={14} />
                         Start Meeting
                     </button>
@@ -673,6 +683,7 @@ export default function SessionsPage() {
                 studentProfileId: s.menteeId,
                 currentDate: s.formattedDate ? s.formattedDate.split(',')[0] : '',
                 currentTime: s.formattedDate ? s.formattedDate.split(',')[1] || '' : '',
+                canStart: s.canStart
             }))
             setSessions(mapped)
         } catch (err: any) {

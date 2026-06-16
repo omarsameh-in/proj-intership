@@ -954,9 +954,25 @@
     transition: all 0.2s ease;
 }
 
-.startButton:hover {
+.startButton:hover:not(:disabled) {
     opacity: 0.9;
     transform: translateY(-1px);
+}
+
+.startButton:disabled {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #64748b;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    background-image: none;
+}
+
+:global(body.light-mode) .startButton:disabled {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    color: #94a3b8;
 }
 
 /* Light mode overrides for reschedule & start buttons */

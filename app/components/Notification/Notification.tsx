@@ -47,6 +47,12 @@ const Notification: React.FC = () => {
             const isStudent = pathname?.startsWith('/student')
 
             switch (notification.type) {
+                case 'MentorSession':
+                    router.push(`/mentor/sessions`)
+                    break
+                case 'StudentSession':
+                    router.push(`/student/sessions`)
+                    break
                 case 'Session':
                     if (isMentor) {
                         router.push(`/mentor/sessions`)
