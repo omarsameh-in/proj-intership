@@ -104,12 +104,25 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
                     } catch (apiErr: any) {
                         console.warn('[handleSave availabilities] API failed:', apiErr)
                         if (apiErr.response) {
-                            const serverMsg = apiErr.response.data?.message || apiErr.response.data?.errorMessage || apiErr.response.data || '';
-                            if (serverMsg && typeof serverMsg === 'string') {
-                                throw new Error(serverMsg);
-                            } else {
-                                throw new Error('Failed to save slot due to validation error.');
+                            let detailedMsg = ''
+                            const data = apiErr.response.data
+                            if (data) {
+                                if (data.errors) {
+                                    const errsObj = data.errors
+                                    detailedMsg = Object.keys(errsObj)
+                                        .map(key => `${key}: ${Array.isArray(errsObj[key]) ? errsObj[key].join(', ') : errsObj[key]}`)
+                                        .join(' | ')
+                                } else if (typeof data === 'string') {
+                                    detailedMsg = data
+                                } else if (data.message) {
+                                    detailedMsg = data.message
+                                } else if (data.errorMessage) {
+                                    detailedMsg = data.errorMessage
+                                } else {
+                                    detailedMsg = JSON.stringify(data)
+                                }
                             }
+                            throw new Error(detailedMsg || 'Failed to save slot due to validation error.');
                         } else {
                             // Fallback to local context saving
                             addSlots([
