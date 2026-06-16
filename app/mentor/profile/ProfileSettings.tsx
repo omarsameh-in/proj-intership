@@ -101,22 +101,32 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
                         }, {
                             headers: { Authorization: `Bearer ${token}` }
                         })
-                    } catch (apiErr) {
-                        console.warn('[handleSave availabilities] API failed, saving slot locally in context:', apiErr)
-                        addSlots([
-                            {
-                                id: s.id,
-                                day: s.day,
-                                time: s.time
+                    } catch (apiErr: any) {
+                        console.warn('[handleSave availabilities] API failed:', apiErr)
+                        if (apiErr.response) {
+                            const serverMsg = apiErr.response.data?.message || apiErr.response.data?.errorMessage || apiErr.response.data || '';
+                            if (serverMsg && typeof serverMsg === 'string') {
+                                throw new Error(serverMsg);
+                            } else {
+                                throw new Error('Failed to save slot due to validation error.');
                             }
-                        ])
+                        } else {
+                            // Fallback to local context saving
+                            addSlots([
+                                {
+                                    id: s.id,
+                                    day: s.day,
+                                    time: s.time
+                                }
+                            ])
+                        }
                     }
                 }
             }
             onSaveSuccess()
         } catch (err: any) {
             console.error('Error saving availabilities:', err)
-            setError('Failed to save. Please try again.')
+            setError(err.message || 'Failed to save. Please try again.')
             setSaving(false)
         }
     }
@@ -277,28 +287,45 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
 // ============================================================
 //  CV UPLOAD ZONE
 // ============================================================
-function CVUploadZone() {
+interface CVUploadZoneProps {
+    file: File | null;
+    onFileSelect: (file: File | null) => void;
+}
+
+function CVUploadZone({ file, onFileSelect }: CVUploadZoneProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null)
     const [isDragging, setIsDragging] = useState(false)
 
     const acceptedTypes = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    const handleFile = (file: File) => setUploadedFile(file)
-    const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) handleFile(f) }
+    const handleFile = (selectedFile: File) => {
+        onFileSelect(selectedFile)
+    }
+    const handleDrop = (e: React.DragEvent) => { 
+        e.preventDefault()
+        setIsDragging(false)
+        const f = e.dataTransfer.files[0]
+        if (f) handleFile(f)
+    }
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { 
+        const f = e.target.files?.[0]
+        if (f) handleFile(f)
+    }
+    const handleRemove = () => {
+        onFileSelect(null)
+    }
 
     return (
         <>
             <input ref={fileInputRef} type="file" accept={acceptedTypes} className={styles.hidden} onChange={handleChange} aria-label="Upload CV" />
-            {uploadedFile ? (
+            {file ? (
                 <div className={styles.uploadedFile}>
                     <FileText size={28} color="#22c55e" />
                     <div className={styles.flexGrow}>
-                        <p className={styles.uploadedFileName}>{uploadedFile.name}</p>
-                        <p className={styles.uploadedFileSize}>{(uploadedFile.size / 1024).toFixed(1)} KB</p>
+                        <p className={styles.uploadedFileName}>{file.name}</p>
+                        <p className={styles.uploadedFileSize}>{(file.size / 1024).toFixed(1)} KB</p>
                     </div>
                     <CheckCircle size={20} color="#22c55e" />
-                    <button onClick={() => setUploadedFile(null)} className={styles.removeFileBtn} title="Remove File">
+                    <button onClick={handleRemove} className={styles.removeFileBtn} title="Remove File">
                         <X size={18} />
                     </button>
                 </div>
@@ -399,6 +426,7 @@ export default function ProfileSettings() {
     const { slots, deleteSlot, setSlots, language, sidebarOpen, setSidebarOpen } = useApp()
     const [showManagement, setShowManagement] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
+    const [cvFile, setCvFile] = useState<File | null>(null)
     const [loading, setLoading] = useState(true)
 
     const defaultProfile = {
@@ -465,30 +493,41 @@ export default function ProfileSettings() {
 
     const handleCancel = () => {
         setIsEditing(false)
+        setCvFile(null)
     }
 
     const handleSave = async () => {
         try {
             const token = localStorage.getItem('token')
-            const payload = {
-                fullName: editData.fullName,
-                email: editData.email,
-                phoneNumber: editData.phoneNumber,
-                location: editData.location,
-                jobTitle: editData.jobTitle,
-                yearsExperience: parseInt(editData.yearsExperience as any) || 0,
-                linkedin: editData.linkedin || null,
-                bio: editData.bio || null
+            const formData = new FormData()
+            formData.append('FullName', editData.fullName)
+            formData.append('Email', editData.email)
+            formData.append('PhoneNumber', editData.phoneNumber)
+            formData.append('Location', editData.location)
+            formData.append('JobTitle', editData.jobTitle)
+            formData.append('YearsExperience', String(editData.yearsExperience))
+            formData.append('Linkedin', editData.linkedin || '')
+            formData.append('Bio', editData.bio || '')
+            if (cvFile) {
+                formData.append('CvFile', cvFile)
             }
-            await api.put('/Mentor/Profile/SaveChange', payload, {
-                headers: { Authorization: `Bearer ${token}` }
+
+            await api.put('/Mentor/Profile/SaveChange', formData, {
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             })
+            alert('Profile updated successfully!')
         } catch (err: any) {
             console.warn('[handleSave] API failed, saving locally:', err)
+            const errMsg = err.response?.data?.message || err.response?.data?.errorMessage || 'Failed to update profile.'
+            alert(errMsg)
         }
         setProfileData({ ...editData })
         localStorage.setItem('mentorProfile', JSON.stringify(editData))
         setIsEditing(false)
+        setCvFile(null)
     }
     const handleChange = (field: keyof typeof editData, value: string) => {
         setEditData(prev => ({ ...prev, [field]: value }))
@@ -503,7 +542,8 @@ export default function ProfileSettings() {
             deleteSlot(slotId)
         } catch (err: any) {
             console.error('Failed to delete slot:', err)
-            alert('Failed to delete slot. Please try again.')
+            const errMsg = err.response?.data?.message || err.response?.data?.errorMessage || 'Failed to delete slot. Please try again.'
+            alert(errMsg)
         }
     }
 
@@ -548,7 +588,7 @@ export default function ProfileSettings() {
                     <div className={styles.sectionsStack}>
 
                         <div className={styles.editBarTop}>
-                            {!isEditing ? (
+                            {!isEditing && !cvFile ? (
                                 <button onClick={handleEdit} className={styles.editProfileBtn} title={language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}>
                                     <Edit size={16} /> {language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
                                 </button>
@@ -606,7 +646,7 @@ export default function ProfileSettings() {
                         {/* Upload CV */}
                         <section className={styles.section}>
                             <h2 className={`${styles.sectionTitle} ${styles.marginBottom16}`}>Upload CV</h2>
-                            <CVUploadZone />
+                            <CVUploadZone file={cvFile} onFileSelect={setCvFile} />
                         </section>
 
                         {/* Availability & Preferences */}
