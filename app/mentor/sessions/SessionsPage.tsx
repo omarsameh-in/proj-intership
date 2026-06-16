@@ -16,7 +16,7 @@ import api from '../../lib/api'
 // ============================================================
 //  TYPES
 // ============================================================
-type SessionStatus = 'Pending' | 'Confirmed' | 'Declined' | 'Completed'
+type SessionStatus = 'Pending' | 'Confirmed' | 'Declined' | 'Completed' | 'Cancelled' | 'Expired' | 'Started' | 'InProgress'
 
 interface Session {
     id: number
@@ -108,6 +108,20 @@ const MOCK_SESSIONS: Session[] = [
         date: 'Jan 15, 2024', duration: '1 hour',
         currentDate: 'Jan 15', currentTime: '1:00 PM – 2:00 PM',
     },
+    {
+        id: 4, title: 'Mock Cancelled Session', student: 'Omar Hassan',
+        studentUniversity: 'Cairo University', studentMajor: 'Engineering',
+        status: 'Cancelled', date: 'Jan 10, 2024', duration: '1 hour',
+        notes: 'Session cancelled by user.',
+        currentDate: 'Jan 10', currentTime: '2:00 PM – 3:00 PM',
+    },
+    {
+        id: 5, title: 'Mock Expired Session', student: 'Mariam Ali',
+        studentUniversity: 'GUC', studentMajor: 'Management',
+        status: 'Expired', date: 'Jan 05, 2024', duration: '30 min',
+        notes: 'Session expired request.',
+        currentDate: 'Jan 05', currentTime: '10:00 AM – 10:30 AM',
+    },
 ]
 
 // ============================================================
@@ -119,8 +133,12 @@ function StatusBadge({ status }: { status: SessionStatus }) {
         Pending: styles.badgePending,
         Declined: styles.badgeDeclined,
         Completed: styles.badgeCompleted,
+        Cancelled: styles.badgeCancelled,
+        Expired: styles.badgeExpired,
+        Started: styles.badgeConfirmed,
+        InProgress: styles.badgeConfirmed,
     }
-    return <span className={`${styles.badge} ${cls[status]}`}>{status}</span>
+    return <span className={`${styles.badge} ${cls[status] || styles.badgePending}`}>{status}</span>
 }
 
 // ============================================================
@@ -578,6 +596,24 @@ export default function SessionsPage() {
     const [pageError, setPageError] = useState<string | null>(null)
     const [detailsSession, setDetailsSession] = useState<Session | null>(null)
     const [rescheduleSession, setRescheduleSession] = useState<Session | null>(null)
+    const [statusFilter, setStatusFilter] = useState<'All' | 'Confirmed' | 'Cancelled' | 'Expired' | 'Pending'>('All')
+
+    const filterOptions = [
+        { key: 'All', labelAr: 'الكل', labelEn: 'All' },
+        { key: 'Confirmed', labelAr: 'مؤكدة', labelEn: 'Confirmed' },
+        { key: 'Pending', labelAr: 'قيد الانتظار', labelEn: 'Pending' },
+        { key: 'Cancelled', labelAr: 'ملغاة', labelEn: 'Cancelled' },
+        { key: 'Expired', labelAr: 'منتهية الصلاحية', labelEn: 'Expired' }
+    ] as const
+
+    const filteredSessions = sessions.filter(session => {
+        if (statusFilter === 'All') return true
+        if (statusFilter === 'Confirmed') return session.status === 'Confirmed'
+        if (statusFilter === 'Cancelled') return session.status === 'Cancelled' || session.status === 'Declined'
+        if (statusFilter === 'Expired') return session.status === 'Expired'
+        if (statusFilter === 'Pending') return session.status === 'Pending'
+        return true
+    })
 
     const fetchSessions = async () => {
         try {
@@ -672,20 +708,42 @@ export default function SessionsPage() {
                 )}
 
                 {!loading && !pageError && (
-                    <div className={styles.sessionsList}>
-                        {sessions.map(session => (
-                            <SessionCard
-                                key={session.id}
-                                session={session}
-                                onViewDetails={() => setDetailsSession(session)}
-                                onReschedule={() => setRescheduleSession(session)}
-                                onUpdate={handleUpdateStatus}
-                            />
-                        ))}
-                        {sessions.length === 0 && (
-                            <p className={styles.emptyState}>No sessions yet.</p>
-                        )}
-                    </div>
+                    <>
+                        <div className={styles.filterBar}>
+                            {filterOptions.map(opt => {
+                                const isActive = statusFilter === opt.key
+                                const label = language === 'ar' ? opt.labelAr : opt.labelEn
+                                return (
+                                    <button
+                                        key={opt.key}
+                                        className={`${styles.filterPill} ${isActive ? styles.filterPillActive : ''}`}
+                                        onClick={() => setStatusFilter(opt.key)}
+                                    >
+                                        {label}
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        <div className={styles.sessionsList}>
+                            {filteredSessions.map(session => (
+                                <SessionCard
+                                    key={session.id}
+                                    session={session}
+                                    onViewDetails={() => setDetailsSession(session)}
+                                    onReschedule={() => setRescheduleSession(session)}
+                                    onUpdate={handleUpdateStatus}
+                                />
+                            ))}
+                            {filteredSessions.length === 0 && (
+                                <p className={styles.emptyState}>
+                                    {language === 'ar' 
+                                        ? 'لا توجد جلسات تطابق هذا التصفية.' 
+                                        : 'No sessions found matching this filter.'}
+                                </p>
+                            )}
+                        </div>
+                    </>
                 )}
             </div>
 

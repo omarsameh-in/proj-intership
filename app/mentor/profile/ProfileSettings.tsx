@@ -48,9 +48,15 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
     const [error, setError] = useState<string | null>(null)
 
     const [sessionType, setSessionType] = useState('Paid Sessions')
-    const [hourlyRate, setHourlyRate] = useState('500')
+    const [hourlyRate, setHourlyRate] = useState('0')
     const [durationMinutes, setDurationMinutes] = useState('60')
     const [meetingPlatform, setMeetingPlatform] = useState('Zoom')
+
+    useEffect(() => {
+        if (sessionType !== 'Paid Sessions') {
+            setHourlyRate('0')
+        }
+    }, [sessionType])
 
     const handleAddSlot = () => {
         if (!day || !time) return
@@ -251,6 +257,7 @@ function ManagementModal({ onClose, onSaveSuccess }: { onClose: () => void; onSa
                                 value={hourlyRate}
                                 onChange={e => setHourlyRate(e.target.value)}
                                 className={styles.formInput}
+                                disabled={sessionType !== 'Paid Sessions'}
                             />
                         </div>
                         <div className={styles.formField}>

@@ -54,6 +54,39 @@
     gap: 16px;
 }
 
+/* Filter Bar */
+.filterBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.filterPill {
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+}
+
+.filterPill:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.filterPillActive {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+
 .emptyState {
     text-align: center;
     color: #94a3b8;
@@ -161,6 +194,19 @@
     color: #64748b;
     border: 1px solid #e2e8f0;
 }
+
+.badgeCancelled {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.badgeExpired {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
 
 /* Card Actions */
 .cardActions {
@@ -879,6 +925,24 @@
 :global(body.light-mode) .pageSubtitle {
     color: #64748b;
 }
+
+:global(body.light-mode) .filterPill {
+    background: white;
+    border-color: #e2e8f0;
+    color: #475569;
+}
+
+:global(body.light-mode) .filterPill:hover {
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+:global(body.light-mode) .filterPillActive {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
 :global(body.light-mode) .sessionCard {
     background: white;
     border-color: #e2e8f0;
