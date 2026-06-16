@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Bell, X, Check, Info, AlertTriangle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useApp } from '../../context/AppContext'
 import styles from './Notification.module.css'
 import { notificationService, NotificationItem } from '../../services/notificationService'
@@ -10,6 +10,7 @@ import { notificationService, NotificationItem } from '../../services/notificati
 const Notification: React.FC = () => {
     const { language, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useApp()
     const router = useRouter()
+    const pathname = usePathname()
     const [isOpen, setIsOpen] = useState(false)
 
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -40,14 +41,25 @@ const Notification: React.FC = () => {
         // 2. إغلاق القائمة
         setIsOpen(false)
 
-        // 3. التوجيه بناءً على النوع والـ ID
+        // 3. التوجيه بناءً على النوع والـ ID والـ Role
         if (notification.relatedEntityId) {
+            const isMentor = pathname?.startsWith('/mentor')
+            const isStudent = pathname?.startsWith('/student')
+
             switch (notification.type) {
                 case 'Session':
-                    router.push(`/student/sessions`)
+                    if (isMentor) {
+                        router.push(`/mentor/sessions`)
+                    } else {
+                        router.push(`/student/sessions`)
+                    }
                     break
                 case 'Internship':
-                    router.push(`/student/internships`)
+                    if (isStudent) {
+                        router.push(`/student/internships`)
+                    } else {
+                        router.push(`/company/internships`)
+                    }
                     break
                 case 'Mentorship':
                     router.push(`/student/mentorships`)
