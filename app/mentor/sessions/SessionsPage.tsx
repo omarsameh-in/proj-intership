@@ -824,18 +824,25 @@ export default function SessionsPage() {
     }
 
     useEffect(() => {
-        const loadData = async () => {
-            await fetchSessions()
-            const rescheduleId = searchParams.get('reschedule')
-            if (rescheduleId) {
-                const session = MOCK_SESSIONS.find(s => s.studentProfileId === Number(rescheduleId))
-                if (session) setRescheduleSession(session)
-            }
-        }
-        loadData()
+        fetchSessions()
     }, [searchParams])
 
+    // Open reschedule modal when ?reschedule=sessionId is in the URL
+    // Runs after sessions are loaded so we can find the real session object
     useEffect(() => {
+        if (loading) return
+        const rescheduleId = searchParams.get('reschedule')
+        if (rescheduleId) {
+            const found = sessions.find(s => s.id === Number(rescheduleId))
+            if (found) {
+                setRescheduleSession(found)
+            }
+        }
+    }, [sessions, loading, searchParams])
+
+    // Open details modal when ?sessionId or ?id is in the URL
+    useEffect(() => {
+        if (loading) return
         const sessionIdParam = searchParams.get('sessionId') || searchParams.get('id')
         if (sessionIdParam) {
             const found = sessions.find(s => s.id === Number(sessionIdParam))
@@ -854,7 +861,7 @@ export default function SessionsPage() {
                 })
             }
         }
-    }, [searchParams, sessions])
+    }, [sessions, loading, searchParams])
 
     if (loading) {
         return <LoadingScreen />
