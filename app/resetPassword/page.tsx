@@ -164,8 +164,13 @@ function ResetPasswordContent() {
         setIsLoading(true)
 
         try {
+            // Re-encode the token so the backend's UrlDecode produces the correct value.
+            // The browser already URL-decoded the token from the link; the backend calls
+            // UrlDecode again, so we encode it once more to compensate.
+            const encodedToken = encodeURIComponent(token.trim())
+
             await api.post('/Account/resetpassword', {
-                token: token.trim(),
+                token: encodedToken,
                 email: email.trim(),
                 newPassword,
             })
@@ -180,14 +185,28 @@ function ResetPasswordContent() {
                 const data = err.response.data
                 if (typeof data === 'string') {
                     msg = data
-                } else if (data.errorMessage) {
-                    msg = data.errorMessage
+                } else if (data.errorMessage || data.ErrorMessage) {
+                    msg = data.errorMessage || data.ErrorMessage
                 } else if (data.message || data.Message) {
                     msg = data.message || data.Message
                 } else if (data.Errors && Array.isArray(data.Errors)) {
-                    msg = data.Errors.map((e: any) => e.errorDescription || e).join(', ')
-                } else if (data.errors && typeof data.errors === 'object') {
-                    msg = Object.values(data.errors).flat().join(', ')
+                    // Backend sends { Errors: [{ ErrorDescription: "..." }] }
+                    msg = data.Errors
+                        .map((e: any) => e.ErrorDescription || e.errorDescription || String(e))
+                        .filter(Boolean)
+                        .join('. ')
+                } else if (data.errors) {
+                    if (Array.isArray(data.errors)) {
+                        msg = data.errors
+                            .map((e: any) => e.ErrorDescription || e.errorDescription || String(e))
+                            .filter(Boolean)
+                            .join('. ')
+                    } else if (typeof data.errors === 'object') {
+                        // ASP.NET Core ModelState validation errors
+                        msg = (Object.values(data.errors) as string[][])
+                            .flat()
+                            .join('. ')
+                    }
                 }
             }
             setError(msg)
