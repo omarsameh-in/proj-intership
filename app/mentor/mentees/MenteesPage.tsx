@@ -145,40 +145,36 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
             className={styles.overlay}
             onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className={styles.modal}>
+            <div className={styles.rescheduleModal}>
                 {/* Header */}
-                <div className={styles.modalHeader}>
+                <div className={styles.rescheduleHeader}>
                     <div>
-                        <p className={styles.modalEyebrow}>New Session</p>
-                        <h2 className={styles.modalTitle}>{mentee.name}</h2>
-                        <p className={styles.modalSubtitle}>{mentee.university}</p>
+                        <p className={styles.rescheduleEyebrow}>Scheduling</p>
+                        <h2 className={styles.rescheduleTitle}>New Mentorship Session</h2>
+                        <p className={styles.rescheduleStudent}>{mentee.name}</p>
                     </div>
                     <button onClick={onClose} className={styles.closeBtn} title="Close">
                         <X size={18} />
                     </button>
                 </div>
 
-                {/* Mentee Info */}
-                <div className={styles.modalMenteeInfo}>
-                    <div className={styles.menteeInfoCard}>
-                        <div className={styles.menteeAvatar}>{mentee.name.charAt(0)}</div>
-                        <div>
-                            <p className={styles.menteeName}>{mentee.name}</p>
-                            <p className={styles.menteeMajor}>{mentee.major}</p>
-                        </div>
-                        <div className={styles.menteeSessions}>
-                            <p className={styles.menteeSessionsLabel}>Total Sessions</p>
-                            <p className={styles.menteeSessionsCount}>{mentee.totalSessions}</p>
-                        </div>
+                {/* Mentee Info / Current Slot Bar equivalent */}
+                <div className={styles.currentSlotBar}>
+                    <div className={styles.currentSlotBox}>
+                        <GraduationCap size={13} color="#94a3b8" />
+                        <span className={styles.currentSlotLabel}>Mentee Info:</span>
+                        <span className={styles.currentSlotValue}>
+                            {mentee.university} · {mentee.major}
+                        </span>
                     </div>
-                    <p className={styles.slotHint}>Select an available slot for this session</p>
+                    <p className={styles.slotSelectHint}>Select an available slot for this session</p>
                     <hr className={styles.divider} />
                 </div>
 
                 {/* Error Banner */}
                 {error && !loadingSlots && (
                     <div style={{
-                        margin: '12px 24px 0',
+                        margin: '0 24px 12px',
                         padding: '12px 16px',
                         background: '#fef2f2',
                         border: '1px solid #fecaca',
@@ -196,7 +192,7 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
                 )}
 
                 {/* Slots List */}
-                <div className={styles.slotList}>
+                <div className={styles.slotsScrollArea}>
                     {loadingSlots && (
                         <div className={styles.loadingState}>
                             <Loader2 size={24} className="animate-spin" />
@@ -214,19 +210,19 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
                                 onClick={() => setSelectedSlot(slot)}
                                 className={`${styles.slotItem} ${isSelected ? styles.slotItemSelected : styles.slotItemDefault}`}
                             >
-                                <div className={styles.slotLeft}>
-                                    <div className={`${styles.slotIcon} ${isSelected ? styles.slotIconSelected : styles.slotIconDefault}`}>
+                                <div className={styles.slotItemLeft}>
+                                    <div className={`${styles.slotIconBox} ${isSelected ? styles.slotIconBoxSelected : styles.slotIconBoxDefault}`}>
                                         <Calendar size={16} color={isSelected ? '#3b82f6' : '#94a3b8'} />
                                     </div>
                                     <div>
                                         <p className={styles.slotDate}>{slot.displayDate}</p>
-                                        <div className={styles.slotTime}>
+                                        <div className={styles.slotTimeMeta}>
                                             <Clock size={11} color="#94a3b8" />
                                             <span>{slot.displayTime}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <span className={`${styles.slotBadge} ${isSelected ? styles.slotBadgeSelected : styles.slotBadgeDefault}`}>
+                                <span className={`${styles.slotSelectBadge} ${isSelected ? styles.slotSelectBadgeSelected : styles.slotSelectBadgeDefault}`}>
                                     {isSelected ? 'Selected' : 'Select'}
                                 </span>
                             </div>
@@ -250,12 +246,12 @@ function ScheduleSessionModal({ mentee, onClose, onSuccess }: {
                 )}
 
                 {/* Footer */}
-                <div className={styles.modalFooter}>
-                    <button onClick={onClose} className={styles.cancelBtn}>Cancel</button>
+                <div className={styles.rescheduleFooter}>
+                    <button onClick={onClose} className={styles.rescheduleCancelBtn}>Cancel</button>
                     <button
                         onClick={handleConfirm}
                         disabled={!selectedSlot || confirming || done}
-                        className={`${styles.confirmBtn} ${done
+                        className={`${styles.rescheduleConfirmBtn} ${done
                                 ? styles.confirmBtnDone
                                 : (!selectedSlot || confirming)
                                     ? styles.confirmBtnDisabled

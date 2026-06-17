@@ -7,6 +7,53 @@ import { useApp } from '../../context/AppContext'
 import styles from './Notification.module.css'
 import { notificationService, NotificationItem } from '../../services/notificationService'
 
+function formatTimeAgo(dateString: string, language: 'en' | 'ar'): string {
+    if (!dateString) return '';
+    
+    // Check if it's already a relative time string (e.g. "Just now", "2 hours ago")
+    if (dateString.includes(' ') && !dateString.includes('T') && !dateString.includes('-') && !dateString.includes(':')) {
+        return dateString;
+    }
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (isNaN(date.getTime()) || seconds < 0) return language === 'ar' ? 'الآن' : 'Just now';
+    
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (language === 'ar') {
+        if (seconds < 60) return 'الآن';
+        if (minutes === 1) return 'منذ دقيقة';
+        if (minutes === 2) return 'منذ دقيقتين';
+        if (minutes < 11) return `منذ ${minutes} دقائق`;
+        if (minutes < 60) return `منذ ${minutes} دقيقة`;
+        
+        if (hours === 1) return 'منذ ساعة';
+        if (hours === 2) return 'منذ ساعتين';
+        if (hours < 11) return `منذ ${hours} ساعات`;
+        if (hours < 24) return `منذ ${hours} ساعة`;
+        
+        if (days === 1) return 'أمس';
+        if (days === 2) return 'منذ يومين';
+        if (days < 11) return `منذ ${days} أيام`;
+        return `منذ ${days} يوم`;
+    } else {
+        if (seconds < 60) return 'Just now';
+        if (minutes === 1) return '1 minute ago';
+        if (minutes < 60) return `${minutes} minutes ago`;
+        
+        if (hours === 1) return '1 hour ago';
+        if (hours < 24) return `${hours} hours ago`;
+        
+        if (days === 1) return '1 day ago';
+        return `${days} days ago`;
+    }
+}
+
 const Notification: React.FC = () => {
     const { language, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useApp()
     const router = useRouter()
@@ -42,38 +89,63 @@ const Notification: React.FC = () => {
         setIsOpen(false)
 
         // 3. التوجيه بناءً على النوع والـ ID والـ Role
-        if (notification.relatedEntityId) {
-            const isMentor = pathname?.startsWith('/mentor')
-            const isStudent = pathname?.startsWith('/student')
+        const isMentor = pathname?.startsWith('/mentor')
+        const isStudent = pathname?.startsWith('/student')
+        const id = notification.relatedEntityId
 
-            switch (notification.type) {
-                case 'MentorSession':
+        switch (notification.type) {
+            case 'MentorSession':
+                if (id) {
+                    router.push(`/mentor/sessions?sessionId=${id}`)
+                } else {
                     router.push(`/mentor/sessions`)
-                    break
-                case 'StudentSession':
+                }
+                break
+            case 'StudentSession':
+                if (id) {
+                    router.push(`/student/sessions?sessionId=${id}`)
+                } else {
                     router.push(`/student/sessions`)
-                    break
-                case 'Session':
-                    if (isMentor) {
+                }
+                break
+            case 'CompanyApplication':
+                if (id) {
+                    router.push(`/company/applicants?internId=${id}`)
+                } else {
+                    router.push(`/company/applicants`)
+                }
+                break
+            case 'StudentApplication':
+                router.push(`/student/internships`)
+                break
+            case 'Session':
+                if (isMentor) {
+                    if (id) {
+                        router.push(`/mentor/sessions?sessionId=${id}`)
+                    } else {
                         router.push(`/mentor/sessions`)
-                    } else {
-                        router.push(`/student/sessions`)
                     }
-                    break
-                case 'Internship':
-                    if (isStudent) {
-                        router.push(`/student/internships`)
+                } else {
+                    router.push(`/student/sessions`)
+                }
+                break
+            case 'Internship':
+                if (isStudent) {
+                    router.push(`/student/internships`)
+                } else {
+                    if (id) {
+                        router.push(`/company/applicants?internId=${id}`)
                     } else {
-                        router.push(`/company/internships`)
+                        router.push(`/company/applicants`)
                     }
-                    break
-                case 'Mentorship':
-                    router.push(`/student/mentorships`)
-                    break
-                default:
-                    // لو نوع غير معروف، مفيش توجيه محدد
-                    break
-            }
+                }
+                break
+            case 'Mentorship':
+                router.push(`/student/mentorships`)
+                break
+            default:
+                // لو نوع غير معروف، مفيش توجيه محدد
+                break
         }
     }
 
@@ -123,7 +195,9 @@ const Notification: React.FC = () => {
                                     <div className={styles.content}>
                                         <div className={styles.itemHeader}>
                                             <span className={styles.itemTitle}>{notification.title}</span>
-                                            <span className={styles.time}>{notification.timeAgo}</span>
+                                            <span className={styles.time}>
+                                                {formatTimeAgo(notification.createdAt || notification.timeAgo, language)}
+                                            </span>
                                         </div>
                                         <p className={styles.message}>{notification.message}</p>
                                     </div>

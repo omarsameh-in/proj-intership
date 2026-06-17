@@ -28,7 +28,7 @@ export const notificationService = {
         try {
             const response = await api.get('/api/Notifications/unread-count');
             const data = response.data?.data ?? response.data;
-            return typeof data === 'number' ? data : (data?.count ?? 0);
+            return typeof data === 'number' ? data : (data?.unreadCount ?? data?.count ?? 0);
         } catch (err: any) {
             console.warn('[getUnreadCount] Notification endpoint failed or not implemented yet. Falling back to 0.', err);
             return 0;

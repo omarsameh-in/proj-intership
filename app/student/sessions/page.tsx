@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
     BookOpen,
     User,
@@ -297,13 +297,34 @@ async function refreshAccessToken(): Promise<string | null> {
     }
 }
 
-export default function SessionsPage() {
-    const { t } = useApp()
+function SessionsPageContent() {
+    const { t, language } = useApp()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const sessionIdParam = searchParams.get('sessionId') || searchParams.get('id')
 
     const [sessions, setSessions] = useState<Session[]>([])
     const [loading, setLoading] = useState(true)
     const [sidebarOpen, setSidebarOpen] = useState(false)
+
+    const [statusFilter, setStatusFilter] = useState<'All' | 'Confirmed' | 'Cancelled' | 'Expired' | 'Pending'>('All')
+
+    const filterOptions = [
+        { key: 'All', labelAr: 'الكل', labelEn: 'All' },
+        { key: 'Confirmed', labelAr: 'مؤكدة', labelEn: 'Confirmed' },
+        { key: 'Pending', labelAr: 'قيد الانتظار', labelEn: 'Pending' },
+        { key: 'Cancelled', labelAr: 'ملغاة', labelEn: 'Cancelled' },
+        { key: 'Expired', labelAr: 'منتهية الصلاحية', labelEn: 'Expired' }
+    ] as const
+
+    const filteredSessions = sessions.filter(session => {
+        if (statusFilter === 'All') return true
+        if (statusFilter === 'Confirmed') return session.status === 'Confirmed' || session.status === 'Started' || session.status === 'InProgress'
+        if (statusFilter === 'Cancelled') return session.status === 'Cancelled'
+        if (statusFilter === 'Expired') return session.status === 'Expired'
+        if (statusFilter === 'Pending') return session.status === 'Pending'
+        return true
+    })
 
     const [penaltyState, setPenaltyState] = useState<PenaltyState | null>(null)
     const [penaltyLoading, setPenaltyLoading] = useState(false)
@@ -655,15 +676,44 @@ export default function SessionsPage() {
                     </div>
                 </header>
 
+                <div className={styles.filterPills} style={{ marginBottom: '1.5rem' }}>
+                    {filterOptions.map(opt => {
+                        const isActive = statusFilter === opt.key
+                        const label = language === 'ar' ? opt.labelAr : opt.labelEn
+                        return (
+                            <button
+                                key={opt.key}
+                                className={`${styles.pill} ${isActive ? styles.activePill : ''}`}
+                                onClick={() => setStatusFilter(opt.key)}
+                            >
+                                {label}
+                            </button>
+                        )
+                    })}
+                </div>
+
                 <div className={styles.sessionsGrid}>
-                    {sessions.length === 0 ? (
+                    {filteredSessions.length === 0 ? (
                         <div className={styles.noSessions}>
                             <BookOpen size={48} />
-                            <p>{t.noSessions}</p>
+                            <p>
+                                {statusFilter === 'All' 
+                                    ? t.noSessions 
+                                    : (language === 'ar' 
+                                        ? 'لا توجد جلسات تطابق هذا التصفية.' 
+                                        : 'No sessions found matching this filter.'
+                                      )
+                                }
+                            </p>
                         </div>
                     ) : (
-                        sessions.map(session => (
-                            <div key={session.id} className={styles.sessionCard}>
+                        filteredSessions.map(session => {
+                            const isHighlighted = session.id === Number(sessionIdParam)
+                            return (
+                                <div
+                                    key={session.id}
+                                    className={`${styles.sessionCard} ${isHighlighted ? styles.highlightedCard : ''}`}
+                                >
                                 <div className={styles.cardHeader}>
                                     <div className={styles.avatar}><User size={24} /></div>
 
@@ -747,7 +797,8 @@ export default function SessionsPage() {
                                     )}
                                 </div>
                             </div>
-                        ))
+                            )
+                        })
                     )}
                 </div>
             </main>
@@ -960,5 +1011,13 @@ export default function SessionsPage() {
                 </div>
             )}
         </div>
+    )
+}
+
+export default function SessionsPage() {
+    return (
+        <Suspense fallback={<LoadingScreen />}>
+            <SessionsPageContent />
+        </Suspense>
     )
 }

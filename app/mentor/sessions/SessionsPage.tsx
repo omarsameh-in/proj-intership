@@ -150,6 +150,7 @@ function ViewDetailsModal({ session, onClose }: {
     session: Session
     onClose: () => void
 }) {
+    const { theme, language } = useApp()
     const [details, setDetails] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -203,7 +204,7 @@ function ViewDetailsModal({ session, onClose }: {
                 setLoadingProfile(true)
                 setProfileError(null)
                 const token = localStorage.getItem('token')
-                const res = await api.get(`/Mentor/MyMentees/viewprofile/${session.studentProfileId}`, {
+                const res = await api.get(`/Mentor/MySessions/viewprofile/${session.studentProfileId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
                 const responseData = res.data?.Data || res.data?.data || res.data
@@ -284,9 +285,26 @@ function ViewDetailsModal({ session, onClose }: {
                             )}
                         </div>
 
+
                         {/* Collapsible Student Profile Details */}
-                        <div className={`${styles.profileAccordion} ${isProfileVisible ? styles.profileAccordionExpanded : ''}`}>
-                            <div className={styles.profileAccordionInner}>
+                        <div
+                            style={isProfileVisible ? {
+                                maxHeight: '1000px',
+                                marginBottom: '16px',
+                                transition: 'max-height 0.35s ease, margin-bottom 0.35s ease',
+                                overflow: 'visible'
+                            } : {
+                                maxHeight: '0',
+                                overflow: 'hidden',
+                                transition: 'max-height 0.35s ease, margin-bottom 0.35s ease'
+                            }}
+                        >
+                            <div style={{
+                                background: theme === 'light' ? '#f8fafc' : '#252b3d',
+                                border: theme === 'light' ? '1px solid #e2e8f0' : '1px solid #3b4f7c',
+                                borderRadius: '16px',
+                                padding: '16px'
+                            }}>
                                 {loadingProfile ? (
                                     <div className={styles.profileLoadingState}>
                                         <Loader2 size={20} className="animate-spin" />
@@ -816,6 +834,27 @@ export default function SessionsPage() {
         }
         loadData()
     }, [searchParams])
+
+    useEffect(() => {
+        const sessionIdParam = searchParams.get('sessionId') || searchParams.get('id')
+        if (sessionIdParam) {
+            const found = sessions.find(s => s.id === Number(sessionIdParam))
+            if (found) {
+                setDetailsSession(found)
+            } else if (sessions.length > 0) {
+                setDetailsSession({
+                    id: Number(sessionIdParam),
+                    title: 'Mentorship Session',
+                    student: 'Student',
+                    status: 'Pending',
+                    date: '',
+                    duration: '',
+                    currentDate: '',
+                    currentTime: ''
+                })
+            }
+        }
+    }, [searchParams, sessions])
 
     if (loading) {
         return <LoadingScreen />
