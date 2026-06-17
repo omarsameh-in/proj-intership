@@ -1005,3 +1005,62 @@
     border-color: #e2e8f0;
     border-top-color: #3b82f6;
 }
+
+/* ─── Hamburger & Responsive Layout ─── */
+.hamburgerBtn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    z-index: 110;
+}
+
+.hamburgerBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+:global([data-theme="light"]) .hamburgerBtn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+/* Sidebar toggling overlay */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99;
+}
+
+.overlayVisible {
+    display: block;
+}
+
+.sidebarOpen {
+    display: flex !important;
+}
+
+@media (max-width: 768px) {
+    .hamburgerBtn {
+        display: flex;
+    }
+    
+    .sidebar {
+        display: none;
+        width: 260px;
+    }
+    
+    .mainContent {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding: 1.5rem !important;
+    }
+}
