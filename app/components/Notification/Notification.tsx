@@ -211,11 +211,6 @@ const Notification: React.FC = () => {
                         )}
                     </div>
 
-                    <div className={styles.footer}>
-                        <button className={styles.viewAll}>
-                            {language === 'ar' ? 'مشاهدة كل التنبيهات' : 'View all notifications'}
-                        </button>
-                    </div>
                 </div>
             )}
         </div>
