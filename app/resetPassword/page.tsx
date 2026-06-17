@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Globe, Moon, Sun, Check } from 'lucide-react'
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Globe, Moon, Sun, Check, Mail, Key } from 'lucide-react'
 import api from '../lib/api'
 
 type Language = 'en' | 'ar'
@@ -12,7 +12,11 @@ type Theme = 'dark' | 'light'
 const translations = {
     en: {
         title: "Reset Your Password",
-        subtitle: "Enter your new password below.",
+        subtitle: "Enter your email, reset token, and new password to continue.",
+        emailLabel: "Email Address *",
+        emailPlaceholder: "Enter your email",
+        tokenLabel: "Reset Token *",
+        tokenPlaceholder: "Paste your reset token here",
         newPasswordLabel: "New Password *",
         newPasswordPlaceholder: "Enter new password",
         confirmPasswordLabel: "Confirm Password *",
@@ -22,15 +26,21 @@ const translations = {
         successTitle: "Password Reset Successful",
         successMessage: "Your password has been reset successfully. You can now login with your new password.",
         errorTitle: "Error",
+        emailRequired: "Email is required",
+        emailInvalid: "Please enter a valid email address",
+        tokenRequired: "Reset token is required",
         passwordRequired: "Password is required",
         passwordTooShort: "Password must be at least 8 characters",
         passwordMismatch: "Passwords do not match",
         invalidToken: "Invalid or expired reset link",
-        tokenRequired: "Reset token is missing",
     },
     ar: {
         title: "إعادة تعيين كلمة المرور",
-        subtitle: "أدخل كلمة المرور الجديدة أدناه.",
+        subtitle: "أدخل بريدك الإلكتروني ورمز الإعادة وكلمة المرور الجديدة للمتابعة.",
+        emailLabel: "البريد الإلكتروني *",
+        emailPlaceholder: "أدخل بريدك الإلكتروني",
+        tokenLabel: "رمز إعادة التعيين *",
+        tokenPlaceholder: "الصق رمز إعادة التعيين هنا",
         newPasswordLabel: "كلمة المرور الجديدة *",
         newPasswordPlaceholder: "أدخل كلمة المرور الجديدة",
         confirmPasswordLabel: "تأكيد كلمة المرور *",
@@ -40,11 +50,13 @@ const translations = {
         successTitle: "تم إعادة تعيين كلمة المرور بنجاح",
         successMessage: "تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة.",
         errorTitle: "خطأ",
+        emailRequired: "البريد الإلكتروني مطلوب",
+        emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
+        tokenRequired: "رمز إعادة التعيين مطلوب",
         passwordRequired: "كلمة المرور مطلوبة",
         passwordTooShort: "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
         passwordMismatch: "كلمات المرور غير متطابقة",
         invalidToken: "رابط إعادة التعيين غير صالح أو منتهي الصلاحية",
-        tokenRequired: "رمز إعادة التعيين مفقود",
     },
 }
 
@@ -126,19 +138,16 @@ function ResetPasswordContent() {
 
         if (tokenParam) setToken(tokenParam)
         if (emailParam) setEmail(emailParam)
+    }, [searchParams])
 
-        if (!tokenParam || !emailParam) {
-            setError(t.tokenRequired)
-        }
-    }, [searchParams, t.tokenRequired])
-
-    const validatePassword = (password: string) => {
-        if (!password) {
-            return t.passwordRequired
-        }
-        if (password.length < 8) {
-            return t.passwordTooShort
-        }
+    const validateForm = () => {
+        if (!email.trim()) return t.emailRequired
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email.trim())) return t.emailInvalid
+        if (!token.trim()) return t.tokenRequired
+        if (!newPassword) return t.passwordRequired
+        if (newPassword.length < 8) return t.passwordTooShort
+        if (newPassword !== confirmPassword) return t.passwordMismatch
         return ''
     }
 
@@ -146,22 +155,9 @@ function ResetPasswordContent() {
         e.preventDefault()
         setError('')
 
-        // Validate new password
-        const passwordError = validatePassword(newPassword)
-        if (passwordError) {
-            setError(passwordError)
-            return
-        }
-
-        // Check if passwords match
-        if (newPassword !== confirmPassword) {
-            setError(t.passwordMismatch)
-            return
-        }
-
-        // Check if token and email exist
-        if (!token || !email) {
-            setError(t.tokenRequired)
+        const validationError = validateForm()
+        if (validationError) {
+            setError(validationError)
             return
         }
 
@@ -169,8 +165,8 @@ function ResetPasswordContent() {
 
         try {
             await api.post('/Account/resetpassword', {
-                token,
-                email,
+                token: token.trim(),
+                email: email.trim(),
                 newPassword,
             })
             setIsSubmitted(true)
@@ -181,13 +177,17 @@ function ResetPasswordContent() {
             console.error('Reset password error:', err)
             let msg = t.invalidToken
             if (err.response?.data) {
-                if (err.response.data.errorMessage) {
-                    msg = err.response.data.errorMessage
-                } else if (err.response.data.message) {
-                    msg = err.response.data.message
-                } else if (Array.isArray(err.response.data.errors)) {
-                    const firstDesc = err.response.data.errors[0]?.errorDescription
-                    if (firstDesc) msg = firstDesc
+                const data = err.response.data
+                if (typeof data === 'string') {
+                    msg = data
+                } else if (data.errorMessage) {
+                    msg = data.errorMessage
+                } else if (data.message || data.Message) {
+                    msg = data.message || data.Message
+                } else if (data.Errors && Array.isArray(data.Errors)) {
+                    msg = data.Errors.map((e: any) => e.errorDescription || e).join(', ')
+                } else if (data.errors && typeof data.errors === 'object') {
+                    msg = Object.values(data.errors).flat().join(', ')
                 }
             }
             setError(msg)
@@ -277,6 +277,41 @@ function ResetPasswordContent() {
 
                             {/* Form */}
                             <form onSubmit={handleSubmit}>
+
+                                {/* Email Field */}
+                                <div className="mb-3">
+                                    <label className="form-label text-white small fw-medium d-flex align-items-center gap-2">
+                                        <Mail size={16} className="text-secondary" />
+                                        <span>{t.emailLabel}</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="form-control"
+                                        placeholder={t.emailPlaceholder}
+                                        disabled={isLoading}
+                                        autoComplete="email"
+                                    />
+                                </div>
+
+                                {/* Token Field */}
+                                <div className="mb-3">
+                                    <label className="form-label text-white small fw-medium d-flex align-items-center gap-2">
+                                        <Key size={16} className="text-secondary" />
+                                        <span>{t.tokenLabel}</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={token}
+                                        onChange={(e) => setToken(e.target.value)}
+                                        className="form-control"
+                                        placeholder={t.tokenPlaceholder}
+                                        disabled={isLoading}
+                                        style={{ fontSize: '12px', fontFamily: 'monospace' }}
+                                    />
+                                </div>
+
                                 {/* New Password Field */}
                                 <div className="mb-3">
                                     <label className="form-label text-white small fw-medium d-flex align-items-center gap-2">
@@ -290,7 +325,7 @@ function ResetPasswordContent() {
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             className="form-control"
                                             placeholder={t.newPasswordPlaceholder}
-                                            disabled={isLoading || !token || !email}
+                                            disabled={isLoading}
                                         />
                                         <button
                                             type="button"
@@ -315,7 +350,7 @@ function ResetPasswordContent() {
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             className="form-control"
                                             placeholder={t.confirmPasswordPlaceholder}
-                                            disabled={isLoading || !token || !email}
+                                            disabled={isLoading}
                                         />
                                         <button
                                             type="button"
@@ -331,7 +366,7 @@ function ResetPasswordContent() {
                                 <button
                                     type="submit"
                                     className="btn login-btn w-100 py-3 text-white fw-semibold border-0 mb-3"
-                                    disabled={isLoading || !token || !email}
+                                    disabled={isLoading}
                                 >
                                     {isLoading ? (
                                         <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
