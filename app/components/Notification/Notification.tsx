@@ -15,7 +15,24 @@ function formatTimeAgo(dateString: string, language: 'en' | 'ar'): string {
         return dateString;
     }
     
-    const date = new Date(dateString);
+    // Normalize date string to avoid timezone parsing bugs with high-precision fractional seconds
+    let normalized = dateString;
+    if (normalized.includes('T') && 
+        !normalized.endsWith('Z') && !normalized.endsWith('z') && 
+        !normalized.includes('+') && 
+        !/\-\d{2}:\d{2}$/.test(normalized)
+    ) {
+        normalized = `${normalized}Z`;
+    }
+    
+    if (normalized.includes('.') && (normalized.endsWith('Z') || normalized.endsWith('z'))) {
+        const [mainPart, subPart] = normalized.split('.');
+        const digits = subPart.replace(/[^\d]/g, '');
+        const truncated = digits.substring(0, 3).padEnd(3, '0');
+        normalized = `${mainPart}.${truncated}Z`;
+    }
+
+    const date = new Date(normalized);
     const now = new Date();
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     
