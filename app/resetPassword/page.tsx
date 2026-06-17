@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Globe, Moon, Sun, Check, Mail, Key } from 'lucide-react'
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Globe, Moon, Sun, Check, Mail } from 'lucide-react'
 import api from '../lib/api'
 
 type Language = 'en' | 'ar'
@@ -12,7 +12,7 @@ type Theme = 'dark' | 'light'
 const translations = {
     en: {
         title: "Reset Your Password",
-        subtitle: "Enter your email, reset token, and new password to continue.",
+        subtitle: "Enter your email and new password to reset your account.",
         emailLabel: "Email Address *",
         emailPlaceholder: "Enter your email",
         tokenLabel: "Reset Token *",
@@ -36,7 +36,7 @@ const translations = {
     },
     ar: {
         title: "إعادة تعيين كلمة المرور",
-        subtitle: "أدخل بريدك الإلكتروني ورمز الإعادة وكلمة المرور الجديدة للمتابعة.",
+        subtitle: "أدخل بريدك الإلكتروني وكلمة المرور الجديدة لإعادة تعيين حسابك.",
         emailLabel: "البريد الإلكتروني *",
         emailPlaceholder: "أدخل بريدك الإلكتروني",
         tokenLabel: "رمز إعادة التعيين *",
@@ -314,22 +314,6 @@ function ResetPasswordContent() {
                                     />
                                 </div>
 
-                                {/* Token Field */}
-                                <div className="mb-3">
-                                    <label className="form-label text-white small fw-medium d-flex align-items-center gap-2">
-                                        <Key size={16} className="text-secondary" />
-                                        <span>{t.tokenLabel}</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={token}
-                                        onChange={(e) => setToken(e.target.value)}
-                                        className="form-control"
-                                        placeholder={t.tokenPlaceholder}
-                                        disabled={isLoading}
-                                        style={{ fontSize: '12px', fontFamily: 'monospace' }}
-                                    />
-                                </div>
 
                                 {/* New Password Field */}
                                 <div className="mb-3">
