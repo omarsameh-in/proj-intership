@@ -174,11 +174,13 @@ const Notification: React.FC = () => {
                 <div className={`${styles.dropdown} ${language === 'ar' ? styles.rtl : ''}`}>
                     <div className={styles.header}>
                         <h3 className={styles.title}>{language === 'ar' ? 'التنبيهات' : 'Notifications'}</h3>
-                        {unreadCount > 0 && (
-                            <button onClick={markAllAsRead} className={styles.markAll}>
-                                {language === 'ar' ? 'تحديد الكل كمقروء' : 'Mark all as read'}
-                            </button>
-                        )}
+                        <button 
+                            onClick={markAllAsRead} 
+                            className={styles.markAll}
+                            disabled={unreadCount === 0}
+                        >
+                            {language === 'ar' ? 'تحديد الكل كمقروء' : 'Mark all as read'}
+                        </button>
                     </div>
 
                     <div className={styles.list}>

@@ -93,6 +93,17 @@
     text-decoration: underline;
 }
 
+.markAll:disabled {
+    color: #64748b;
+    opacity: 0.5;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+:global(body.light-mode) .markAll:disabled {
+    color: #94a3b8;
+}
+
 .list {
     max-height: 400px;
     overflow-y: auto;
