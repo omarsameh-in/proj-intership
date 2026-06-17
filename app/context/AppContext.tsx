@@ -32,6 +32,8 @@ interface AppContextType {
     markAsRead: (id: number) => Promise<void>
     markAllAsRead: () => Promise<void>
     logout: () => Promise<void>
+    refreshKey: number
+    setRefreshKey: React.Dispatch<React.SetStateAction<number>>
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -45,6 +47,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [token, setToken] = useState<string | null>(null)
     const [notifications, setNotifications] = useState<NotificationItem[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
+
+  
+    const [refreshKey, setRefreshKey] = useState(0);
+      useEffect(() => {
+    const interval = setInterval(() => setRefreshKey(k => k + 1), 15000);
+    return () => clearInterval(interval);
+  }, []);
+
 
     // Sync token on pathname changes (supporting both localStorage and sessionStorage)
     useEffect(() => {
@@ -93,7 +103,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const startSignalR = async () => {
             try {
                 const signalR = await import('@microsoft/signalr')
-                const hubUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://5kn3tnf8-5022.uks1.devtunnels.ms'}/notificationHub`
+                const hubUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://63gh3zjs-5022.uks1.devtunnels.ms'}/notificationHub`
                 
                 connection = new signalR.HubConnectionBuilder()
                     .withUrl(hubUrl, {
@@ -262,7 +272,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetchNotifications,
         markAsRead,
         markAllAsRead,
-        logout
+        logout,
+
+
+        refreshKey,
+        setRefreshKey
     }
 
     // Prevent hydration mismatch by rendering nothing until mounted

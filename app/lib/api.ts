@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: '/api',
+    timeout: 5000, // 5 seconds – fail fast when backend is down so mock data loads immediately
     withCredentials: true, // Crucial for cookie-based refresh tokens & logout
     headers: {
         'Content-Type': 'application/json',
@@ -153,6 +154,20 @@ export function getErrorMessage(error: any, defaultMessage: string = 'An error o
                 const errorDetails = Object.keys(errorsDict)
                     .map(key => errorsDict[key])
                     .reduce((acc: any, val: any) => acc.concat(val), [])
+                    .join(', ');
+                if (errorDetails) return errorDetails;
+            }
+            // Raw ASP.NET ModelState dictionary: BadRequest(ModelState) serializes as
+            // { "FieldName": ["error 1", "error 2"], "OtherField": ["error 3"] }
+            // with no message/Message/errorMessage/title/errors wrapper at all.
+            const keys = Object.keys(obj);
+            const looksLikeModelState =
+                keys.length > 0 &&
+                keys.every(key => Array.isArray(obj[key]) && obj[key].every((v: any) => typeof v === 'string'));
+            if (looksLikeModelState) {
+                const errorDetails = keys
+                    .map(key => obj[key])
+                    .reduce((acc: string[], val: string[]) => acc.concat(val), [])
                     .join(', ');
                 if (errorDetails) return errorDetails;
             }

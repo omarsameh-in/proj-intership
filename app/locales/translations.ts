@@ -383,6 +383,7 @@ export const translations = {
         reopenPosting: "Reopen Posting",
         ok: "ok",
         failedToDownloadCv: "failedToDownloadCv",
+        requirementRequired:"At least one  requirement is required"
     },
     ar: {
         // Mentor Dashboard
@@ -767,7 +768,8 @@ export const translations = {
         pleaseSelectDeadline: "يرجى اختيار موعد نهائي",
         reopenPosting: "إعادة فتح التدريب",
         ok: "موافق",
-        failedToDownloadCv: "فشل التنزيل"
+        failedToDownloadCv: "فشل التنزيل",
+        requirementRequired: "يجب إضافة متطلب واحد على الأقل"
     }
 }
 

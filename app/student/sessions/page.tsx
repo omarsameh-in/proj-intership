@@ -22,6 +22,7 @@ import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './sessions.module.css'
 import api, { getErrorMessage } from '../../lib/api'
+import { toast } from '../../lib/toast'
 
 interface ApiSession {
     session_id: number
@@ -383,7 +384,7 @@ function SessionsPageContent() {
             if (link) {
                 window.open(link, '_blank')
             } else {
-                alert(message)
+                toast.info(message)
             }
         } catch (err: any) {
             if (err.response?.status === 401) {
@@ -393,7 +394,7 @@ function SessionsPageContent() {
                 return
             }
             const msg = getErrorMessage(err, 'Cannot join session right now.')
-            alert(msg)
+            toast.error(msg)
         }
     }
 
@@ -408,7 +409,7 @@ function SessionsPageContent() {
 
             if (decision === 'Allow') {
                 await fetchSessions()
-                alert(message)
+                toast.success(message)
             } else if (decision === 'ConfirmPenalty') {
                 setPenaltyState({
                     sessionId,
@@ -416,7 +417,7 @@ function SessionsPageContent() {
                     message: message
                 })
             } else {
-                alert(message)
+                toast.warning(message)
             }
         } catch (err: any) {
             if (err.response?.status === 401) {
@@ -426,7 +427,7 @@ function SessionsPageContent() {
                 return
             }
             const msg = getErrorMessage(err, 'Cancellation failed.')
-            alert(msg)
+            toast.error(msg)
         }
     }
 
@@ -442,7 +443,7 @@ function SessionsPageContent() {
             if (success && url) {
                 window.open(url, '_blank')
             } else {
-                alert(message)
+                toast.warning(message)
             }
         } catch (err: any) {
             if (err.response?.status === 401) {
@@ -452,7 +453,7 @@ function SessionsPageContent() {
                 return
             }
             const msg = getErrorMessage(err, 'Payment failed. Please try again.')
-            alert(msg)
+            toast.error(msg)
         }
     }
 
@@ -476,7 +477,7 @@ function SessionsPageContent() {
                 return
             }
             const msg = getErrorMessage(err, 'Could not apply penalty.')
-            alert(msg)
+            toast.error(msg)
         } finally {
             setPenaltyLoading(false)
         }
@@ -558,7 +559,7 @@ function SessionsPageContent() {
             if (decision === 'Allow') {
                 setRescheduleState(null)
                 await fetchSessions()
-                alert(message)
+                toast.success(message)
             } else {
                 setRescheduleError(message)
             }
@@ -596,7 +597,7 @@ function SessionsPageContent() {
                 { headers: { Authorization: `Bearer ${token}` } }
             )
             setReviewState(null)
-            alert('Review submitted successfully!')
+            toast.success('Review submitted successfully!')
         } catch (err: any) {
             if (err.response?.status === 401) {
                 const newToken = await refreshAccessToken()
