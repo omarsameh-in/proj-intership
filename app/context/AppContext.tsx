@@ -103,7 +103,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const startSignalR = async () => {
             try {
                 const signalR = await import('@microsoft/signalr')
-                const hubUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://2lmcv6z8-5022.euw.devtunnels.ms'}/notificationHub`
+                const hubUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://swdp54wg-5022.uks1.devtunnels.ms'}/notificationHub`
                 
                 connection = new signalR.HubConnectionBuilder()
                     .withUrl(hubUrl, {
