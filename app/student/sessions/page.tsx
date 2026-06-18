@@ -1,8 +1,9 @@
+
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import {
     BookOpen,
     User,
@@ -48,7 +49,6 @@ interface RescheduleResponse {
     penaltyAmount: number | null
 }
 
-// ── New types for reschedule data ──
 interface TopicOption {
     id: number
     title: string
@@ -140,7 +140,6 @@ function mapApiSession(s: ApiSession): Session {
         isPaid: s.isPaid
     }
 }
-
 
 function getStatusBadgeClass(status: ApiSession['status'], styles: any): string {
     switch (status) {
@@ -298,34 +297,13 @@ async function refreshAccessToken(): Promise<string | null> {
     }
 }
 
-function SessionsPageContent() {
-    const { t, language } = useApp()
+export default function SessionsPage() {
+    const { t } = useApp()
     const router = useRouter()
-    const searchParams = useSearchParams()
-    const sessionIdParam = searchParams.get('sessionId') || searchParams.get('id')
 
     const [sessions, setSessions] = useState<Session[]>([])
     const [loading, setLoading] = useState(true)
     const [sidebarOpen, setSidebarOpen] = useState(false)
-
-    const [statusFilter, setStatusFilter] = useState<'All' | 'Confirmed' | 'Cancelled' | 'Expired' | 'Pending'>('All')
-
-    const filterOptions = [
-        { key: 'All', labelAr: 'الكل', labelEn: 'All' },
-        { key: 'Confirmed', labelAr: 'مؤكدة', labelEn: 'Confirmed' },
-        { key: 'Pending', labelAr: 'قيد الانتظار', labelEn: 'Pending' },
-        { key: 'Cancelled', labelAr: 'ملغاة', labelEn: 'Cancelled' },
-        { key: 'Expired', labelAr: 'منتهية الصلاحية', labelEn: 'Expired' }
-    ] as const
-
-    const filteredSessions = sessions.filter(session => {
-        if (statusFilter === 'All') return true
-        if (statusFilter === 'Confirmed') return session.status === 'Confirmed' || session.status === 'Started' || session.status === 'InProgress'
-        if (statusFilter === 'Cancelled') return session.status === 'Cancelled'
-        if (statusFilter === 'Expired') return session.status === 'Expired'
-        if (statusFilter === 'Pending') return session.status === 'Pending'
-        return true
-    })
 
     const [penaltyState, setPenaltyState] = useState<PenaltyState | null>(null)
     const [penaltyLoading, setPenaltyLoading] = useState(false)
@@ -338,7 +316,6 @@ function SessionsPageContent() {
     const [rescheduleLoading, setRescheduleLoading] = useState(false)
     const [rescheduleError, setRescheduleError] = useState<string | null>(null)
 
-    // ── New state for topics & availability ──
     const [topics, setTopics] = useState<TopicOption[]>([])
     const [topicsLoading, setTopicsLoading] = useState(false)
 
@@ -380,7 +357,7 @@ function SessionsPageContent() {
                 { headers: { Authorization: `Bearer ${token}` } }
             )
             const { link, message } = res.data
-            
+
             if (link) {
                 window.open(link, '_blank')
             } else {
@@ -483,7 +460,6 @@ function SessionsPageContent() {
         }
     }
 
-   
     const fetchTopics = (token: string | null) => {
         setTopicsLoading(true)
         api.get('/Student/Mentorships/session/topic', {
@@ -499,7 +475,6 @@ function SessionsPageContent() {
             .finally(() => setTopicsLoading(false))
     }
 
-    
     const fetchMentorAvailability = (mentorId: number, token: string | null) => {
         setSlotsLoading(true)
         api.get(`/Student/Mentorships/mentors/available-slots/${mentorId}`, {
@@ -511,7 +486,6 @@ function SessionsPageContent() {
             })
             .catch(err => {
                 if (err.response?.status === 404) {
-                    // 404 = no available slots
                     setAvailableSlots([])
                 } else {
                     console.warn('[fetchMentorAvailability] failed:', err)
@@ -620,13 +594,11 @@ function SessionsPageContent() {
             <div className={styles.glowSecondary} aria-hidden="true" />
             <div className={styles.glowTertiary} aria-hidden="true" />
 
-            {/* Overlay */}
             <div
                 className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
                 onClick={() => setSidebarOpen(false)}
             />
 
-            {/* Sidebar */}
             <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoSection}>
                     <div className={styles.backButton} onClick={() => router.push('/student/dashboard')} role="button" title="Back to Dashboard">
@@ -677,44 +649,15 @@ function SessionsPageContent() {
                     </div>
                 </header>
 
-                <div className={styles.filterPills} style={{ marginBottom: '1.5rem' }}>
-                    {filterOptions.map(opt => {
-                        const isActive = statusFilter === opt.key
-                        const label = language === 'ar' ? opt.labelAr : opt.labelEn
-                        return (
-                            <button
-                                key={opt.key}
-                                className={`${styles.pill} ${isActive ? styles.activePill : ''}`}
-                                onClick={() => setStatusFilter(opt.key)}
-                            >
-                                {label}
-                            </button>
-                        )
-                    })}
-                </div>
-
                 <div className={styles.sessionsGrid}>
-                    {filteredSessions.length === 0 ? (
+                    {sessions.length === 0 ? (
                         <div className={styles.noSessions}>
                             <BookOpen size={48} />
-                            <p>
-                                {statusFilter === 'All' 
-                                    ? t.noSessions 
-                                    : (language === 'ar' 
-                                        ? 'لا توجد جلسات تطابق هذا التصفية.' 
-                                        : 'No sessions found matching this filter.'
-                                      )
-                                }
-                            </p>
+                            <p>{t.noSessions}</p>
                         </div>
                     ) : (
-                        filteredSessions.map(session => {
-                            const isHighlighted = session.id === Number(sessionIdParam)
-                            return (
-                                <div
-                                    key={session.id}
-                                    className={`${styles.sessionCard} ${isHighlighted ? styles.highlightedCard : ''}`}
-                                >
+                        sessions.map(session => (
+                            <div key={session.id} className={styles.sessionCard}>
                                 <div className={styles.cardHeader}>
                                     <div className={styles.avatar}><User size={24} /></div>
 
@@ -798,8 +741,7 @@ function SessionsPageContent() {
                                     )}
                                 </div>
                             </div>
-                            )
-                        })
+                        ))
                     )}
                 </div>
             </main>
@@ -928,7 +870,6 @@ function SessionsPageContent() {
                             Reschedule Session
                         </h3>
 
-                        {/* ── Slot select: fetched from /Mentor/{mentorId}/availability ── */}
                         <div className={styles.formGroup}>
                             <label className={styles.formLabel}>
                                 Available Time Slot
@@ -960,7 +901,6 @@ function SessionsPageContent() {
                             )}
                         </div>
 
-                        {/* ── Topic select: fetched from /Lookups/topics ── */}
                         <div className={styles.formGroup}>
                             <label className={styles.formLabel}>
                                 Topic
@@ -1012,13 +952,5 @@ function SessionsPageContent() {
                 </div>
             )}
         </div>
-    )
-}
-
-export default function SessionsPage() {
-    return (
-        <Suspense fallback={<LoadingScreen />}>
-            <SessionsPageContent />
-        </Suspense>
     )
 }

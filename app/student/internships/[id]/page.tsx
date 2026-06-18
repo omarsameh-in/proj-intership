@@ -63,21 +63,7 @@ interface InternshipDetail {
   company:            Company
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VALIDATOR / NORMALISER
-// ─────────────────────────────────────────────────────────────────────────────
-//
-// The Response Guide says GET /Student/Internships/view/details/{id} returns
-// "Message + Data, shape matches the Internship model" without listing every
-// field. The list endpoint (GET /Student/Internships) uses PascalCase /
-// snake_case keys (Internship_Id, location_type, application_deadline,
-// company {...}). We defensively accept BOTH that shape and the camelCase
-// shape this UI was originally built against (internId, locationType,
-// startDate, endDate, etc.), so the page keeps working whichever the
-// backend actually returns — with sensible fallbacks for fields the
-// backend doesn't expose yet (canApply, requirements, applicationsCount,
-// company.webSit/industry).
-// ─────────────────────────────────────────────────────────────────────────────
+
 function validateDetail(raw: any): InternshipDetail {
   if (!raw || typeof raw !== 'object') throw new Error('Empty response')
 
@@ -96,7 +82,6 @@ function validateDetail(raw: any): InternshipDetail {
             })
           : 'N/A')
 
-  // يدعم isPaid (camelCase) و IsPaid (PascalCase) لو الـ serializer مش معمول عليه camelCase policy
   const isPaid = typeof raw.isPaid === 'boolean'
     ? raw.isPaid
     : typeof raw.IsPaid === 'boolean'
@@ -117,7 +102,7 @@ function validateDetail(raw: any): InternshipDetail {
     canApply:           typeof raw.canApply === 'boolean'
                           ? raw.canApply
                           : (raw.status ?? 'Open') === 'Open',
-    // يدعم internship_City (camelCase) و Internship_City (PascalCase)
+    
     internship_City:    raw.internship_City    ?? raw.Internship_City    ?? raw.location ?? '',
     internship_Country: raw.internship_Country ?? raw.Internship_Country ?? null,
     skills:             Array.isArray(raw.skills)       ? raw.skills.filter(Boolean)       : [],
@@ -132,10 +117,6 @@ function validateDetail(raw: any): InternshipDetail {
     },
   }
 }
-// ─────────────────────────────────────────────────────────────────────────────
-// MOCK DATA — fallback only
-// ─────────────────────────────────────────────────────────────────────────────
-
 const MOCK_DETAIL: Record<number, any> = {
   3: {
     internId:           3,
@@ -289,10 +270,6 @@ const colorFromId = (id: number) => AVATAR_COLORS[id % AVATAR_COLORS.length]
 const initials    = (name: string) =>
   name.split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AUTH HELPERS — refresh-token flow per the Request Guide
-// ─────────────────────────────────────────────────────────────────────────────
-
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = localStorage.getItem('refreshToken')
   if (!refreshToken) return null
@@ -335,10 +312,8 @@ export default function InternshipDetailPage() {
   const [applying, setApplying]       = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // ── shared applied state across pages ────────────────────────────────────
   const { isApplied, markApplied } = useAppliedInternships()
 
-  // اشتق الـ applied state من الـ hook بدل useState
   const applied = internship ? isApplied(internship.internId) : false
 
   useEffect(() => { if (internId) fetchDetail() }, [internId])
@@ -348,12 +323,6 @@ export default function InternshipDetailPage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // FETCH DETAIL — GET /Student/Internships/view/details/{internshipId}
-  // Response: { Message, Data: {...} }
-  // ─────────────────────────────────────────────────────────────────────────
-
   const fetchDetail = async () => {
     setLoading(true)
     setError(null)
@@ -422,11 +391,6 @@ export default function InternshipDetailPage() {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // APPLY — POST /Student/Internships/internship/apply/{internshipId}
-  // Response body is a PLAIN STRING (not JSON).
-  // ─────────────────────────────────────────────────────────────────────────
-
   const handleApply = async () => {
     if (!internship || applying || applied) return
     setApplying(true)
@@ -471,7 +435,7 @@ export default function InternshipDetailPage() {
           }
         }
         if (apiErr.response?.status === 409) {
-          // Duplicate application
+          
           markApplied(internship.internId)
           return
         }

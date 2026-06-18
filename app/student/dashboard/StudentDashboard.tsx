@@ -25,7 +25,7 @@ import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './DashboardStyle.module.css'
 import api from '../../lib/api'
-
+import { toast } from '../../lib/toast'
 
 // Raw shape from GET /Student/Dashboard -> Data
 interface RawDashboardStats {
@@ -117,11 +117,11 @@ const MOCK_INTERNSHIPS: InternshipCard[] = [
   { id: 3, title: 'Full Stack Developer', company: 'Innovation Hub', location: 'Remote', match: 82 },
 ]
 
-const MOCK_MENTORS: MentorCard[] = [
-  { id: 1, name: 'Dr. Ahmed Hassan', field: 'Software Engineering', rating: 4.9, experience: '15 years', available: true },
-  { id: 2, name: 'Eng. Sara Mohamed', field: 'Data Science', rating: 4.8, experience: '10 years', available: true },
-  { id: 3, name: 'Prof. Karim Ali', field: 'AI & Machine Learning', rating: 4.7, experience: '12 years', available: false },
-]
+// const MOCK_MENTORS: MentorCard[] = [
+//   { id: 1, name: 'Dr. Ahmed Hassan', field: 'Software Engineering', rating: 4.9, experience: '15 years', available: true },
+//   { id: 2, name: 'Eng. Sara Mohamed', field: 'Data Science', rating: 4.8, experience: '10 years', available: true },
+//   { id: 3, name: 'Prof. Karim Ali', field: 'AI & Machine Learning', rating: 4.7, experience: '12 years', available: false },
+// ]
 
 const MOCK_STATS: DashboardStats = {
   appliedInternships: 12,
@@ -228,10 +228,10 @@ function StudentDashboard() {
 
       // ── Stats ─────────────────────────────────────────────────────────
       if (statsRes.status === 'fulfilled' && statsRes.value) {
-  const rawStats: RawDashboardStats | null =
-    statsRes.value.data?.data ?? statsRes.value.data?.Data ?? null
-  setStats(rawStats ? normaliseStats(rawStats) : MOCK_STATS)
-}else {
+        const rawStats: RawDashboardStats | null =
+          statsRes.value.data?.data ?? statsRes.value.data?.Data ?? null
+        setStats(rawStats ? normaliseStats(rawStats) : MOCK_STATS)
+      } else {
         console.warn('[fetchDashboardData] stats failed, falling back to mock:',
           statsRes.status === 'rejected' ? statsRes.reason : 'no data')
         setStats(MOCK_STATS)
@@ -241,7 +241,7 @@ function StudentDashboard() {
       if (internshipsRes.status === 'fulfilled' && internshipsRes.value) {
         const rawList: RawRecommendedInternship[] | null =
           internshipsRes.value.data?.Data ?? internshipsRes.value.data?.data ?? null
-          setInternships(rawList ? rawList.map(normaliseInternship) : [])
+        setInternships(rawList ? rawList.map(normaliseInternship) : [])
       } else {
         console.warn('[fetchDashboardData] internships failed, falling back to mock:',
           internshipsRes.status === 'rejected' ? internshipsRes.reason : 'no data')
@@ -250,18 +250,18 @@ function StudentDashboard() {
 
       // ── Recommended mentors ──────────────────────────────────────────────
       if (mentorsRes.status === 'fulfilled' && mentorsRes.value) {
-    const rawList: RawRecommendedMentor[] | null =
-      mentorsRes.value.data?.data ?? mentorsRes.value.data?.Data ?? null
+        const rawList: RawRecommendedMentor[] | null =
+          mentorsRes.value.data?.data ?? mentorsRes.value.data?.Data ?? null
         setMentors(rawList ? rawList.map(normaliseMentor) : [])
       } else {
         console.warn('[fetchDashboardData] mentors failed, falling back to mock:',
           mentorsRes.status === 'rejected' ? mentorsRes.reason : 'no data')
-        setMentors(MOCK_MENTORS)
+        // setMentors(MOCK_MENTORS)
       }
     } catch (err: any) {
       console.warn('[fetchDashboardData] Unexpected failure, falling back to full mock:', err)
       setInternships(MOCK_INTERNSHIPS)
-      setMentors(MOCK_MENTORS)
+      // setMentors(MOCK_MENTORS)
       setStats(MOCK_STATS)
     } finally {
       setLoading(false)
@@ -288,8 +288,10 @@ function StudentDashboard() {
 
       try {
         const res = await doApply(token)
-        const message = typeof res.data === 'string' ? res.data : 'Application submitted successfully.'
-        alert(message)
+        const message = typeof res.data === 'string' && res.data.trim() !== '' 
+          ? res.data 
+          : 'Your application has been submitted successfully.'
+        toast.success(message)
       } catch (apiErr: any) {
         if (apiErr.response?.status === 401) {
           const newToken = await refreshAccessToken()
@@ -299,8 +301,10 @@ function StudentDashboard() {
           }
           try {
             const retryRes = await doApply(newToken)
-            const message = typeof retryRes.data === 'string' ? retryRes.data : 'Application submitted successfully.'
-            alert(message)
+            const message = typeof retryRes.data === 'string' && retryRes.data.trim() !== '' 
+              ? retryRes.data 
+              : 'Your application has been submitted successfully.'
+            toast.success(message)
           } catch (retryErr: any) {
             if (retryErr.response?.status === 401) {
               clearAuthAndRedirect(router)
@@ -309,15 +313,15 @@ function StudentDashboard() {
             throw retryErr
           }
         } else if (apiErr.response?.status === 409) {
-          alert('Already applied to this internship.')
+          toast.warning('You have already applied to this internship.')
         } else if (apiErr.response?.status === 400 || apiErr.response?.status === 404) {
-          const msg = typeof apiErr.response?.data === 'string'
+          const msg = typeof apiErr.response?.data === 'string' && apiErr.response.data.trim() !== ''
             ? apiErr.response.data
-            : 'Unable to apply to this internship.'
-          alert(msg)
+            : 'Unable to apply to this internship at the moment.'
+          toast.error(msg)
         } else {
           console.warn('[handleApplyInternship] API failed, simulating local success:', apiErr)
-          alert('Application submitted successfully!')
+          toast.success('Your application has been submitted successfully.')
         }
       }
     } finally {
@@ -331,7 +335,6 @@ function StudentDashboard() {
     fetchDashboardData()
   }
 
-  
   const handleBookSession = (mentorId: number) => {
     router.push(`/student/mentorships?mentorId=${mentorId}`)
   }
@@ -342,9 +345,13 @@ function StudentDashboard() {
 
   if (error) {
     return (
-      <div className="p-4 text-red-500">
-        {error}
-        <button onClick={fetchDashboardData} className="ms-10 px-4 py-2 bg-blue-500 text-white border-0 rounded-lg cursor-pointer" title="Retry">
+      <div className="p-4 text-red-500" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <span>{error}</span>
+        <button 
+          onClick={fetchDashboardData} 
+          className="px-4 py-2 bg-blue-500 text-white border-0 rounded-lg cursor-pointer" 
+          title="Retry"
+        >
           Retry
         </button>
       </div>
@@ -518,17 +525,3 @@ function StudentDashboard() {
 }
 
 export default StudentDashboard
-
-
-
-
-
-
-
-
-
-
-
-
-
-

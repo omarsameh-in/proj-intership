@@ -299,7 +299,7 @@
 .cardsGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .card {
@@ -328,13 +328,20 @@
 }
 
 .cardSubtitle {
+    display: inline-block;
+    vertical-align: middle;
     font-size: 0.875rem;
     color: #9ca3af;
-    margin: 0 0 1rem 0;
+    margin: 0 0.5rem 0 0;
+    margin-bottom: 2px;
+    
 }
 
-.matchBadge {
+.matchBadge { 
     display: inline-block;
+    /* ====================================== */
+    vertical-align: middle; 
+    /* ====================================== */
     padding: 0.375rem 0.75rem;
     background: rgba(59, 130, 246, 0.15);
     border: 1px solid rgba(59, 130, 246, 0.3);
@@ -348,7 +355,7 @@
 .mentorsGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .mentorCard {

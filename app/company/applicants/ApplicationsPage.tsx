@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
@@ -20,6 +21,7 @@ import TopBarControls from "../../components/TopBarControls/TopBarControls";
 import styles from "./ApplicationsStyle.module.css";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 import api from "../../lib/api";
+import { toast } from "../../lib/toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Applicant {
@@ -41,68 +43,52 @@ const MOCK_APPLICANTS: Applicant[] = [
     id: 1,
     internId: 1,
     internTitle: "Frontend Developer Intern",
-
     name: "Ahmed Khaled",
     university: "Cairo University",
     major: "Computer Science",
     email: "ahmed@example.com",
     phone: "+20 123 456 7890",
-
     appliedAt: "2 hours ago",
     status: "Pending",
-    // matchPercent: 95,
-
     cvUrl: "/cv/ahmed-khaled.pdf",
   },
   {
     id: 2,
     internId: 2,
     internTitle: "Back end Developer Intern",
-
     name: "maryam Khaled",
     university: "Cairo University",
     major: "Computer Science",
     email: "ahmed@example.com",
     phone: "+20 123 456 7890",
-
     appliedAt: "2 hours ago",
     status: "Pending",
-    // matchPercent: 95,
-
     cvUrl: "/cv/ahmed-khaled.pdf",
   },
   {
     id: 3,
     internId: 3,
     internTitle: "Frontend Developer Intern",
-
     name: "dina Khaled",
     university: "Cairo University",
     major: "IT",
     email: "ahmed@example.com",
     phone: "+20 123 456 7890",
-
     appliedAt: "2 hours ago",
     status: "Pending",
-    // matchPercent: 95,
-
     cvUrl: "/cv/ahmed-khaled.pdf",
   },
   {
     id: 4,
     internId: 4,
     internTitle: "Frontend Developer Intern",
-
     name: "amira ahmed",
     university: "Cairo University",
     major: "AI",
     email: "ahmed@example.com",
     phone: "+20 123 456 7890",
-
     appliedAt: "2 hours ago",
     status: "Pending",
-    // matchPercent: 95,
-
     cvUrl: "/cv/ahmed-khaled.pdf",
   },
 ];
@@ -178,8 +164,9 @@ function ApplicationsContent() {
           a.id === applicant.id ? { ...a, status: "Accepted" as const } : a,
         ),
       );
+      toast.success(t.statusAccepted || "Applicant accepted successfully");
     } catch (err: any) {
-      alert(err.message || t.failedToAccept);
+      toast.error(err.message || t.failedToAccept);
     }
   };
 
@@ -199,10 +186,12 @@ function ApplicationsContent() {
           a.id === applicant.id ? { ...a, status: "Rejected" as const } : a,
         ),
       );
+      toast.success(t.statusRejected || "Applicant rejected");
     } catch (err: any) {
-      alert(err.message || t.failedToReject);
+      toast.error(err.message || t.failedToReject);
     }
   };
+
   const handleDownloadCV = async (applicant: Applicant) => {
     try {
       const token = localStorage.getItem("token");
@@ -218,19 +207,16 @@ function ApplicationsContent() {
       );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
-
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", `${applicant.name}-CV.pdf`);
-
       document.body.appendChild(link);
       link.click();
-
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
       console.error(err);
-      alert(err.message || t.failedToDownloadCv);
+      toast.error(err.message || t.failedToDownloadCv);
     }
   };
 

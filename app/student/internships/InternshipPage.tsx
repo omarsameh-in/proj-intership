@@ -1,3 +1,4 @@
+
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -24,29 +25,27 @@ import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import styles from './InternshipsStyle.module.css'
 import { useAppliedInternships } from '../../hooks/useAppliedInternships'
 import api from '../../lib/api'
+import { toast } from '../../lib/toast'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TYPES — matching backend response shapes
+// TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Raw shape of one item from GET /Student/Internships -> data[]
-// (lowercase "data" per the Response Guide)
 interface RawInternshipListItem {
   internshipId:    number
   title:           string
   companyName:     string
   durationMonths:  number
-  locationType:    string            // 'Remote' | 'OnSite' | 'Hybrid'
+  locationType:    string
   city?:           string | null
-  deadline:        string            // ISO date string
+  deadline:        string
   requiredSkills:  string[]
-  paidStatus:      string            // e.g. 'Paid' | 'Unpaid'
+  paidStatus:      string
   price?:          number | null
 }
-// Raw shape of one item from GET /Student/Internships/get/matchscore -> data[]
 interface RawMatchScoreItem {
   internshipId: number
-  score:        number // 0.0 - 1.0
+  score:        number
 }
 
 interface Internship {
@@ -88,7 +87,6 @@ function initials(name: string): string {
     .join('')
 }
 
-// Format an ISO date string into a readable label, e.g. "May 30, 2026"
 function formatDeadline(iso: string): { label: string; date: Date | null } {
   if (!iso) return { label: 'N/A', date: null }
   const date = new Date(iso)
@@ -99,8 +97,6 @@ function formatDeadline(iso: string): { label: string; date: Date | null } {
   return { label, date }
 }
 
-// Map backend location_type values ('OnSite') to the values used by the
-// type filter dropdown ('on-site') so filtering keeps working correctly.
 function normaliseWorkType(raw: string | null | undefined): string {
   if (!raw) return 'N/A'
   const lower = raw.toLowerCase()
@@ -109,15 +105,14 @@ function normaliseWorkType(raw: string | null | undefined): string {
   if (lower === 'hybrid') return 'Hybrid'
   return raw
 }
+
 function normaliseListItem(raw: RawInternshipListItem): Internship {
   if (!raw || typeof raw.internshipId !== 'number') {
     throw new Error(`Invalid list item: ${JSON.stringify(raw)}`)
   }
 
   const companyName = raw.companyName ?? 'Unknown Company'
-
   const { label: deadlineLabel, date: deadlineDate } = formatDeadline(raw.deadline)
-
   const isPaid = (raw.paidStatus ?? '').toLowerCase() !== 'unpaid' && !!raw.price
   const salary = isPaid && raw.price
     ? `${raw.price.toLocaleString()} EGP/month`
@@ -141,14 +136,14 @@ function normaliseListItem(raw: RawInternshipListItem): Internship {
     matchScore:   null,
   }
 }
+
 function isDeadlinePassed(date: Date | null): boolean {
   if (!date) return false
   return date < new Date()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK DATA — kept as fallback, now produced directly as `Internship[]`
-// so the UI keeps working even before backend integration / on failure.
+// MOCK DATA
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MOCK_INTERNSHIPS: Internship[] = [
@@ -202,62 +197,11 @@ const MOCK_INTERNSHIPS: Internship[] = [
     skills: ['c#', 'asp.net core', 'sql'],
     isPaid: false,
     matchScore: 76,
-  },
-  {
-    id: 4,
-    title: 'UI/UX Designer Intern',
-    company: 'Digital Solutions',
-    avatar: initials('Digital Solutions'),
-    avatarColor: colorFromId(4),
-    location: 'Alexandria',
-    workType: 'Hybrid',
-    duration: '4 months',
-    salary: '4,500 EGP/month',
-    salaryColor: '#10B981',
-    deadline: 'Jan 15, 2025',
-    deadlineDate: new Date(2025, 0, 15, 23, 59, 59),
-    skills: ['Figma', 'Adobe XD', 'Prototyping'],
-    isPaid: true,
-    matchScore: 88,
-  },
-  {
-    id: 5,
-    title: 'Full Stack Developer',
-    company: 'Innovation Hub',
-    avatar: initials('Innovation Hub'),
-    avatarColor: colorFromId(5),
-    location: 'Remote',
-    workType: 'Remote',
-    duration: '6 months',
-    salary: 'Unpaid',
-    salaryColor: '#EF5B5B',
-    deadline: 'Jan 20, 2025',
-    deadlineDate: new Date(2025, 0, 20, 23, 59, 59),
-    skills: ['Node.js', 'MongoDB', 'React'],
-    isPaid: false,
-    matchScore: 82,
-  },
-  {
-    id: 6,
-    title: 'Data Analyst Intern',
-    company: 'Startup Labs',
-    avatar: initials('Startup Labs'),
-    avatarColor: colorFromId(6),
-    location: 'Giza',
-    workType: 'On-site',
-    duration: '3 months',
-    salary: '6,000 EGP/month',
-    salaryColor: '#10B981',
-    deadline: 'Dec 25, 2024',
-    deadlineDate: new Date(2024, 11, 25, 23, 59, 59),
-    skills: ['Python', 'SQL', 'Excel'],
-    isPaid: true,
-    matchScore: 75,
-  },
+  }
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AUTH HELPERS — refresh-token flow per the Request Guide
+// AUTH HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -285,7 +229,6 @@ function clearAuthAndRedirect(router: ReturnType<typeof useRouter>) {
   router.push('/login')
 }
 
-// Wraps a GET request: on 401, tries refresh-token once, retries, else logs out.
 async function authedGet(
   url: string,
   router: ReturnType<typeof useRouter>,
@@ -321,7 +264,6 @@ async function authedGet(
 
 function InternshipPage() {
   const { t } = useApp()
-
   const router = useRouter()
 
   const [internships, setInternships]       = useState<Internship[]>([])
@@ -333,16 +275,9 @@ function InternshipPage() {
   const [sidebarOpen, setSidebarOpen]       = useState(false)
   const [applyingIds, setApplyingIds]       = useState<Set<number>>(new Set())
 
-  // ── shared applied state across pages ────────────────────────────────────
   const { isApplied, markApplied } = useAppliedInternships()
 
   useEffect(() => { fetchInternships() }, [])
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // MATCH SCORES — GET /Student/Internships/get/matchscore
-  // Single bulk call, response: { message, data: [{ InternshipId, Score }] }
-  // Score is 0.0-1.0 -> convert to 0-100 for display.
-  // ─────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!internships.length) return
@@ -351,13 +286,10 @@ function InternshipPage() {
     const fetchMatchScores = async () => {
       try {
         const res = await authedGet('/Student/Internships/get/matchscore', router)
-        if (!res) return // already redirected to /login
+        if (!res) return
 
         const rawList: RawMatchScoreItem[] | null = res.data?.data ?? null
-        if (!rawList) {
-          // Data null = no open internships to score against -> leave as is
-          return
-        }
+        if (!rawList) return
 
         const scoreMap = new Map<number, number>()
         rawList.forEach(item => {
@@ -378,22 +310,16 @@ function InternshipPage() {
     fetchMatchScores()
   }, [internships.length])
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // FETCH — GET /Student/Internships
-  // Response: { Message, data: [...] } (lowercase "data")
-  // ─────────────────────────────────────────────────────────────────────────
-
   const fetchInternships = async () => {
     setLoading(true)
     setError(null)
 
     try {
       const res = await authedGet('/Student/Internships', router)
-      if (!res) return // already redirected to /login
+      if (!res) return
 
       const rawList: RawInternshipListItem[] | null = res.data?.data ?? res.data?.Data ?? null
 
-      // Data null -> backend has no open internships -> empty state
       if (rawList === null) {
         setInternships([])
         return
@@ -426,7 +352,7 @@ function InternshipPage() {
         {},
         {
           headers: { Authorization: `Bearer ${accessToken}` },
-          transformResponse: (data) => data, // backend returns plain text
+          transformResponse: (data) => data,
         }
       )
 
@@ -435,9 +361,12 @@ function InternshipPage() {
 
       try {
         const res = await doApply(token)
-        const message = typeof res.data === 'string' ? res.data : 'Application submitted successfully.'
+        const message = typeof res.data === 'string' && res.data.trim() !== '' 
+          ? res.data 
+          : 'Your application has been submitted successfully.'
+        
         markApplied(internshipId)
-        alert(message)
+        toast.success(message)
       } catch (apiErr: any) {
         if (apiErr.response?.status === 401) {
           const newToken = await refreshAccessToken()
@@ -447,9 +376,12 @@ function InternshipPage() {
           }
           try {
             const retryRes = await doApply(newToken)
-            const message = typeof retryRes.data === 'string' ? retryRes.data : 'Application submitted successfully.'
+            const message = typeof retryRes.data === 'string' && retryRes.data.trim() !== '' 
+              ? retryRes.data 
+              : 'Your application has been submitted successfully.'
+            
             markApplied(internshipId)
-            alert(message)
+            toast.success(message)
           } catch (retryErr: any) {
             if (retryErr.response?.status === 401) {
               clearAuthAndRedirect(router)
@@ -458,22 +390,22 @@ function InternshipPage() {
             throw retryErr
           }
         } else if (apiErr.response?.status === 409) {
-          // Duplicate application — backend says already applied
           markApplied(internshipId)
-          alert('Already applied to this internship.')
+          toast.warning('You have already applied to this internship.')
         } else if (apiErr.response?.status === 400 || apiErr.response?.status === 404) {
-          const msg = typeof apiErr.response?.data === 'string'
+          const serverMsg = typeof apiErr.response?.data === 'string'
             ? apiErr.response.data
-            : 'Unable to apply to this internship.'
-          alert(msg)
+            : 'Unable to apply to this internship at the moment.'
+          toast.error(serverMsg)
         } else {
           console.warn(`[handleApply] API failed, simulating local success:`, apiErr)
           markApplied(internshipId)
+          toast.success('Successfully applied (Local fallback).')
         }
       }
     } catch (err: any) {
       console.error('[handleApply]', err)
-      alert(err.message ?? 'Failed to submit application. Please try again.')
+      toast.error(err.message ?? 'An unexpected error occurred. Please try again.')
     } finally {
       setApplyingIds(prev => {
         const next = new Set(prev)
@@ -491,8 +423,6 @@ function InternshipPage() {
       (typeFilter === 'all'     || i.workType.toLowerCase()  === typeFilter.toLowerCase())
     )
   })
-
-
 
   if (loading) {
     return <LoadingScreen />
@@ -598,7 +528,7 @@ function InternshipPage() {
           ) : (
             filteredInternships.map(internship => {
               const deadlinePassed = isDeadlinePassed(internship.deadlineDate)
-              const alreadyApplied = isApplied(internship.id)        // ← من الـ hook
+              const alreadyApplied = isApplied(internship.id)
               const isApplying     = applyingIds.has(internship.id)
               const applyDisabled  = deadlinePassed || alreadyApplied || isApplying
 

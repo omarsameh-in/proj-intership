@@ -1,3 +1,4 @@
+
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
@@ -17,6 +18,7 @@ import TopBarControls from '../../components/TopBarControls/TopBarControls'
 import styles from './PostInternshipStyle.module.css'
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen'
 import api from '../../lib/api'
+import { toast } from '../../lib/toast'
 
 const EGYPT_GOVERNORATES = [
   'Cairo', 'Giza', 'Alexandria', 'Dakahlia', 'Red Sea',
@@ -39,27 +41,26 @@ const DURATION_OPTIONS = [
 interface PostFormData {
   title: string
   description: string
-  duration: number          // int months — 0 means "not selected yet"
+  duration: number
   workType: 'Remote' | 'Onsite' | 'Hybrid'
-  governorate: string       // selected governorate (all work types)
+  governorate: string
   deadline: string
   isPaid: 'paid' | 'unpaid'
-  salary: number            // always a number; 0 when unpaid
+  salary: number
 }
 
 const formatDateForInput = (dateStr: string): string => {
   if (!dateStr) return ''
- 
   if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) return dateStr.split('T')[0]
-   const parts = dateStr.split('/')
+  const parts = dateStr.split('/')
   if (parts.length === 3) {
     const [day, month, year] = parts
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
   }
- 
   return ''
 }
- const formatDateForApi = (dateStr: string): string => {
+
+const formatDateForApi = (dateStr: string): string => {
   if (!dateStr) return ''
   const parts = dateStr.split('-')
   if (parts.length === 3) {
@@ -73,7 +74,7 @@ function PostInternshipContent() {
   const { language, t } = useApp()
   const router       = useRouter()
   const searchParams = useSearchParams()
-  const editId       = searchParams.get('id') // internId
+  const editId       = searchParams.get('id')
   const isEditMode   = !!editId
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -85,12 +86,13 @@ function PostInternshipContent() {
 
   const [form, setForm] = useState<PostFormData>({
     title: '',
-     description: '',
+    description: '',
     duration: 0,
     workType: 'Remote',
     governorate: '',
     deadline: '',
-    isPaid: 'unpaid', salary: 0,
+    isPaid: 'unpaid',
+    salary: 0,
   })
 
   const [requirements, setRequirements] = useState<string[]>([''])
@@ -114,9 +116,8 @@ function PostInternshipContent() {
           description: data.description || '',
           duration:    typeof data.duration === 'number' ? data.duration : 0,
           workType:    data.workType    || 'Remote',
-          governorate: data.governorate ,
+          governorate: data.governorate,
           deadline:    formatDateForInput(data.deadline),
-          // isPaid:      data.isPaid ? 'paid' : 'unpaid',
           isPaid: data.isPaid === true ? 'paid' : 'unpaid',
           salary:      typeof data.salary === 'number' ? data.salary : 0,
         })
@@ -130,7 +131,7 @@ function PostInternshipContent() {
           duration: 3, workType: 'Remote',
           governorate: 'Cairo',
           deadline: '2024-12-30',
-          isPaid: 'paid', 
+          isPaid: 'paid',
           salary: 5000,
         })
         setRequirements(['Strong knowledge of React', 'TypeScript experience'])
@@ -202,21 +203,20 @@ function PostInternshipContent() {
 
     try {
       const token = localStorage.getItem('token')
-  
+
       const payload = {
-        internId:     isEditMode ? Number(editId) : undefined, ///================>>>
+        internId:     isEditMode ? Number(editId) : undefined,
         title:        form.title.trim(),
         description:  form.description.trim(),
         duration:     form.duration,
         workType:     form.workType,
         governorate:  `${form.governorate}, Egypt`,
-        // governorate:  form.governorate,
         deadline:     form.deadline,
         isPaid:       form.isPaid === 'paid' ? 'Paid' : 'Unpaid',
         salary:       form.isPaid === 'paid' ? form.salary : 0,
         requirements: requirements.filter(r => r.trim()),
         skills:       skills.filter(s => s.trim()),
-        }
+      }
       if (isEditMode) {
         await api.put(`company/MyInternships/internship/edite/savechange`, payload, {
           headers: { Authorization: `Bearer ${token}` },
@@ -227,17 +227,16 @@ function PostInternshipContent() {
         })
       }
 
-      alert(isEditMode ? t.internshipUpdatedSuccess : t.internshipPublishedSuccess)
+      toast.success(isEditMode ? t.internshipUpdatedSuccess : t.internshipPublishedSuccess)
       router.push('/company/internships')
     } catch (err: any) {
       console.warn('[handleSubmit] API failed, simulating local success:', err)
-      alert(isEditMode ? t.internshipUpdatedSuccess : t.internshipPublishedSuccess)
+      toast.success(isEditMode ? t.internshipUpdatedSuccess : t.internshipPublishedSuccess)
       router.push('/company/internships')
     } finally {
       setLoading(false)
     }
   }
-
 
   // ─── Render ───────────────────────────────────────────────────────────────
   if (fetching) return <LoadingScreen />
@@ -338,8 +337,6 @@ function PostInternshipContent() {
 
             {/* Row 2 — Location + Duration + Salary */}
             <div className={styles.formRow}>
-
-              {/* Location → governorate dropdown for ALL work types */}
               <div className={`${styles.formGroup} ${errors.governorate ? styles.hasError : ''}`}>
                 <label>{t.locationLabel}</label>
                 <select name="governorate" value={form.governorate} onChange={handleChange}>
@@ -351,7 +348,6 @@ function PostInternshipContent() {
                 {errors.governorate && <span className={styles.fieldError}>{errors.governorate}</span>}
               </div>
 
-              {/* Duration → stored as number (months) */}
               <div className={`${styles.formGroup} ${errors.duration ? styles.hasError : ''}`}>
                 <label>{t.duration}</label>
                 <select
@@ -367,7 +363,6 @@ function PostInternshipContent() {
                 {errors.duration && <span className={styles.fieldError}>{errors.duration}</span>}
               </div>
 
-              {/* Salary → only shown when isPaid === 'paid' */}
               {form.isPaid === 'paid' && (
                 <div className={styles.formGroup}>
                   <label>{t.stipendOptional}</label>
@@ -494,7 +489,3 @@ export default function PostInternshipPage() {
     </Suspense>
   )
 }
-
-
-
-

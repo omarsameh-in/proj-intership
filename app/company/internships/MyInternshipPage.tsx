@@ -1,3 +1,5 @@
+
+
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -30,10 +32,10 @@ import TopBarControls from "../../components/TopBarControls/TopBarControls";
 import styles from "./InternshipsStyle.module.css";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen";
 import api from "../../lib/api";
+import { toast } from "../../lib/toast";
 
 interface Internship {
   id: number;
-
   title: string;
   city?: string;
   isPaid: "Paid" | "Unpaid";
@@ -70,7 +72,6 @@ const MOCK_INTERNSHIPS: Internship[] = [
 
 function MyInternshipPage() {
   const { language, t } = useApp();
-
   const router = useRouter();
 
   const [internships, setInternships] = useState<Internship[]>([]);
@@ -86,6 +87,24 @@ function MyInternshipPage() {
 
   const [applicantsModalOpen, setApplicantsModalOpen] = useState(false);
   const [applicantsLoading, setApplicantsLoading] = useState(false);
+
+  // ── Custom Confirmation Modals States ────────────────────────────────────
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [closeTargetId, setCloseTargetId] = useState<number | null>(null);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
+  // دالة مخصصة لانتشال الخطأ الحقيقي القادم من الباك إيند وتجنب نصوص الـ 404 العامة
+  const extractErrorMessage = (err: any, fallback: string) => {
+    if (err.response?.data) {
+      if (typeof err.response.data === "string") return err.response.data;
+      if (err.response.data.message) return err.response.data.message;
+      if (err.response.data.errorMessage) return err.response.data.errorMessage;
+    }
+    return err.message || fallback;
+  };
+
   const fetchInternships = async () => {
     try {
       setLoading(true);
@@ -96,7 +115,7 @@ function MyInternshipPage() {
       });
       setInternships(res.data.data);
     } catch (err: any) {
-      setError(err.message || t.failedToLoadInternships);
+      setError(extractErrorMessage(err, t.failedToLoadInternships));
     } finally {
       setLoading(false);
     }
@@ -104,7 +123,6 @@ function MyInternshipPage() {
 
   // ── Close posting ──────────────────────────────────────────────────────────
   const handleClosePosting = async (id: number) => {
-    if (!confirm(t.confirmClosePosting)) return;
     try {
       const token = localStorage.getItem("token");
       await api.put(
@@ -114,21 +132,23 @@ function MyInternshipPage() {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-
       setInternships((prev) =>
         prev.map((i) => (i.id === id ? { ...i, status: "Closed" } : i)),
       );
+      toast.success(t.closed || "Posting closed successfully");
     } catch (err: any) {
-      alert(err.message || t.failedToClose);
+      toast.error(extractErrorMessage(err, t.failedToClose));
+    } finally {
+      setCloseConfirmOpen(false);
+      setCloseTargetId(null);
     }
   };
 
   // ── Reopen posting ────────────────────────────────────────────────────────
-
   const handleOpenReopenModal = (id: number) => {
     setReopenTargetId(id);
     const current = internships.find((i) => i.id === id);
-    setReopenDeadline(current?.deadline || "");
+    setReopenDeadline("");
     setReopenModalOpen(true);
   };
 
@@ -145,16 +165,6 @@ function MyInternshipPage() {
   const handleReopen = async () => {
     if (!reopenTargetId) return;
     const id = reopenTargetId;
-    const current = internships.find((i) => i.id === id);
-    const oldDeadlineExpired = current
-      ? new Date(current.deadline) < new Date()
-      : false;
-
-    if (oldDeadlineExpired && !reopenDeadline) {
-      alert(t.pleaseSelectDeadline);
-      return;
-    }
-
     const payload: { deadline: string | null } = {
       deadline: reopenDeadline || null,
     };
@@ -174,23 +184,26 @@ function MyInternshipPage() {
         ),
       );
       handleCloseReopenModal();
+      toast.success(t.active || "Posting reopened successfully");
     } catch (err: any) {
-      alert(err.message || t.failedToReopen);
+      toast.error(extractErrorMessage(err, t.failedToReopen));
     }
   };
 
   // ── Delete ─────────────────────────────────────────────────────────────────
   const handleDelete = async (id: number) => {
-    if (!confirm(t.confirmDelete)) return;
     try {
       const token = localStorage.getItem("token");
       await api.delete(`/company/MyInternships/internship/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setInternships((prev) => prev.filter((i) => i.id !== id));
+      toast.success(t.delete || "Internship deleted");
     } catch (err: any) {
-      alert(err.message || t.failedToDelete);
+      toast.error(extractErrorMessage(err, t.failedToDelete));
+    } finally {
+      setDeleteConfirmOpen(false);
+      setDeleteTargetId(null);
     }
   };
 
@@ -219,7 +232,7 @@ function MyInternshipPage() {
     } catch (err: any) {
       setApplicants([]);
       if (err.response?.status !== 404) {
-        alert(err.message || "فشل تحميل المتقدمين");
+        toast.error(extractErrorMessage(err, "فشل تحميل المتقدمين"));
       }
     } finally {
       setApplicantsLoading(false);
@@ -260,8 +273,9 @@ function MyInternshipPage() {
       setApplicants((prev) =>
         prev.map((a) => (a.id === app.id ? { ...a, status: "Accepted" } : a)),
       );
+      toast.success(t.statusAccepted || "Applicant accepted successfully");
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || t.failedToAccept);
+      toast.error(extractErrorMessage(err, t.failedToAccept));
     }
   };
 
@@ -279,8 +293,9 @@ function MyInternshipPage() {
       setApplicants((prev) =>
         prev.map((a) => (a.id === app.id ? { ...a, status: "Rejected" } : a)),
       );
+      toast.success(t.statusRejected || "Applicant rejected");
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || t.failedToReject);
+      toast.error(extractErrorMessage(err, t.failedToReject));
     }
   };
 
@@ -304,7 +319,7 @@ function MyInternshipPage() {
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || err.message || t.failedToDownloadCv);
+      toast.error(extractErrorMessage(err, t.failedToDownloadCv));
     }
   };
 
@@ -495,7 +510,10 @@ function MyInternshipPage() {
                 {internship.status === "Open" ? (
                   <button
                     className={styles.closeBtn}
-                    onClick={() => handleClosePosting(internship.id)}
+                    onClick={() => {
+                      setCloseTargetId(internship.id);
+                      setCloseConfirmOpen(true);
+                    }}
                   >
                     <XCircle size={15} /> {t.closePosting}
                   </button>
@@ -509,7 +527,10 @@ function MyInternshipPage() {
                 )}
                 <button
                   className={styles.deleteBtn}
-                  onClick={() => handleDelete(internship.id)}
+                  onClick={() => {
+                    setDeleteTargetId(internship.id);
+                    setDeleteConfirmOpen(true);
+                  }}
                 >
                   <Trash2 size={15} /> {t.delete}
                 </button>
@@ -518,6 +539,134 @@ function MyInternshipPage() {
           ))}
         </div>
       </main>
+
+      {/* ── Custom Modal: Close Confirmation ──────────────────────────────── */}
+      {closeConfirmOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1100,
+          }}
+          onClick={() => { setCloseConfirmOpen(false); setCloseTargetId(null); }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              padding: "1.5rem",
+              width: "90%",
+              maxWidth: "380px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, marginBottom: "1rem", fontSize: "1.1rem", fontWeight: 600, color: "#111827" }}>
+              {t.closePosting || "Close Posting"}
+            </h3>
+            <p style={{ fontSize: "0.95rem", color: "#4b5563", marginBottom: "1.5rem" }}>
+              {t.confirmClosePosting || "Are you sure you want to close this internship posting?"}
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button
+                onClick={() => { setCloseConfirmOpen(false); setCloseTargetId(null); }}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  border: "1px solid #d1d5db",
+                  background: "#fff",
+                  cursor: "pointer",
+                  color: "#374151"
+                }}
+              >
+                {t.cancel || "Cancel"}
+              </button>
+              <button
+                onClick={() => closeTargetId && handleClosePosting(closeTargetId)}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "#f59e0b",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontWeight: 500
+                }}
+              >
+                {t.confirmed || "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Custom Modal: Delete Confirmation ──────────────────────────────── */}
+      {deleteConfirmOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1100,
+          }}
+          onClick={() => { setDeleteConfirmOpen(false); setDeleteTargetId(null); }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              padding: "1.5rem",
+              width: "90%",
+              maxWidth: "380px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, marginBottom: "1rem", fontSize: "1.1rem", fontWeight: 600, color: "#ef4444" }}>
+              {t.delete || "Delete Internship"}
+            </h3>
+            <p style={{ fontSize: "0.95rem", color: "#4b5563", marginBottom: "1.5rem" }}>
+              {t.confirmDelete || "Are you sure you want to delete this internship permanently?"}
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button
+                onClick={() => { setDeleteConfirmOpen(false); setDeleteTargetId(null); }}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  border: "1px solid #d1d5db",
+                  background: "#fff",
+                  cursor: "pointer",
+                  color: "#374151"
+                }}
+              >
+                {t.cancel || "Cancel"}
+              </button>
+              <button
+                onClick={() => deleteTargetId && handleDelete(deleteTargetId)}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "#ef4444",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontWeight: 500
+                }}
+              >
+                {t.delete || "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Reopen Modal ───────────────────────────────────────────────── */}
       {reopenModalOpen && (
