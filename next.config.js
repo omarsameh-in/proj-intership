@@ -5,11 +5,11 @@ const nextConfig = {
     return [
       {
         source: '/api/Notifications/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://rd6j07gh-5022.uks1.devtunnels.ms'}/api/Notifications/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://2rdlk991-5022.uks1.devtunnels.ms'}/api/Notifications/:path*`,
       },
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://rd6j07gh-5022.uks1.devtunnels.ms'}/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://2rdlk991-5022.uks1.devtunnels.ms'}/:path*`,
       },
     ]
   }
