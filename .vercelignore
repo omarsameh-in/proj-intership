@@ -2,3 +2,7 @@
 node_modules
 .git
 .vscode
+app 2
+app 2/
+app_backup
+app_backup/

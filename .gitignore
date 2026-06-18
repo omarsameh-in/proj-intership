@@ -36,3 +36,5 @@ next-env.d.ts
 
 # local backups
 /app_backup
+/app 2
+/app 2/
