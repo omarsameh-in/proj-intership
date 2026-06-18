@@ -20,7 +20,7 @@ function head(url){
 }
 
 (async () => {
-  await head('https://2rdlk991-5022.uks1.devtunnels.ms/swagger/index.html');
-  await head('https://2rdlk991-5022.uks1.devtunnels.ms/api/Notifications');
+  await head('https://2lmcv6z8-5022.euw.devtunnels.ms/swagger/index.html');
+  await head('https://2lmcv6z8-5022.euw.devtunnels.ms/api/Notifications');
   await head('http://localhost:3000/api/Notifications');
 })();
