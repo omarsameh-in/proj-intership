@@ -82,8 +82,10 @@ export default function LoginPage() {
         userType: selectedRole
       })
 
-      const loginData = response.data?.data || response.data
-      const { token, refreshToken, user } = loginData || {}
+      const loginData = response.data?.data || response.data?.Data || response.data
+      const token = loginData?.token || loginData?.Token || loginData?.accessToken || loginData?.AccessToken
+      const refreshToken = loginData?.refreshToken || loginData?.RefreshToken
+      const user = loginData?.user || loginData?.User
 
       if (!token || token === 'undefined') {
         throw new Error(language === 'ar' ? 'لم يتم استلام رمز التحقق (Token) بشكل صحيح' : 'Token not received correctly from server');

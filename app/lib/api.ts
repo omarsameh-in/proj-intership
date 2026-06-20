@@ -85,8 +85,8 @@ api.interceptors.response.use(
                 // We pass _skipRefresh: true to avoid infinite interceptor loops
                 const res = await api.get('/Account/refreshtoken', { _skipRefresh: true } as any);
                 
-                const data = res.data?.data || res.data;
-                const newToken = data?.token || data; // handle direct or wrapped string token
+                const data = res.data?.data || res.data?.Data || res.data;
+                const newToken = data?.token || data?.Token || data?.accessToken || data?.AccessToken || data; // handle direct or wrapped string token
 
                 if (newToken) {
                     const rememberMe = typeof window !== 'undefined' && localStorage.getItem('rememberMe') === 'true';
