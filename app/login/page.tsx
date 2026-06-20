@@ -82,7 +82,12 @@ export default function LoginPage() {
         userType: selectedRole
       })
 
-      const { token, refreshToken, user } = response.data
+      const loginData = response.data?.data || response.data
+      const { token, refreshToken, user } = loginData || {}
+
+      if (!token || token === 'undefined') {
+        throw new Error(language === 'ar' ? 'لم يتم استلام رمز التحقق (Token) بشكل صحيح' : 'Token not received correctly from server');
+      }
 
       // Store auth data based on rememberMe checkbox
       if (rememberMe) {

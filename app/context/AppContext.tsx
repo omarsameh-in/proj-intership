@@ -56,10 +56,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
 
-    // Sync token on pathname changes (supporting both localStorage and sessionStorage)
     useEffect(() => {
         if (!mounted) return
-        const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token')
+        let currentToken = localStorage.getItem('token') || sessionStorage.getItem('token')
+        if (currentToken === 'undefined') {
+            currentToken = null
+        }
         if (currentToken !== token) {
             setToken(currentToken)
         }
