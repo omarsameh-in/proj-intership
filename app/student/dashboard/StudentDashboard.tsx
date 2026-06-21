@@ -130,7 +130,7 @@ const MOCK_STATS: DashboardStats = {
 }
 
 async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = localStorage.getItem('refreshToken')
+  const refreshToken = typeof window !== 'undefined' ? (localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')) : null
   if (!refreshToken) return null
 
   try {
@@ -138,9 +138,17 @@ async function refreshAccessToken(): Promise<string | null> {
     const newAccessToken = res.data?.accessToken ?? res.data?.Data?.accessToken
     if (!newAccessToken) return null
 
-    localStorage.setItem('token', newAccessToken)
-    if (res.data?.refreshToken) {
-      localStorage.setItem('refreshToken', res.data.refreshToken)
+    const rememberMe = typeof window !== 'undefined' && localStorage.getItem('rememberMe') === 'true'
+    if (rememberMe) {
+      localStorage.setItem('token', newAccessToken)
+      if (res.data?.refreshToken) {
+        localStorage.setItem('refreshToken', res.data.refreshToken)
+      }
+    } else {
+      sessionStorage.setItem('token', newAccessToken)
+      if (res.data?.refreshToken) {
+        sessionStorage.setItem('refreshToken', res.data.refreshToken)
+      }
     }
     return newAccessToken
   } catch {
@@ -151,6 +159,10 @@ async function refreshAccessToken(): Promise<string | null> {
 function clearAuthAndRedirect(router: ReturnType<typeof useRouter>) {
   localStorage.removeItem('token')
   localStorage.removeItem('refreshToken')
+  localStorage.removeItem('user')
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('refreshToken')
+  sessionStorage.removeItem('user')
   router.push('/login')
 }
 
@@ -159,7 +171,7 @@ async function authedGet(
   url: string,
   router: ReturnType<typeof useRouter>
 ): Promise<any | null> {
-  const token = localStorage.getItem('token')
+  const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null
   try {
     return await api.get(url, { headers: { Authorization: `Bearer ${token}` } })
   } catch (err: any) {

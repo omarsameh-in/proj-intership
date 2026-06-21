@@ -45,8 +45,7 @@ function MentorDashboard() {
         try {
             setLoading(true)
             setError(null)
-            const token = localStorage.getItem('token')
-
+            const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null
             const res = await api.get('/Mentor/Dashboard', {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -135,7 +134,7 @@ function MentorDashboard() {
 
     const handleStartMeeting = async (sessionId: number) => {
         try {
-            const token = localStorage.getItem('token')
+            const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null
             const res = await api.get(`/Mentor/MySessions/joinMeeting/${sessionId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
