@@ -31,7 +31,7 @@ import { toast } from '../../lib/toast'
 interface CompanyData {
   name: string
   industry: string
-  foundedYear: number
+  foundedYear: number | string
   website: string
   description: string
   email: string
@@ -133,7 +133,7 @@ function CompanyProfile() {
       const mapped: CompanyData = {
         name: d.companyName ?? '',
         industry: d.industry ?? '',
-        foundedYear: d.foundedYear ?? 0,
+        foundedYear: d.foundedYear && d.foundedYear !== 0 ? d.foundedYear : '',
         website: d.website ?? '',
         description: d.description ?? '',
         email: d.email ?? '',
@@ -175,18 +175,24 @@ function CompanyProfile() {
   const handleChange = (field: keyof CompanyData, value: string) => {
     setEditData(prev => ({
       ...prev,
-      [field]: field === 'foundedYear' ? Number(value) : value,
+      [field]: field === 'foundedYear' ? value.replace(/\D/g, '') : value,
     }))
   }
 
   const handleSave = async () => {
+    const yearNum = Number(editData.foundedYear)
+    if (!editData.foundedYear || isNaN(yearNum) || yearNum < 1800 || yearNum > new Date().getFullYear() + 1) {
+      toast.error(language === 'ar' ? 'الرجاء إدخال سنة تأسيس صالحة (مثال: 2010)' : 'Please enter a valid founded year (e.g., 2010)')
+      return
+    }
+
     try {
       setSaving(true)
       const token = localStorage.getItem('token')
       const res = await api.put('/company/Profile/SaveChange', {
         companyName: editData.name,
         industry: editData.industry,
-        foundedYear: editData.foundedYear,
+        foundedYear: Number(editData.foundedYear),
         description: editData.description,
         officeAddress: editData.address,
         city: editData.city,
@@ -206,7 +212,7 @@ function CompanyProfile() {
       const mapped: CompanyData = {
         name: d.companyName ?? '',
         industry: d.industry ?? '',
-        foundedYear: d.foundedYear ?? 0,
+        foundedYear: d.foundedYear && d.foundedYear !== 0 ? d.foundedYear : '',
         website: d.website ?? '',
         description: d.description ?? '',
         email: d.email ?? '',
