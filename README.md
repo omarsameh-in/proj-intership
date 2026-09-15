@@ -97,7 +97,7 @@ Follow these steps to set up the project locally:
 
 The application is deployed and hosted on Vercel. Feature updates are automatically built and deployed upon pushing to the main branch.
 
-**[Live Demo Link](https://proj-intership-fux4o1e95-omars-projects-1e4409a8.vercel.app)**
+**[Live Demo Link](https://proj-intership.vercel.app/)**
 
 ---
 
@@ -187,7 +187,7 @@ The application is deployed and hosted on Vercel. Feature updates are automatica
 
 تم نشر التطبيق واستضافته على **Vercel**. يتم بناء ونشر التحديثات تلقائياً عند رفع التغييرات إلى الفرع الرئيسي (main branch).
 
-**[رابط المعاينة المباشرة](https://proj-intership-fux4o1e95-omars-projects-1e4409a8.vercel.app)**
+**[رابط المعاينة المباشرة](https://proj-intership.vercel.app/)**
 
 ---
 
